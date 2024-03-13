@@ -1,8 +1,8 @@
-# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 SSTATETASKS += "do_generate_product_sdk "
-SSTATE_OUT_DIR = "${DEPLOY_DIR}/artifacts/"
+SSTATE_OUT_DIR = "${DEPLOY_DIR}/qirpsdk_artifacts/"
 SSTATE_IN_DIR = "${QIRP_TOP_DIR}/${SDK_PN}"
 TMP_SSTATE_IN_DIR = "${QIRP_TOP_DIR}/${SDK_PN}_tmp"
 SAMPLES_PATH ?= "NULL"
@@ -30,6 +30,7 @@ do_generate_product_sdk[sstate-outputdirs] = "${SSTATE_OUT_DIR}"
 do_generate_product_sdk[dirs] = "${SSTATE_IN_DIR} ${SSTATE_OUT_DIR} ${TMP_SSTATE_IN_DIR}"
 do_generate_product_sdk[cleandirs] = "${SSTATE_IN_DIR} ${SSTATE_OUT_DIR} ${TMP_SSTATE_IN_DIR}"
 do_generate_product_sdk[stamp-extra-info] = "${MACHINE_ARCH}"
+do_generate_product_sdk[nostamp] = "1"
 
 # Add a task to generate product sdk
 do_generate_product_sdk () {
@@ -38,6 +39,8 @@ do_generate_product_sdk () {
         mkdir -p ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
     fi
     cp -r ${WORKDIR}/*install.sh ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
+    cp -r ${WORKDIR}/qirp-setup.sh ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
+    cp -r ${WORKDIR}/qirp-upgrade.sh ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
     cp ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/${PN}_*.${IMAGE_PKGTYPE} ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
     cd ${TMP_SSTATE_IN_DIR}
     tar -zcf ${SSTATE_IN_DIR}/${SDK_PN}.tar.gz ./${SDK_PN}/*

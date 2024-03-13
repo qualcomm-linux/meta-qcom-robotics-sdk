@@ -1,28 +1,17 @@
-# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
-def check_and_sync_sample_codes(d):
-    samples_path = d.getVar('SAMPLES_PATH')
-    sample_code_link = d.getVar('SAMPLE_CODE_LINK')
-    if samples_path and os.path.exists(samples_path):
-        bb.note("Get samples from local path")
-        pass
-    elif sample_code_link:
-        bb.note("Get samples from remote link")
-        return "sync_sample_codes"
-    else :
-        bb.note("No samples found from both remote link and local path")
-        pass
-
-do_install[postfuncs] += "${@check_and_sync_sample_codes(d)}"
-
 sync_sample_codes() {
-    
     bbnote "downloading samples..."
-    
+    SAMPLES_PATH="${QIRP_TOP_DIR}/sources/robotics/qirp-oss"
     #orgnanize sample codes
-    install -d ${SAMPLES_PATH}
-    cd ${SAMPLES_PATH}
+    if [ -d "${SAMPLES_PATH}" ]; then
+        bbnote "Sample path exists, removing: ${SAMPLES_PATH}"
+        rm -rf "${SAMPLES_PATH}"
+    fi
+
+    install -d ${SAMPLES_PATH%/*}
+    cd ${SAMPLES_PATH%/*}
 
     #get all sample code link and assign to LINK array
     tempfile=$(mktemp)
@@ -37,6 +26,23 @@ sync_sample_codes() {
         git clone -b $branch $url
     done
 }
+
+do_install[postfuncs] += "check_and_sync_sample_codes"
+python check_and_sync_sample_codes() {
+    samples_path = d.getVar('SAMPLES_PATH')
+    sample_code_link = d.getVar('SAMPLE_CODE_LINK')
+    path_list = samples_path.split(" ")
+    for path in path_list:
+        if os.path.exists(path) and os.listdir(path) :
+            bb.note("Get samples from SAMPLES_PATH")
+    if sample_code_link:
+        bb.note("Get samples from remote link")
+        bb.build.exec_func('sync_sample_codes', d)
+    else :
+        bb.note("No samples found from both remote link and local path")
+}
+
+
 
 def check_sample_codes(d):
     samples_path = d.getVar('ROBOTICS_SAMPLES_PATH')

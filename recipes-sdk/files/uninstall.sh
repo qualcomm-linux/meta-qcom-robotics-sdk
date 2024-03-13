@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 SDK_NAME="QIRP_SDK"
@@ -43,7 +43,7 @@ function main() {
         $uninstall_command $PKG_FILE
     done
 
-    rm -rf $PKG_LIST_FILE
+    rm -rf /opt/qcom/qirp-sdk
 }
 
 main "$@"

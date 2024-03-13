@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 PATH:prepend = "/usr/bin:"
@@ -83,7 +83,7 @@ python do_fetch_extra () {
                 bb.note("SDK hash matches with the info in config file")
                 return
 
-        if sdk_version == config_sdk_version and sdk_hashsum == config_sdk_hashsum:
+        if config_sdk_version in sdk_version and sdk_hashsum == config_sdk_hashsum:
             bb.note("SDK version & hash matches with the info in config file")
             return
         else:
@@ -185,19 +185,30 @@ python do_unpack () {
         pass
 
     def extract_deb(file, out_path):
-        # dpkg -X file out_path
-        extract_cmd = "dpkg -X %s %s/data" %(file,out_path)
-        subprocess.call(extract_cmd,shell=True)
-        extract_cmd = "dpkg -e %s %s" %(file,out_path)
-        bb.note(extract_cmd)
-        subprocess.call(extract_cmd,shell=True)
+        # check the deb packages if is in PKGS_SKIP
+        last_slash_index = file.rfind("/")
+        next_underscore_index = file.find("_", last_slash_index)
+        if d.getVar('PKGS_SKIP') and file[last_slash_index + 1:next_underscore_index] in d.getVar('PKGS_SKIP'):
+            bb.note(file + "is in PKGS_SKIP, skip")
+        else:
+            # dpkg -X file out_path
+            extract_cmd = "dpkg -X %s %s/data" %(file,out_path)
+            subprocess.call(extract_cmd,shell=True)
+            extract_cmd = "dpkg -e %s %s" %(file,out_path)
+            bb.note(extract_cmd)
+            subprocess.call(extract_cmd,shell=True)
         pass
-
     def extract_ipk(file, out_path):
-        # ar -x file --output out_path
-        extract_cmd = "cd %s && ar -x %s && cd -" %(out_path,file)
-        bb.note(extract_cmd)
-        subprocess.call(extract_cmd,shell=True)
+        # check the ipk packages if is in PKGS_SKIP
+        last_slash_index = file.rfind("/")
+        next_underscore_index = file.find("_", last_slash_index)
+        if d.getVar('PKGS_SKIP') and file[last_slash_index + 1:next_underscore_index] in d.getVar('PKGS_SKIP'):
+            bb.note(file + "is in PKGS_SKIP, skip")
+        else:
+            # ar -x file --output out_path
+            extract_cmd = "cd %s && ar -x %s && cd -" %(out_path,file)
+            bb.note(extract_cmd)
+            subprocess.call(extract_cmd,shell=True)
         pass
 
     def extract_7z(file, out_path):
