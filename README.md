@@ -6,210 +6,230 @@ This documentation is intended to help you understand the basic features of the 
 
 - What is the QIRP SDK
 - How to sync and build QIRP SDK
-- How to install and uninstall QIRP SDK
+- How to install QIRP SDK
+- How to run samples on QIRP SDK
 - How to develop application with QIRP SDK
 
-# Introduction
+# What is the QIRP SDK
 
-QIRP SDK collects artifacts from various Qualcomm SDKs, and selectively picks the libs for robotics use cases.
+Welcome to use the Qualcomm® Intelligent Robotics Product SDK (QIRP SDK) 2.0. This SDK is applicable to the Qualcomm® Linux releases. QIRP SDK is a collection of components that enable a developer to realize robotics features on Qualcomm Platforms. The QIRP SDK provides the following:
 
-The QIRP SDK is advantageous as it provides the following:
+**Out-of-box samples**
 
-out-of-box samples:
-- Various modules. Not only useful for verifying SDK functions, These modules also serve as a reference or code base for helping developers to quickly develop their own applications.
-- e2e scenario samples. Help developers to evaluate the robotics platforms as systematic solution.
+- ROS packages serve as a reference or code base for helping developers quickly develop their Robotics applications.
+- E2E scenario samples. Help developers evaluate the robotics platforms as systematic solution.
 
-easy-to-develop experience
-- Various libs for robotics applications, such as AI, multimedia, robotics specific libs.
-- Integrated cross-compile toolchain, which includes common build tools, such as `aarch64-oe-linux-gcc`, `make`, `cmake`, and `ros core`. Developers can build their applications with their familiar approaches.
-- Tools and scripts to help customer accelerate the development.
+**Easy-to-develop experience**
+
+- Various ROS packages for robotics applications.
+- Integrated cross-compile toolchain, which includes common build tools, such as `aarch64-oe-linux-gcc`, `make`, `cmake`, and ROS core. Developers can build their applications with their familiar approaches.
+- Tools and scripts to help customers accelerate the development.
 - Documents that describe how to set up the QIRP SDK and tutorials on how to quickly start to develop your own applications.
-- (Planning Features)Robotics IDE will be launched to support development with QIRP SDK.
 
-NOTE: This release provides ROS2 core enablement only, other features are expected in future release.
+The purpose of this document is to help a developer get started with the QIRP SDK. The scope of this document primarily covers how to generate the QIRP SDK, install QIRP SDK, run sample applications, and guide you through developing your first sample application.
 
-# QIRP SDK Generation
+# How to sync and build QIRP SDK
 
-**QIRP packages are generated combined with Qualcomm Linux 1.0 base in Alpha release. Further, QIRP will also support standalone way to generated SDK packages later.**
-
-The initial generation of the QIRP SDK includes the software synchronization and compilation procedures.
-
-1. HOST setup
+## Host Setup
 
 Refer to [qcom-manifest/README.md](https://github.com/quic-yocto/qcom-manifest/blob/qcom-linux-kirkstone/README.md#host-setup) setup the host environment.
 
-2. Download code base
+## Prerequisites
+
+Run the following commands to set up Qualcomm Package Manager 3 [https://qpm.qualcomm.com/](https://qpm.qualcomm.com/):
 
 ```shell
-repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.00-QLI.1.0-Ver.1.1_robotics.xml
+mkdir -p <DEV_PKG_LOCATION>
+cd <DEV_PKG_LOCATION>
+sudo dpkg -i <downloaded Deb file>
+## Example `sudo dpkg -i QualcommPackageManager3.3.0.92.4.Linux-x86.deb`
+qpm-cli --login
+```
 
+## Sync the code base of QIRP SDK
+
+```shell
+mkdir <workspace>
+cd <workspace>
+repo init -u https://github.com/quic-yocto/qcom-manifest -b [branch name] -m [release manifest]
 repo sync -c -j8
 ```
 
-3. Environment setup for QIRP generation
+**Example:**
 
-In order to unify the compilation environment, the compilation of QIRP SDK will be completed in docker, so the following additional packages are required.
+To download the `qcom-6.6.17-QLI.1.0-Ver.1.4_robotics.xml` release
+
 ```shell
-apt install docker.io
+repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.17-QLI.1.0-Ver.1.4_robotics.xml
+repo sync -c -j8
 ```
 
-- Docker build
-
-NOTE: The Dockerfile is in `<codebase>/layers/meta-qcom-robotics/files/Dockerfile/Dockerfile`.
+## Build QIRP SDK
 
 ```shell
-cp <codebase>/layers/meta-qcom-robotics/files/Dockerfile/Dockerfile .
-
-docker build --build-arg IMAGE_OS=focal \
-    --build-arg HOST_USER_ID=$(id -u ${USER}) \
-    --build-arg HOST_GROUP_ID=$(id -g ${USER}) \
-    --build-arg HOST_USER=${USER} \
-    --build-arg HOST_GROUP=$(getent group $(id -g ${USER}) | cut -d ':' -f 1) \
-    --build-arg USER_EMAIL=<Your Email> \
-    -f Dockerfile -t <image_name> .
-```
-
-NOTE: You can replace `<image_name>` with the custom docker image name.
-
-e.g.
-```shell
-docker build --build-arg IMAGE_OS=focal \
-    --build-arg HOST_USER_ID=$(id -u ${USER}) \
-    --build-arg HOST_GROUP_ID=$(id -g ${USER}) \
-    --build-arg HOST_USER=${USER} \
-    --build-arg HOST_GROUP=$(getent group $(id -g ${USER}) | cut -d ':' -f 1) \
-    --build-arg USER_EMAIL=visitor@mail.com \
-    -f Dockerfile -t my_docker_image .
-```
-
-- Docker run
-
-```shell
-export CODEBASE=/path/to/host/codebase
-
-docker run --rm -d -it  -u $(id -u ${USER}) -v $CODEBASE:/path/in/container/workspace --privileged --name=<container_name> <image_name> /bin/bash
-```
-*If you encounter network problems, please try running again.*
-
-NOTE: The `/path/to/host/codebase:/path/in/container/workspace` means that the host path `/path/to/host/codebase` will be mapped to the container path `/path/in/container/workspace`. The `<container_name>` is your custom container image name.
-
-e.g.
-```shell
-export CODEBASE=/path/to/host/codebase
-
-docker run --rm -d -it  -u $(id -u ${USER}) -v $CODEBASE:/home/qirp-workspace --privileged --name=my_container_name my_docker_image /bin/bash
-```
-
-- Docker exec
-
-Switch into container rootfs.
-```shell
-docker exec -it -u $(id -u ${USER}) <container_name> /bin/bash
-```
-
-e.g.
-```shell
-docker exec -it -u $(id -u ${USER}) my_container_name /bin/bash
-```
-
-4. Generate QIRP SDK
-
-```shell
+cd <workspace>
 MACHINE=qcm6490 DISTRO=qcom-robotics-ros2-humble source setup-robotics-environment
 
 ../qirp-build qcom-robotics-full-image
 ```
 
-Then `qirp-sdk_<qirp_version>.tar.gz` will be in `build-qcom-robotics-ros2-humble/tmp-glibc/deploy/artifacts` directory
+QIRP SDK artifacts: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/artifacts/qirp-sdk_<version>.tar.gz`
 
-# Application Development
+Robotics image: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/images/qcm6490/qcom-robotics-full-image/`
 
-This section will introduce how to develop applications on linux machine with QIRP SDK.
+# How to install QIRP SDK
+ 
 
-NOTE: Before application development, please refer to [meta-qcom-robotics/README.md](https://github.com/quic-yocto/meta-qcom-robotics/blob/kirkstone/README.md) flash the image into your Qualcomm robotics platforms.
-## Set up the development environment
+**Deploy QIRP SDK on the host machine**
 
-### Set up the cross-compile environment
+On the host machine, move to the artifacts directory and decompress the package using the `tar` command.
 
-To set up the environment for application development, follow these steps:
-
-1. Decompress the QIRP SDK.
-
-Exit docker and change to the artifacts directory.
-
-``` shell
-exit
-
-cd <codebase>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/artifacts
+```bash
+cd <workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/artifacts
+tar -zxf qirp-sdk_<qirp_version>.tar.gz
+cd qirp-sdk
 ```
 
-Decompress the package using the `tar` command.
+**Install QIRP SDK on the device**
 
-``` shell
-tar -zxf qirp-sdk_<qirp_version>.tar.gz
+1. Flash the robotics image to the device. To do this, refer to the [RB3 Gen2 Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-253).
+2. Ensure that the device is connected to the host machine.
+3. To deploy the QIRP artifacts, push the QIRP files to the device using the following commands.
+```bash
+adb devices
+adb push ./runtime/qirp-sdk.tar.gz /opt/
+adb shell "cd /opt && tar -zxf ./qirp-sdk.tar.gz"
+adb shell "chmod +x /opt/qirp-sdk/*.sh"
+adb shell "/opt/qirp-sdk/install.sh"
 ```
 
-**Note:**  The `qirp-sdk_<qirp_version>.tar.gz` is in the deployed path of QIRP artifacts. The <qirp_version> changes with each release, such as 2.0.0, 2.0.1. For example, the whole package name can be qirp-sdk_2.0.0.tar.gz. For all released versions, see QIRP SDK overview.
+# How to run samples on QIRP SDK
 
-Check the decompressed files.
+The QIRP SDK provides the sample applications that users can run to experience the basic functionality on the device.
 
-``` shell
-tree qirp-sdk -L 1
-├── runtime
-├── setup.sh
-└── toolchain
+Example: System Monitor ROS Node publish system information with ROS messages, such as CPU loading, memory usage, battery status.
+
+**Build the sample**
+
+```bash
+cd sample-code/Product_SDK_Samples/Applications/QRB-ROS/qrb_ros_system_monitor
+export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
+export PYTHONPATH=${PYTHONPATH}:${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages
+colcon build --merge-install --cmake-args \
+ -DPython3_ROOT_DIR=${OECORE_TARGET_SYSROOT}/usr \
+ -DPython3_NumPy_INCLUDE_DIR=${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages/numpy/core/include \
+ -DPYTHON_SOABI=cpython-310-aarch64-linux-gnu -DCMAKE_STAGING_PREFIX=$(pwd)/install \
+ -DCMAKE_PREFIX_PATH=$(pwd)/install/share \
+ -DBUILD_TESTING=OFF
 ```
 
-2. Set up the QIRP cross-compile environment.
+**Install the system monitor to device**
 
-``` shell
-cd qirp-sdk
+```bash
+adb wait-for-device
+cd sample-code/Product_SDK_Samples/Applications/QRB-ROS/qrb_ros_system_monitor/install
+tar czvf qrb_ros_system_monitor.tar.gz include lib share
+adb push qrb_ros_system_monitor.tar.gz /opt/qcom/qirp-sdk/
+adb shell "tar -zxf /opt/qcom/qirp-sdk/qrb_ros_system_monitor.tar.gz -C /opt/qcom/qirp-sdk/usr/"
+```
+
+**In terminal 1, run the system monitor node**
+
+```bash
+export HOME=/opt
+source /usr/bin/ros_setup.sh && source /opt/qcom/qirp-sdk/qirp-setup.sh
+ros2 run qrb_ros_system_monitor qrb_ros_system_monitor
+```
+
+**In terminal 2, check the ROS topic and message.**
+
+Check ROS topic:
+
+```bash
+ros2 topic list
+	/battery
+	/cpu
+	/disk
+	/memory
+	/parameter_events
+	/rosout
+	/swap
+	/temperature
+```
+
+Check ROS message:
+
+```bash
+ros2 topic list
+ros2 topic echo /cpu
+```
+
+# How to develop application with QIRP SDK
+
+The following example provides a general procedure for developing your first application using the QIRP SDK.
+
+## Set up the cross-compile environment
+
+```bash
+cd <QIRP_decompressed_path>/qirp_sdk
 source setup.sh
 ```
 
-### Set up the run-time environment
+## Fetch the project and write your own code
 
-Ensure that the device is connected to the host machine.
+**Fetch a project from github**
 
-To deploy the QIRP artifacts, push the QIRP files to the device using the following commands.
+```bash
+git clone https://github.com/ros2/demos.git -b humble
+cd demos/demo_nodes_cpp
+vim src/topics/talker.cpp
+```
 
-``` shell
+**Develop your own application. Following is a sample.**
+
+Change the `demo_nodes_cpp/src/topics/talker.cpp` msg data in line46, such as changing 'Hello world' to 'get message success'：
+
+```css
+46:msg_->data = "get message success " + std::to_string(count_++);
+```
+
+## Compile the application
+
+```bash
+export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
+export PYTHONPATH=${PYTHONPATH}:${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages
+colcon build --merge-install --cmake-args \
+-DPython3_ROOT_DIR=${OECORE_TARGET_SYSROOT}/usr \
+-DPython3_NumPy_INCLUDE_DIR=${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages/numpy/core/include \
+-DCMAKE_STAGING_PREFIX=$(pwd)/install \
+-DCMAKE_PREFIX_PATH=$(pwd)/install/share \
+-DBUILD_TESTING=OFF \
+--packages-up-to demo_nodes_cpp
+```
+
+## Push the demo to device
+
+```bash
+cd demo_nodes_cpp\install
+tar -czvf demo_nodes_cpp.tar.gz lib share
 adb devices
-adb push ./runtime/qirp-sdk /opt/runtime/
-adb shell "chmod +x /opt/runtime/qirp-sdk/*.sh"
-adb shell "/opt/runtime/qirp-sdk/install.sh"
+adb push demo_nodes_cpp.tar.gz /opt/qcom/qirp-sdk/
+adb shell "tar -zxf /opt/qcom/qirp-sdk/qrb_ros_system_monitor.tar.gz -C /opt/qcom/qirp-sdk/usr/"
 ```
 
-This section introduces how to develop applications on linux machine with QIRP SDK.
+## Run the demo application on the device
 
-## Compile and run the sample code
-
-The following examples provide a general procedure for developing an application using the QIRP SDK.
-
-**CMakeHelloWorld**
-
-1. Clone an OSS project from github.
-
-``` shell
-git clone https://github.com/MattClarkson/CMakeHelloWorld.git
+```bash
+export HOME=/opt
+source /usr/bin/ros_setup.sh && source /opt/qcom/qirp-sdk/qirp-setup.sh
+export PATH=/opt/qcom/qirp-sdk/usr/share:/opt/qcom/qirp-sdk/usr/bin:${PATH}
+ 
+shell 1 : ros2 run demo_nodes_cpp talker
+shell 2: ros2 run demo_nodes_cpp listener
 ```
 
-2. Compile the application using these commands
+# Reference
 
-``` shell
-source setup.sh
-cd CMakeHelloWorld/ && cmake .
-make
-```
+[Standard Yocto environment](https://docs.yoctoproject.org/4.0.13/brief-yoctoprojectqs/index.html)
 
-3. Push the generated binary to the device.
-
-``` shell
-adb devices
-adb push hello /opt/
-adb shell
-./opt/hello
-```
-
-NOTE: For the further development, please refer to QIRP SDK documents, to be released later.
-
+[QCOM Linux Yocto BSP releases](https://github.com/quic-yocto/qcom-manifest/blob/qcom-linux-kirkstone/README.md)
