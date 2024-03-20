@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+#Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 #SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
@@ -122,8 +122,8 @@ check_dependencies() {
 
 compile_qirp(){
     # Generate image and function sdk
-    bitbake $IMAGE_NAME
-    bitbake $FUNCTION_SDK
+    bitbake $IMAGE_NAME || exit 1
+    bitbake $FUNCTION_SDK || exit 1
 
     # Generate standard SDK to provide toolchain...
     if ls $(pwd)/tmp-glibc/deploy/sdk/*toolchain*.sh &> /dev/null; then

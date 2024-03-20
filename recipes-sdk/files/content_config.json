@@ -1,44 +1,82 @@
 {
     "function_sdks": [
         {
-            "name": "qti-robotics",
-            "description":"QIRF SDK OSS part",
+            "name": "qti-qirf",
+            "description":"QIRF SDK",
             "version": "latest",
             "hashsum": "latest",
-            "path": "",
-            "download": {
-                "downloadable": false,
-                "suite_id": 0,
-                "release_id": 0
-            },
             "pickup_files": [
                 {
                     "to": "/opt/qcom/qirp-sdk/",
                     "from": [
-                        "qti-robotics/*"
+                        "qti-qirf/opt/qcom/qirf-sdk/*"
                     ],
                     "tag": "all files"
                 }
             ]
         },
         {
-            "name": "qti-qim",
-            "description":"QIM SDK",
+            "name": "qti-qim-product-sdk",
+            "description":"QIM Product SDK",
             "version": "latest",
             "hashsum": "latest",
-            "path": "",
-            "download": {
-                "downloadable": false,
-                "suite_id": 0,
-                "release_id": 0
-            },
             "pickup_files": [
                 {
                     "to": "/opt/qcom/qirp-sdk/",
                     "from": [
-                        "qti-qim/*"
+                        "qti-qim-product-sdk/*"
                     ],
                     "tag": "all files"
+                }
+            ]
+        },
+        {
+            "name": "qti-qnn",
+            "description":"QNN SDK",
+            "version": "2.19.0",
+            "hashsum": "41cceff03fc2539f7d2a6eb556f775b3",
+            "pickup_files": [
+                {
+                    "to": "/opt/qcom/qirp-sdk/include/",
+                    "from": [
+                        "qti-qnn/include/*"
+                    ],
+                    "tag": "QNN header files"
+                },
+                {
+                    "to": "/opt/qcom/qirp-sdk/bin/",
+                    "from": [
+                        "qti-qnn/bin/*"
+                    ],
+                    "tag": "QNN binaries"
+                },
+                {
+                    "to": "/opt/qcom/qirp-sdk/lib/x86_64-linux-clang/",
+                    "from": [
+                        "qti-qnn/lib/x86_64-linux-clang/*"
+                    ],
+                    "tag": "QNN HOST libraries"
+                },
+                {
+                    "to": "/opt/qcom/qirp-sdk/lib/aarch64-oe-linux-gcc11.2/",
+                    "from": [
+                        "qti-qnn/lib/aarch64-oe-linux-gcc11.2/*"
+                    ],
+                    "tag": "QNN target libraries"
+                },
+                {
+                    "to": "/opt/qcom/qirp-sdk/lib/python/qti/",
+                    "from": [
+                        "qti-qnn/lib/python/qti/*"
+                    ],
+                    "tag": "QNN python module"
+                },
+                {
+                    "to": "/opt/qcom/qirp-sdk/share/",
+                    "from": [
+                        "qti-qnn/share/*"
+                    ],
+                    "tag": "QNN share files"
                 }
             ]
         }

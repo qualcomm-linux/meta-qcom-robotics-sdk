@@ -7,9 +7,11 @@ inherit psdk-base psdk-package psdk-pickup psdk-sample
 SRC_URI = "file://${@d.getVar('CONFIG_SELECT')}"
 SRC_URI =+ "file://install.sh"
 SRC_URI =+ "file://uninstall.sh"
+SRC_URI =+ "file://qirp-setup.sh"
+SRC_URI =+ "file://qirp-upgrade.sh"
 
 # The path infos of qirp content
-SAMPLES_PATH = "${QIRP_TOP_DIR}/../sources/robotics/qirp-oss/Product_SDK_Samples"
+SAMPLES_PATH = "${QIRP_TOP_DIR}/sources/robotics/qirp-oss/Product_SDK_Samples"
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
 SETUP_PATH = "${FILE_DIRNAME}/files/setup.sh"
 
@@ -17,8 +19,7 @@ SETUP_PATH = "${FILE_DIRNAME}/files/setup.sh"
 SDK_PN = "qirp-sdk"
 PV = "2.0.0"
 
-# This recipe is an example to fetch QIRF sample apps
-# DEPENDS += "robotics-sample"
-
 # The functionality of qirp SDK
-DEPENDS += "${@bb.utils.contains_any('MACHINE', 'qcm6490', 'qti-robotics', "", d)}"
+DEPENDS += "${@bb.utils.contains_any('MACHINE', 'qcm6490', 'qti-qirf', "", d)}"
+DEPENDS += "${@bb.utils.contains_any('MACHINE', 'qcm6490', 'qti-qnn', "", d)}"
+DEPENDS += "${@bb.utils.contains_any('MACHINE', 'qcm6490', 'qti-qim-product-sdk', "", d)}"
