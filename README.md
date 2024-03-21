@@ -57,10 +57,10 @@ repo sync -c -j8
 
 **Example:**
 
-To download the `qcom-6.6.17-QLI.1.0-Ver.1.4_robotics.xml` release
+To download the `qcom-6.6.17-QLI.1.0-Ver.1.3_robotics.xml` release
 
 ```shell
-repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.17-QLI.1.0-Ver.1.4_robotics.xml
+repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.17-QLI.1.0-Ver.1.3_robotics.xml
 repo sync -c -j8
 ```
 
