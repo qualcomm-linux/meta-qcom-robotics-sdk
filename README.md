@@ -100,7 +100,7 @@ adb devices
 adb push ./runtime/qirp-sdk.tar.gz /opt/
 adb shell "cd /opt && tar -zxf ./qirp-sdk.tar.gz"
 adb shell "chmod +x /opt/qirp-sdk/*.sh"
-adb shell "/opt/qirp-sdk/install.sh"
+adb shell "cd /opt/qirp-sdk && ./install.sh"
 ```
 
 # How to run samples on QIRP SDK
