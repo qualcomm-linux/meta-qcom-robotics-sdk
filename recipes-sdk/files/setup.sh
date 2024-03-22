@@ -3,7 +3,10 @@
 
 #!/bin/bash
 
-export SDK_TOP_DIR=$PWD
+THIS_SCRIPT=$(readlink -f ${BASH_SOURCE[0]})
+scriptdir="$(dirname "${THIS_SCRIPT}")"
+export SDK_TOP_DIR=$scriptdir
+cd $SDK_TOP_DIR
 
 #create toolchain dir
 if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
@@ -12,7 +15,7 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
   for file in $search_dir/*.sh; do
     echo $file
       mkdir toolchain/install_dir
-      ./"$file" -d $PWD/toolchain/install_dir -y
+      ./"$file" -d $SDK_TOP_DIR/toolchain/install_dir -y
   done
 
   export search_dir=$SDK_TOP_DIR/toolchain/install_dir/environment*linux
@@ -33,11 +36,14 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     echo $file
     if [ -d "$file" ]; then
       cd $file
-      ar -x qirp-*
-      xz -d data.tar.xz && tar -xf data.tar -C $SDKTARGETSYSROOT
+      ar -x qirp-*.ipk
+      xz -d data.tar.xz && tar -xf data.tar
       cd ../
     fi
   done
+  cd $SDK_TOP_DIR/runtime/qirp-sdk
+  rsync -av opt/qcom/qirp-sdk/ $SDK_TOP_DIR/toolchain/install_dir/sysroots/armv8-2a-qcom-linux/
+  rm opt control.tar.gz data.tar debian-binary -rf
 cd $SDK_TOP_DIR
 fi
 
@@ -67,5 +73,3 @@ else
   fi
   echo "setup qirp sysroot done!"
 fi
-
-

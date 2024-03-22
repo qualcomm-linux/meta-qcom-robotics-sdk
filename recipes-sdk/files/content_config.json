@@ -22,9 +22,9 @@
             "hashsum": "latest",
             "pickup_files": [
                 {
-                    "to": "/opt/qcom/qirp-sdk/",
+                    "to": "/opt/qcom/qirp-sdk/usr/",
                     "from": [
-                        "qti-qim-product-sdk/*"
+                        "qti-qim-product-sdk/usr/*"
                     ],
                     "tag": "all files"
                 }

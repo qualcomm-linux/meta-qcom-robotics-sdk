@@ -3,15 +3,15 @@
 
 sync_sample_codes() {
     bbnote "downloading samples..."
-    SAMPLES_PATH="${QIRP_TOP_DIR}/sources/robotics/qirp-oss"
+    DOWNLOAD_SAMPLES_PATH="${QIRP_TOP_DIR}/sources/robotics/qirp-oss"
     #orgnanize sample codes
-    if [ -d "${SAMPLES_PATH}" ]; then
-        bbnote "Sample path exists, removing: ${SAMPLES_PATH}"
-        rm -rf "${SAMPLES_PATH}"
+    if [ -d "${DOWNLOAD_SAMPLES_PATH}" ]; then
+        bbnote "Sample path exists, removing: ${DOWNLOAD_SAMPLES_PATH}"
+        rm -rf "${DOWNLOAD_SAMPLES_PATH}"
     fi
 
-    install -d ${SAMPLES_PATH%/*}
-    cd ${SAMPLES_PATH%/*}
+    install -d ${DOWNLOAD_SAMPLES_PATH%/*}
+    cd ${DOWNLOAD_SAMPLES_PATH%/*}
 
     #get all sample code link and assign to LINK array
     tempfile=$(mktemp)

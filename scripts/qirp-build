@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+#Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
 #SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
@@ -13,6 +13,12 @@ FUNCTION_SDK="qirf-sdk"
 # API check is disabled by default
 APICHECK_ENABLED=0
 package_list=()
+
+sample_test_list=" \
+    mono-vslam \
+    depth-vslam \
+"
+IFS=' ' read -r -a sample_array <<< "$sample_test_list"
 
 ERROR(){
     local message="$1"
@@ -46,7 +52,7 @@ api_check() {
             exit 1
         fi
         # clean the build cache
-        rm -rf ./install ./log ./build && cd ..
+        rm -rf ./install ./log ./build && cd -
     done
 }
 
@@ -83,8 +89,13 @@ start_sanity_check() {
     echo "Compile Samples Test, and check APIs..."
     for package_xml in $(find ./$SAMPLE_DIR -name "package.xml"); do
         package_dir=$(dirname $package_xml)
-        package_list+=("$package_dir")
+        last_name=$(basename "$package_dir")
+        if [[ " ${sample_array[*]} " =~ " $last_name " ]]; then
+            package_list+=("$package_dir")
+        fi
     done
+
+    echo "API check list: ${package_list[@]}"
 
     # Test case just run in X86 to test api compatibility,
     # so it should be compiledin X86 environment
@@ -147,7 +158,7 @@ compile_qirp(){
     if [ $APICHECK_ENABLED -eq 1 ]; then
         echo "Starting API Check..."
         check_dependencies
-        start_apicheck
+        start_sanity_check
     else
         echo "Skip API Check..."
     fi
