@@ -30,10 +30,6 @@ The purpose of this document is to help a developer get started with the QIRP SD
 
 # How to sync and build QIRP SDK
 
-## Host Setup
-
-Refer to [qcom-manifest/README.md](https://github.com/quic-yocto/qcom-manifest/blob/qcom-linux-kirkstone/README.md#host-setup) setup the host environment.
-
 ## Prerequisites
 
 Run the following commands to set up Qualcomm Package Manager 3 [https://qpm.qualcomm.com/](https://qpm.qualcomm.com/):
@@ -45,57 +41,60 @@ sudo dpkg -i <downloaded Deb file>
 ## Example `sudo dpkg -i QualcommPackageManager3.3.0.92.4.Linux-x86.deb`
 qpm-cli --login
 ```
+## Host Setup and Download the Yocto Project BSP
 
-## Sync the code base of QIRP SDK
+Refer to https://github.com/quic-yocto/qcom-manifest/blob/qcom-linux-kirkstone/README.md setup the host environment and sync the latest Yocto Project BSP.
+## Download the layers for QIRP SDK
+
+Based on the `<workspace>` directory of the downloaded Yocto Project BSP, execute the following command to download the required layers.
 
 ```shell
-mkdir <workspace>
 cd <workspace>
-repo init -u https://github.com/quic-yocto/qcom-manifest -b [branch name] -m [release manifest]
-repo sync -c -j8
-```
-
-**Example:**
-
-To download the `qcom-6.6.17-QLI.1.0-Ver.1.3_robotics.xml` release
-
-```shell
-repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.17-QLI.1.0-Ver.1.3_robotics.xml
-repo sync -c -j8
+git clone https://git.codelinaro.org/clo/le/meta-ros.git -b ros.qclinux.1.0.r1-rel layers/meta-ros
+git clone https://github.com/quic-yocto/meta-qcom-robotics.git layers/meta-qcom-robotics
+git clone https://github.com/quic-yocto/meta-qcom-robotics-distro.git layers/meta-qcom-robotics-distro
+git clone https://github.com/quic-yocto/meta-qcom-robotics-sdk.git layers/meta-qcom-robotics-sdk
+git clone https://github.com/quic-yocto/meta-qcom-qim-product-sdk layers/meta-qcom-qim-product-sdk
 ```
 
 ## Build QIRP SDK
 
 ```shell
 cd <workspace>
+ln -s layers/meta-qcom-robotics-distro/set_bb_env.sh ./setup-robotics-environment
+ln -s layers/meta-qcom-robotics-sdk/scripts/qirp-build ./qirp-build
+
 MACHINE=qcm6490 DISTRO=qcom-robotics-ros2-humble source setup-robotics-environment
 
 ../qirp-build qcom-robotics-full-image
 ```
 
-QIRP SDK artifacts: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/artifacts/qirp-sdk_<version>.tar.gz`
+QIRP SDK artifacts: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk_<version>.tar.gz`
 
 Robotics image: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/images/qcm6490/qcom-robotics-full-image/`
 
 # How to install QIRP SDK
  
 
-**Deploy QIRP SDK on the host machine**
+**Flash robotics image**
 
-On the host machine, move to the artifacts directory and decompress the package using the `tar` command.
-
-```bash
-cd <workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/artifacts
-tar -zxf qirp-sdk_<qirp_version>.tar.gz
-cd qirp-sdk
-```
+1. Connect the device to the host machine. Refer to [Set up the device](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-253/set_up_the_device.html) of the [Qualcomm® Robotics RB3 Gen2 Development Kit Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-253)
+2. Flash the robotics image to the device. Refer to the [Qualcomm® Robotics RB3 Gen2 Development Kit Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-253), using the robotics image generated with previous steps.
 
 **Install QIRP SDK on the device**
 
-1. Flash the robotics image to the device. To do this, refer to the [RB3 Gen2 Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-253).
-2. Ensure that the device is connected to the host machine.
-3. To deploy the QIRP artifacts, push the QIRP files to the device using the following commands.
+1. On the host machine, move to the artifacts directory and decompress the package using the `tar` command.
+
 ```bash
+cd <workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/qirpsdk_artifacts
+tar -zxf qirp-sdk_<qirp_version>.tar.gz
+```
+
+> **Note:** The `qirp-sdk_<qirp_version>.tar.gz` is in the deployed path of QIRP artifacts. The `<qirp_version>` changes with each release, such as `2.0.0`, `2.0.1`. For example, the whole package name can be `qirp-sdk_2.0.0.tar.gz`. For all released versions, see the _QIRP SDK release notes_.
+
+2. To deploy the QIRP artifacts, push the QIRP files to the device using the following commands.
+```bash
+cd <workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk
 adb devices
 adb push ./runtime/qirp-sdk.tar.gz /opt/
 adb shell "cd /opt && tar -zxf ./qirp-sdk.tar.gz"
@@ -108,6 +107,13 @@ adb shell "cd /opt/qirp-sdk && ./install.sh"
 The QIRP SDK provides the sample applications that users can run to experience the basic functionality on the device.
 
 Example: System Monitor ROS Node publish system information with ROS messages, such as CPU loading, memory usage, battery status.
+
+**Set up the cross-compile environment**
+
+```bash
+cd <QIRP_decompressed_path>/qirp_sdk
+source setup.sh
+```
 
 **Build the sample**
 
