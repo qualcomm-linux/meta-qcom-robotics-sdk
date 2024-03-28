@@ -111,14 +111,14 @@ Example: System Monitor ROS Node publish system information with ROS messages, s
 **Set up the cross-compile environment**
 
 ```bash
-cd <QIRP_decompressed_path>/qirp_sdk
+cd <QIRP_decompressed_path>/qirp-sdk
 source setup.sh
 ```
 
 **Build the sample**
 
 ```bash
-cd sample-code/Product_SDK_Samples/Applications/QRB-ROS/qrb_ros_system_monitor
+cd sample-code/Applications/QRB-ROS/qrb_ros_system_monitor
 export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
 export PYTHONPATH=${PYTHONPATH}:${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages
 colcon build --merge-install --cmake-args \
@@ -133,7 +133,7 @@ colcon build --merge-install --cmake-args \
 
 ```bash
 adb wait-for-device
-cd sample-code/Product_SDK_Samples/Applications/QRB-ROS/qrb_ros_system_monitor/install
+cd sample-code/Applications/QRB-ROS/qrb_ros_system_monitor/install
 tar czvf qrb_ros_system_monitor.tar.gz include lib share
 adb push qrb_ros_system_monitor.tar.gz /opt/qcom/qirp-sdk/
 adb shell "tar -zxf /opt/qcom/qirp-sdk/qrb_ros_system_monitor.tar.gz -C /opt/qcom/qirp-sdk/usr/"
@@ -142,8 +142,9 @@ adb shell "tar -zxf /opt/qcom/qirp-sdk/qrb_ros_system_monitor.tar.gz -C /opt/qco
 **In terminal 1, run the system monitor node**
 
 ```bash
+adb shell
 export HOME=/opt
-source /usr/bin/ros_setup.sh && source /opt/qcom/qirp-sdk/qirp-setup.sh
+source /usr/bin/ros_setup.sh && source /etc/profile.d/qirp-setup.sh
 ros2 run qrb_ros_system_monitor qrb_ros_system_monitor
 ```
 
@@ -152,6 +153,10 @@ ros2 run qrb_ros_system_monitor qrb_ros_system_monitor
 Check ROS topic:
 
 ```bash
+
+adb shell
+export HOME=/opt
+source /usr/bin/ros_setup.sh && source /etc/profile.d/qirp-setup.sh
 ros2 topic list
 	/battery
 	/cpu
@@ -177,7 +182,7 @@ The following example provides a general procedure for developing your first app
 ## Set up the cross-compile environment
 
 ```bash
-cd <QIRP_decompressed_path>/qirp_sdk
+cd <QIRP_decompressed_path>/qirp-sdk
 source setup.sh
 ```
 
@@ -216,21 +221,20 @@ colcon build --merge-install --cmake-args \
 ## Push the demo to device
 
 ```bash
-cd demo_nodes_cpp\install
+cd demo_nodes_cpp/install
 tar -czvf demo_nodes_cpp.tar.gz lib share
 adb devices
 adb push demo_nodes_cpp.tar.gz /opt/qcom/qirp-sdk/
-adb shell "tar -zxf /opt/qcom/qirp-sdk/qrb_ros_system_monitor.tar.gz -C /opt/qcom/qirp-sdk/usr/"
+adb shell "tar -zxf /opt/qcom/qirp-sdk/demo_nodes_cpp.tar.gz -C /opt/qcom/qirp-sdk/usr/"
 ```
 
 ## Run the demo application on the device
 
 ```bash
 export HOME=/opt
-source /usr/bin/ros_setup.sh && source /opt/qcom/qirp-sdk/qirp-setup.sh
-export PATH=/opt/qcom/qirp-sdk/usr/share:/opt/qcom/qirp-sdk/usr/bin:${PATH}
+source /usr/bin/ros_setup.sh && source /etc/profile.d/qirp-setup.sh
  
-shell 1 : ros2 run demo_nodes_cpp talker
+shell 1: ros2 run demo_nodes_cpp talker
 shell 2: ros2 run demo_nodes_cpp listener
 ```
 
