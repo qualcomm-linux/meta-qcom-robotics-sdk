@@ -7,7 +7,7 @@
 IMAGE_NAME="qcom-robotics-console-image"
 QIRP_NAME="qirp-sdk"
 SAMPLE_DIR="sample-code"
-DEPLOY_DIR="tmp-glibc/deploy/artifacts"
+DEPLOY_DIR="tmp-glibc/deploy/qirpsdk_artifacts"
 FUNCTION_SDK="qirf-sdk"
 
 # API check is disabled by default
@@ -36,12 +36,20 @@ USAGE() {
 
 api_check() {
     # ros environment Host setup
-    source /opt/ros/foxy/setup.sh
+    if [ -d "/opt/ros/foxy" ]; then
+        echo "ROS Foxy detected."
+        source /opt/ros/foxy/setup.sh
+    elif [ -d "/opt/ros/humble" ]; then
+        echo "ROS Humble detected."
+        source /opt/ros/humble/setup.sh
+    else
+        echo "No supported ROS version detected."
+    fi
 
     for dir in "${package_list[@]}"; do
         cd $dir || exit 1
-        # BUILD_TESTS_ONLY=ON, build test case only
-        colcon build --cmake-args -DBUILD_TESTS_ONLY=ON
+        # BUILD_TESTING=ON, build test case only
+        colcon build --cmake-args -DBUILD_TESTING=ON
         if [ $? -ne 0 ]; then
             echo "Error building test code in $dir. Exiting."
             exit 1
@@ -78,7 +86,7 @@ compilation_check() {
 
 start_sanity_check() {
     echo "Unpacking QIRP SDK..."
-    if ! ls $(pwd)/$DEPLOY_DIR/$QIRP_NAME/*.tar.gz &> /dev/null; then
+    if ! ls $(pwd)/$DEPLOY_DIR/$QIRP_NAME*.tar.gz &> /dev/null; then
         echo "    There are no QIRP SDK in $(pwd)/$DEPLOY_DIR/"
         exit 1
     else
@@ -109,11 +117,11 @@ start_sanity_check() {
 check_dependencies() {
     echo "Checking HOST Dependencies..."
 
-    if ! dpkg -l | grep ros-foxy-desktop &> /dev/null; then
-        echo "    ros-foxy-desktop is not installed. Please install"
+    if ! dpkg -l | grep -E 'ros-(foxy|humble)-desktop' &> /dev/null; then
+        echo "    ros desktop is not installed. Please install"
         exit 1
     else
-        echo "    ros-foxy-desktop is installed"
+        echo "    ros desktop is installed"
     fi
 
     if ! dpkg -l | grep python3-colcon-common-extensions &> /dev/null; then

@@ -18,4 +18,4 @@ export GST_PLUGIN_PATH=/opt/qcom/qirp-sdk/usr/lib/gstreamer-1.0:${GST_PLUGIN_PAT
 export GST_PLUGIN_SCANNER=/opt/qcom/qirp-sdk/usr/libexec/gstreamer-1.0/gst-plugin-scanner:${GST_PLUGIN_SCANNER}
 
 #qnn environment variables export
-export ADSP_LIBRARY_PATH=/opt/qcom/qirp-sdk/lib/aarch64-oe-linux-gcc11.2:${ADSP_LIBRARY_PATH}
+export ADSP_LIBRARY_PATH=/opt/qcom/qirp-sdk/lib/aarch64-oe-linux-gcc11.2:/opt/qcom/qirp-sdk/lib/hexagon-v68/unsigned:${ADSP_LIBRARY_PATH}

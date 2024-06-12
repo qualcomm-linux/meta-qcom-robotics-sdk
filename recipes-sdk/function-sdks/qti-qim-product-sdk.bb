@@ -10,3 +10,9 @@ SDKSPATH = "${DEPLOY_DIR}/qim_prod_sdk_artifacts/qim-prod-sdk_*.tar.gz"
 do_fetch_extra[depends] += "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-qim-product-sdk', 'qim-product-sdk:do_generate_qim_prod_sdk', '', d)}"
 
 SYSROOT_DIRS_IGNORE += "/${PN}/runtime"
+
+# skip unnecessary ipk/deb packages
+PKGS_SKIP = "qnn \
+             qnn-dev \
+             qnn-dbg \
+            "

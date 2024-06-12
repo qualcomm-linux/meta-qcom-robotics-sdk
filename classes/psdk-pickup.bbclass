@@ -100,6 +100,14 @@ python do_install () {
     mv_cmd = "mkdir -p %s && mv %s %s" %(fileslist_path, outputdir + fileslist, fileslist_path)
     bb.note(mv_cmd)
     subprocess.call(mv_cmd,shell=True)
+
+    # move setup script to opt dir
+    SETUP_SRC_PATH="/opt/qcom/qirp-sdk/"
+    SETUP_DEST_PATH="/opt/qcom/qirp-sdk/"
+    SETUP_SCRIPT_FILE="qirp-setup.sh"
+    cp_cmd = "mkdir -p %s && cp %s %s" %(outputdir + SETUP_DEST_PATH, d.getVar('WORKDIR') + "/" + SETUP_SCRIPT_FILE, outputdir + SETUP_DEST_PATH)
+    bb.note(cp_cmd)
+    subprocess.call(cp_cmd,shell=True)
 }
 
 # add a prefunction to reorganize directory structure

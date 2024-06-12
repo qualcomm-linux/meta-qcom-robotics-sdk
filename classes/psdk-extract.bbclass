@@ -242,12 +242,16 @@ python do_install() {
                 data_dir = os.path.join(dirpath, "data")
                 data_dir += "/*"
                 data_dir_list += data_dir + " "
-        if data_dir_list:
-            copy_cmd = "cp -r %s %s" %(data_dir_list,d.getVar("D") + "/" + d.getVar("PN"))
-            bb.note(copy_cmd)
-            subprocess.call(copy_cmd,shell=True)
+        data_dirs = data_dir_list.split()
+        for data_dir in data_dirs:
+            base_dir = data_dir.rstrip('/*')
+            if os.path.exists(base_dir) and os.listdir(base_dir):
+                copy_cmd = "cp -r %s %s" %(data_dir,d.getVar("D") + "/" + d.getVar("PN"))
+                bb.note(copy_cmd)
+                subprocess.call(copy_cmd,shell=True)
         else:
             bb.note("do_install: There has no data dir after unpacked")
+
 
     locate_extract_dir(d.getVar('S'))
     copy_cmd = "cp -r %s %s" %(d.getVar("COPYDIR"),d.getVar("D") + "/" + d.getVar("PN"))
@@ -273,7 +277,8 @@ python do_install() {
 
 SYSROOT_DIRS = "/${DIRNAME}/"
 SYSROOT_DIRS_IGNORE = "/${PN}/${PN}"
-FILES:${PN} = "/"
+FILES:${PN} = " "
+ALLOW_EMPTY:${PN} = "1"
 
 do_fetch_extra[cleandirs] = "${S}"
 do_unpack[cleandirs] = ""
@@ -283,6 +288,6 @@ do_prepare_recipe_sysroot[noexec] = "1"
 do_populate_lic[noexec] = "1"
 do_package_qa[noexec] = "1"
 
-INSANE_SKIP:${PN} += "already-stripped"
+INSANE_SKIP:${PN} += "already-stripped installed-vs-shipped"
 INHIBIT_SYSROOT_STRIP = "1"
 EXCLUDE_FROM_SHLIBS = "1"

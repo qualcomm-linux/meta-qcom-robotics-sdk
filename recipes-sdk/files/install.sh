@@ -8,8 +8,6 @@ SDK_NAME="QIRP_SDK"
 FOUND_PKGS=""
 PKG_LIST_DIR="/opt/qcom/qirp-sdk/data/"
 PKG_LIST_FILE="$PKG_LIST_DIR/$SDK_NAME.list"
-SETUP_PATH="/etc/profile.d"
-SETUP_SCRIPT_FILE="qirp-setup.sh"
 
 ALL_PKGS="\
     qirp-sdk \
@@ -59,19 +57,6 @@ function install_packages() {
     done
 }
 
-# copy setup script to /etc/profile.d
-function copy_setup() {
-    if [ ! -f "$SETUP_PATH/$SETUP_SCRIPT_FILE" ]; then
-        if [ -f "./$SETUP_SCRIPT_FILE" ]; then
-            cp ./$SETUP_SCRIPT_FILE $SETUP_PATH
-        else
-            echo "$SETUP_SCRIPT_FILE not existed on sdk tar $SETUP_PATH,please check"
-            echo
-        fi
-    fi
-}
-
-
 function main() {
 
     echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
@@ -104,7 +89,6 @@ function main() {
     done
 
     install_packages
-    copy_setup
 }
 
 main "$@"

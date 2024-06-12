@@ -31,6 +31,7 @@ do_generate_product_sdk[dirs] = "${SSTATE_IN_DIR} ${SSTATE_OUT_DIR} ${TMP_SSTATE
 do_generate_product_sdk[cleandirs] = "${SSTATE_IN_DIR} ${SSTATE_OUT_DIR} ${TMP_SSTATE_IN_DIR}"
 do_generate_product_sdk[stamp-extra-info] = "${MACHINE_ARCH}"
 do_generate_product_sdk[nostamp] = "1"
+do_generate_product_sdk[network] = "1"
 
 # Add a task to generate product sdk
 do_generate_product_sdk () {
@@ -58,18 +59,36 @@ organize_sdk_file () {
     fi
 
     # orgnanize QIRP sample codes
-    if ls ${SAMPLES_PATH}/* >/dev/null 2>&1; then
-        install -d ${SSTATE_IN_DIR}/${SDK_PN}/sample-code
-        cp -r ${SAMPLES_PATH}/* ${SSTATE_IN_DIR}/${SDK_PN}/sample-code/
-    else
-        bbwarn "No Sample codes found in ${SAMPLES_PATH}, Please Note it!"
-    fi
+    CONFIG_FILE="${WORKDIR}/${CONFIGFILE}"
+    sed -i "s/CUST_ID/${CUST_ID}/g" ${CONFIG_FILE}
+    jq -c '.samples[]' $CONFIG_FILE | while read line; do
+        name=$(echo $line | jq -r '.name')
+        oss_channel=$(echo $line | jq -r '.oss_channel')
+        from_uri=$(echo $line | jq -r '.from_uri')
+        from_local="${WORKSPACE}/$(echo $line | jq -r '.from_local')"
+        to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
-    # orgnanize robotics sample codes
-    if ls ${RECIPE_SYSROOT}/robotics-sample/* >/dev/null 2>&1; then
-       install -d ${SSTATE_IN_DIR}/${SDK_PN}/sample-code/Robotics-Modules
-       cp -r ${RECIPE_SYSROOT}/robotics-sample/* ${SSTATE_IN_DIR}/${SDK_PN}/sample-code/Robotics-Modules
-    fi
+        if [[ "$oss_channel" == "false" && "$oss_channel" != "${OSS_CHANNEL_FLAG}" ]]; then
+            bbnote "Skipping $name ..."
+            continue
+        fi
+
+        #create destination dir
+        install -d $to
+
+        if [ -n "$from_uri" ]; then
+            repo=$(echo $from_uri | sed -e 's/;branch=.*//')
+            branch=$(echo $from_uri | sed -e 's/.*;branch=//')
+
+            rm -rf $from_local
+
+            git clone -b $branch $repo $from_local
+        fi
+
+        if [ -d "$from_local$name" ]; then
+            cp -r $from_local$name $to
+        fi
+    done
 
     # orgnanize toolchain
     if ls ${TOOLCHAIN_PATH}/* >/dev/null 2>&1; then
