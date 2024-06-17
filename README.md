@@ -30,39 +30,33 @@ The purpose of this document is to help a developer get started with the QIRP SD
 
 # How to sync and build QIRP SDK
 
-## Prerequisites
-
-Run the following commands to set up Qualcomm Package Manager 3 [https://qpm.qualcomm.com/](https://qpm.qualcomm.com/):
-
-```shell
-mkdir -p <DEV_PKG_LOCATION>
-cd <DEV_PKG_LOCATION>
-sudo dpkg -i <downloaded Deb file>
-## Example `sudo dpkg -i QualcommPackageManager3.3.0.92.4.Linux-x86.deb`
-qpm-cli --login
-```
 ## Host Setup and Download the Yocto Project BSP
 
-Refer to https://github.com/quic-yocto/qcom-manifest/blob/qcom-linux-kirkstone/README.md setup the host environment and sync the latest Yocto Project BSP.
-## Download the layers for QIRP SDK
+Refer to https://github.com/quic-yocto/qcom-manifest/blob/qcom-linux-kirkstone/README.md setup the host environment.
+
+## Download the layer of QIRP SDK
 
 Based on the `<workspace>` directory of the downloaded Yocto Project BSP, execute the following command to download the required layers.
 
 ```shell
 cd <workspace>
-git clone https://git.codelinaro.org/clo/le/meta-ros.git -b ros.qclinux.1.0.r1-rel layers/meta-ros
-git clone https://github.com/quic-yocto/meta-qcom-robotics.git layers/meta-qcom-robotics
-git clone https://github.com/quic-yocto/meta-qcom-robotics-distro.git layers/meta-qcom-robotics-distro
-git clone https://github.com/quic-yocto/meta-qcom-robotics-sdk.git layers/meta-qcom-robotics-sdk
-git clone https://github.com/quic-yocto/meta-qcom-qim-product-sdk layers/meta-qcom-qim-product-sdk
+repo init -u https://github.com/quic-yocto/qcom-manifest -b [branch name] -m [release manifest]
+repo sync -c -j8
+```
+
+Example:
+
+To download the `qcom-6.6.28-QLI.1.1-Ver.1.0_robotics-product-sdk-1.2.xml` release, run this command:
+
+```
+repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.28-QLI.1.1-Ver.1.0_robotics-product-sdk-1.2.xml
+repo sync -c -j8
 ```
 
 ## Build QIRP SDK
 
 ```shell
 cd <workspace>
-ln -s layers/meta-qcom-robotics-distro/set_bb_env.sh ./setup-robotics-environment
-ln -s layers/meta-qcom-robotics-sdk/scripts/qirp-build ./qirp-build
 
 MACHINE=qcm6490 DISTRO=qcom-robotics-ros2-humble source setup-robotics-environment
 
@@ -75,6 +69,9 @@ Robotics image: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/im
 
 # How to install QIRP SDK
  
+**Prerequisite**
+
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [How to SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-254/how_to.html?product=1601111740013095&state=preview#how-to-ssh-).
 
 **Flash robotics image**
 
@@ -86,7 +83,6 @@ Robotics image: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/im
 1. On the host machine, move to the artifacts directory and decompress the package using the `tar` command.
 
 ```bash
-cd <workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/qirpsdk_artifacts
 tar -zxf qirp-sdk_<qirp_version>.tar.gz
 ```
 
@@ -94,117 +90,116 @@ tar -zxf qirp-sdk_<qirp_version>.tar.gz
 
 2. To deploy the QIRP artifacts, push the QIRP files to the device using the following commands.
 ```bash
-cd <workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk
-adb devices
-adb push ./runtime/qirp-sdk.tar.gz /opt/
-adb shell "cd /opt && tar -zxf ./qirp-sdk.tar.gz"
-adb shell "chmod +x /opt/qirp-sdk/*.sh"
-adb shell "cd /opt/qirp-sdk && ./install.sh"
+cd <qirp_decompressed_workspace>
+scp ./runtime/qirp-sdk.tar.gz root@[ip-addr]:/opt/
+ssh root@[ip-addr]
+(ssh) cd /opt && tar -zxf ./qirp-sdk.tar.gz
+(ssh) chmod +x /opt/qirp-sdk/*.sh
+(ssh) cd /opt/qirp-sdk && ./install.sh
 ```
 
 # How to run samples on QIRP SDK
 
 The QIRP SDK provides the sample applications that users can run to experience the basic functionality on the device.
 
-Example: System Monitor ROS Node publish system information with ROS messages, such as CPU loading, memory usage, battery status.
+## Example 1 - IMU ROS Node
 
-**Set up the cross-compile environment**
+The Qualcomm Sensor See Framework provides the IMU data that is obtained from the IMU driver via DSP. The `qrb_ros_imu` uses this framework to get the latest IMU data with little latency.
+
+
+**Prerequisite**
+
+- The prebuilt robotics image is flashed.
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [How to SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-254/how_to.html?product=1601111740013095&state=preview#how-to-ssh-).
+
+
+**Set up QIRP SDK and ROS2 environment in each terminal on device**
 
 ```bash
-cd <QIRP_decompressed_path>/qirp-sdk
-source setup.sh
+ssh root@[ip-addr]
+(ssh) export HOME=/opt
+(ssh) source /opt/qcom/qirp-sdk/qirp-setup.sh
+(ssh) export ROS_DOMAIN_ID=xx
+(ssh) source /usr/bin/ros_setup.bash
 ```
 
-**Build the sample**
+**Open terminal 1 and run the IMU ROS Node**
 
 ```bash
-cd sample-code/Applications/QRB-ROS/qrb_ros_system_monitor
-export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
-export PYTHONPATH=${PYTHONPATH}:${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages
-colcon build --merge-install --cmake-args \
- -DPython3_ROOT_DIR=${OECORE_TARGET_SYSROOT}/usr \
- -DPython3_NumPy_INCLUDE_DIR=${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages/numpy/core/include \
- -DPYTHON_SOABI=cpython-310-aarch64-linux-gnu -DCMAKE_STAGING_PREFIX=$(pwd)/install \
- -DCMAKE_PREFIX_PATH=$(pwd)/install/share \
- -DBUILD_TESTING=OFF
+(ssh) ros2 run qrb_ros_imu imu_node
 ```
 
-**Install the system monitor to device**
+**Open terminal 2 and get the IMU data.**
 
 ```bash
-adb wait-for-device
-cd sample-code/Applications/QRB-ROS/qrb_ros_system_monitor/install
-tar czvf qrb_ros_system_monitor.tar.gz include lib share
-adb push qrb_ros_system_monitor.tar.gz /opt/qcom/qirp-sdk/
-adb shell "tar -zxf /opt/qcom/qirp-sdk/qrb_ros_system_monitor.tar.gz -C /opt/qcom/qirp-sdk/usr/"
+(ssh) ros2 topic echo /imu
 ```
 
-**In terminal 1, run the system monitor node**
+## Example 2 - Camera ROS Node
+
+With this camera ROS2 node, data can achieve zero-copy performance when coming out of the camera-server. This will greatly reduce the latency between ROS nodes.
+
+The Qualcomm Camera-Server provides camera data that is obtained from the camera sensor. `qrb_ros_camera` uses this camera-server to get the latest camera data. 
+
+
+**Prerequisite**
+
+- The prebuilt robotics image is flashed.
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [How to SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-254/how_to.html?product=1601111740013095&state=preview#how-to-ssh-).
+
+
+**Set up QIRP SDK and ROS2 environment in each terminal on device**
 
 ```bash
-adb shell
-export HOME=/opt
-source /usr/bin/ros_setup.sh && source /etc/profile.d/qirp-setup.sh
-ros2 run qrb_ros_system_monitor qrb_ros_system_monitor
+ssh root@[ip-addr]
+(ssh) export HOME=/opt
+(ssh) source /opt/qcom/qirp-sdk/qirp-setup.sh
+(ssh) export ROS_DOMAIN_ID=xx
+(ssh) source /usr/bin/ros_setup.bash
 ```
 
-**In terminal 2, check the ROS topic and message.**
-
-Check ROS topic:
+**Open terminal 1 and run the CAMERA ROS Node**
 
 ```bash
-
-adb shell
-export HOME=/opt
-source /usr/bin/ros_setup.sh && source /etc/profile.d/qirp-setup.sh
-ros2 topic list
-	/battery
-	/cpu
-	/disk
-	/memory
-	/parameter_events
-	/rosout
-	/swap
-	/temperature
+(ssh) ros2 launch qrb_ros_camera qrb_ros_camera_launch.py
 ```
 
-Check ROS message:
+**Open terminal 2 and get the camera image data.**
 
 ```bash
-ros2 topic list
-ros2 topic echo /cpu
+(ssh) ros2 topic echo /image
 ```
 
 # How to develop application with QIRP SDK
 
 The following example provides a general procedure for developing your first application using the QIRP SDK.
 
-## Set up the cross-compile environment
+**Prerequisite**
+
+- The prebuilt robotics image is flashed.
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [How to SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70014-254/how_to.html?product=1601111740013095&state=preview#how-to-ssh-).
+
+**Set up the cross-compile environment**
 
 ```bash
-cd <QIRP_decompressed_path>/qirp-sdk
+cd <qirp_decompressed_path>/qirp-sdk
 source setup.sh
 ```
 
-## Fetch the project and write your own code
+**Fetch the project and develop your own code**
 
-**Fetch a project from github**
 
 ```bash
 git clone https://github.com/ros2/demos.git -b humble
-cd demos/demo_nodes_cpp
-vim src/topics/talker.cpp
 ```
 
-**Develop your own application. Following is a sample.**
-
-Change the `demo_nodes_cpp/src/topics/talker.cpp` msg data in line46, such as changing 'Hello world' to 'get message success'：
+Change the `demos/demo_nodes_cpp/src/topics/talker.cpp` msg data in line46, such as changing 'Hello world' to 'get message success'：
 
 ```css
 46:msg_->data = "get message success " + std::to_string(count_++);
 ```
 
-## Compile the application
+**Compile the application**
 
 ```bash
 export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
@@ -218,24 +213,23 @@ colcon build --merge-install --cmake-args \
 --packages-up-to demo_nodes_cpp
 ```
 
-## Push the demo to device
+**Push the application to device**
 
 ```bash
-cd demo_nodes_cpp/install
-tar -czvf demo_nodes_cpp.tar.gz lib share
-adb devices
-adb push demo_nodes_cpp.tar.gz /opt/qcom/qirp-sdk/
-adb shell "tar -zxf /opt/qcom/qirp-sdk/demo_nodes_cpp.tar.gz -C /opt/qcom/qirp-sdk/usr/"
+cd demos/demo_nodes_cpp/install
+tar -czvf demo_nodes_cpp.tar.gz lib share
+scp demo_nodes_cpp.tar.gz root@[ip-addr]:/opt/
+ssh root@[ip-addr] 
+(ssh) tar -zxf /opt/demo_nodes_cpp.tar.gz -C /opt/qcom/qirp-sdk/usr/
 ```
 
-## Run the demo application on the device
+**Run the demo application on the device**
 
 ```bash
-export HOME=/opt
-source /usr/bin/ros_setup.sh && source /etc/profile.d/qirp-setup.sh
- 
-shell 1: ros2 run demo_nodes_cpp talker
-shell 2: ros2 run demo_nodes_cpp listener
+(ssh) export HOME=/opt
+(ssh) source /usr/bin/ros_setup.sh && source /opt/qcom/qirp-sdk/qirp-setup.sh 
+(ssh shell 1) ros2 run demo_nodes_cpp talker
+(ssh shell 2) ros2 run demo_nodes_cpp listener
 ```
 
 # Reference
