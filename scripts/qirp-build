@@ -140,10 +140,6 @@ check_dependencies() {
 }
 
 compile_qirp(){
-    # Generate image and function sdk
-    bitbake $IMAGE_NAME || exit 1
-    bitbake $FUNCTION_SDK || exit 1
-
     # Generate standard SDK to provide toolchain...
     if ls $(pwd)/tmp-glibc/deploy/sdk/*toolchain*.sh &> /dev/null; then
         echo "Standard SDK has been ready, skip generation"
@@ -154,6 +150,9 @@ compile_qirp(){
         echo
         bitbake $IMAGE_NAME -c populate_sdk || exit 1
     fi
+
+    # Generate image
+    bitbake $IMAGE_NAME || exit 1
 
     # Generate QIRP SDK...
     echo "Generating QIRP SDK with:"
