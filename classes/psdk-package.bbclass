@@ -91,11 +91,11 @@ organize_sdk_file () {
     done
 
     # orgnanize toolchain
-    if ls ${TOOLCHAIN_PATH}/* >/dev/null 2>&1; then
+    if ls ${TOOLCHAIN_PATH}/${DISTRO}-${SDKMACHINE}-*-${TUNE_PKGARCH}-${MACHINE}-toolchain-${SDK_VERSION}.* >/dev/null 2>&1; then
         install -d ${SSTATE_IN_DIR}/${SDK_PN}/toolchain
-        cp -r ${TOOLCHAIN_PATH}/* ${SSTATE_IN_DIR}/${SDK_PN}/toolchain/
+        cp -r ${TOOLCHAIN_PATH}/${DISTRO}-${SDKMACHINE}-*-${TUNE_PKGARCH}-${MACHINE}-toolchain-${SDK_VERSION}.* ${SSTATE_IN_DIR}/${SDK_PN}/toolchain/
     else
-        bbwarn "No SDK Toolchain found in ${TOOLCHAIN_PATH}, Please Note it!"
+        bbfatal "No Standard SDK Toolchain found in ${TOOLCHAIN_PATH}, Please Note it!"
     fi
 
     # orgnanize tools
