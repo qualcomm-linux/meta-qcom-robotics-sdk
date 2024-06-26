@@ -14,10 +14,12 @@ SETUP_PATH ?= "NULL"
 python __anonymous () {
     package_type = d.getVar("IMAGE_PKGTYPE", True)
     if package_type == "ipk":
-        bb.build.addtask('do_generate_product_sdk', 'do_build', 'do_package_write_ipk', d)
+        bb.build.addtask('do_package_write_ipk', 'do_populate_sysroot', 'do_packagedata', d)
+        bb.build.addtask('do_generate_product_sdk', 'do_populate_sysroot', 'do_package_write_ipk', d)
         d.appendVarFlag('do_package_write_ipk', 'prefuncs', ' do_reorganize_pkg_dir')
     elif package_type == "deb":
-        bb.build.addtask('do_generate_product_sdk', 'do_build', 'do_package_write_deb', d)
+        bb.build.addtask('do_package_write_deb', 'do_populate_sysroot', 'do_packagedata', d)
+        bb.build.addtask('do_generate_product_sdk', 'do_populate_sysroot', 'do_package_write_deb', d)
         d.appendVarFlag('do_package_write_deb', 'prefuncs', ' do_reorganize_pkg_dir')
 }
 
@@ -127,5 +129,3 @@ organize_sdk_file () {
 python do_generate_product_sdk_setscene() {
     sstate_setscene(d)
 }
-
-deltask do_rm_work
