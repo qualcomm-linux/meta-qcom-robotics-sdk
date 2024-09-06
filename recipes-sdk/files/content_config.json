@@ -92,6 +92,7 @@
         {
             "name": "qirp_nodes",
             "oss_channel": "true",
+            "chipset_support": "qcs6490-rb3gen2-vision-kit",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
             "from_local": "robotics/qirp-oss/",
             "to": "sample-code/"
@@ -99,6 +100,7 @@
         {
             "name": "auto-explore",
             "oss_channel": "false",
+            "chipset_support": "qcs6490-rb3gen2-vision-kit",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
             "to": "sample-code/qirp_nodes/navigation_nodes/"
@@ -106,6 +108,7 @@
         {
             "name": "vio",
             "oss_channel": "false",
+            "chipset_support": "qcs6490-rb3gen2-vision-kit",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
             "to": "sample-code/qirp_nodes/navigation_nodes/"
@@ -113,6 +116,7 @@
         {
             "name": "../followme",
             "oss_channel": "false",
+            "chipset_support": "qcs6490-rb3gen2-vision-kit",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robot-followme.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/followme/",
             "to": "sample-code/qirp_nodes/navigation_nodes/"
@@ -120,6 +124,7 @@
         {
             "name": "vslam",
             "oss_channel": "false",
+            "chipset_support": "qcs6490-rb3gen2-vision-kit",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
             "to": "sample-code/qirp_nodes/navigation_nodes/"

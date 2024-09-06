@@ -17,13 +17,21 @@ SETUP_PATH = "${FILE_DIRNAME}/files/setup.sh"
 
 # The name and version of qirp SDK artifact
 SDK_PN = "qirp-sdk"
-PV = "2.1.0"
+PV = "2.1.1"
 
 # The functionality of qirp SDK
-DEPENDS += "jq-native git-native"
-DEPENDS += "${@bb.utils.contains_any('MACHINE', 'qcm6490', 'qti-qirf', "", d)}"
-DEPENDS += "${@bb.utils.contains_any('MACHINE', 'qcm6490', 'qti-qnn', "", d)}"
-DEPENDS += "${@bb.utils.contains_any('MACHINE', 'qcm6490', 'qti-qim-product-sdk', "", d)}"
+DEPENDS:append = " \
+    jq-native \
+    git-native \
+    qti-qirf \
+    qti-qnn \
+    qti-qim-product-sdk \
+    "
+
+DEPENDS:remove:qcom-base-bsp = " \
+    qti-qnn \
+    qti-qim-product-sdk \
+    "
 
 # The runtime dependency for qirp sdk sample
 RDEPENDS:${PN} = "qirf-sdk"

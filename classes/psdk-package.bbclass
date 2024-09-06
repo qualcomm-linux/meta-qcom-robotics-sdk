@@ -64,12 +64,18 @@ organize_sdk_file () {
     jq -c '.samples[]' $CONFIG_FILE | while read line; do
         name=$(echo $line | jq -r '.name')
         oss_channel=$(echo $line | jq -r '.oss_channel')
+        chipset_support=$(echo $line | jq -r '.chipset_support')
         from_uri=$(echo $line | jq -r '.from_uri')
         from_local="${WORKSPACE}/$(echo $line | jq -r '.from_local')"
         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
+        if [[ $chipset_support != *${MACHINE}* ]];then
+            bbnote "Sample $name has not support on ${MACHINE} ..."
+            continue
+        fi
+
         if [[ "$oss_channel" == "false" && "$oss_channel" != "${OSS_CHANNEL_FLAG}" ]]; then
-            bbnote "Skipping $name ..."
+            bbnote "Skipping $name cause of channel mismatch ..."
             continue
         fi
 
@@ -91,9 +97,9 @@ organize_sdk_file () {
     done
 
     # orgnanize toolchain
-    if ls ${TOOLCHAIN_PATH}/${DISTRO}-${SDKMACHINE}-*-${TUNE_PKGARCH}-${MACHINE}-toolchain-${SDK_VERSION}.* >/dev/null 2>&1; then
+    if ls ${TOOLCHAIN_PATH}/* | grep -v ext >/dev/null 2>&1; then
         install -d ${SSTATE_IN_DIR}/${SDK_PN}/toolchain
-        cp -r ${TOOLCHAIN_PATH}/${DISTRO}-${SDKMACHINE}-*-${TUNE_PKGARCH}-${MACHINE}-toolchain-${SDK_VERSION}.* ${SSTATE_IN_DIR}/${SDK_PN}/toolchain/
+        find ${TOOLCHAIN_PATH} -type f -not -name "*ext*" -exec cp {} ${SSTATE_IN_DIR}/${SDK_PN}/toolchain/ \;
     else
         bbfatal "No Standard SDK Toolchain found in ${TOOLCHAIN_PATH}, Please Note it!"
     fi

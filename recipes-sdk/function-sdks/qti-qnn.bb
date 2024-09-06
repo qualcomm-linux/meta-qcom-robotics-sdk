@@ -10,8 +10,8 @@ CONFIGFILE = "${@d.getVar('CONFIG_SELECT')}"
 
 # qnn-sdk should be downloaded before compiling this recipe,
 # this recipe will unpack qnn-sdk zip, and pick up the files we needed.
-QNPSDK_SRC_VER="2.22.0.240425"
-QNPSDK_SRC_SHID="d68ed4d92187101a9759384cbce0a35bd383840b2e3c3c746a4d35f99823a75a"
+QNPSDK_SRC_VER="2.22.10.240618"
+QNPSDK_SRC_SHID="06ba9d28252299207d5d0a5d05d7b26f122fac34d2f904b656732242678ef119"
 SRC_URI = "https://softwarecenter.qualcomm.com/api/download/software/qualcomm_neural_processing_sdk/v${QNPSDK_SRC_VER}.zip"
 SRC_URI[sha256sum] = "${QNPSDK_SRC_SHID}"
 

@@ -158,7 +158,6 @@ compile_qirp(){
     echo "Generating QIRP SDK with:"
     echo "    bitbake $QIRP_NAME"
     echo
-    bitbake $QIRP_NAME -c do_cleanall
     bitbake $QIRP_NAME || exit 1
 
     # Start APIs Check
