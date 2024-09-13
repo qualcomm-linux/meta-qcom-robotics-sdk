@@ -97,7 +97,7 @@ organize_sdk_file () {
     done
 
     # orgnanize toolchain
-    if ls ${TOOLCHAIN_PATH}/* | grep -v ext >/dev/null 2>&1; then
+    if ls ${TOOLCHAIN_PATH}/ | grep -v ext >/dev/null 2>&1; then
         install -d ${SSTATE_IN_DIR}/${SDK_PN}/toolchain
         find ${TOOLCHAIN_PATH} -type f -not -name "*ext*" -exec cp {} ${SSTATE_IN_DIR}/${SDK_PN}/toolchain/ \;
     else
