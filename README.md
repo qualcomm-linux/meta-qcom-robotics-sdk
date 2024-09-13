@@ -46,10 +46,10 @@ repo sync -c -j8
 
 Example:
 
-To download the `qcom-6.6.28-QLI.1.1-Ver.1.1_robotics-product-sdk-1.1.xml` release, run this command:
+To download the `qcom-6.6.38-QLI.1.2-Ver.1.0_robotics-product-sdk-1.0.xml` release, run this command:
 
 ```
-repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.28-QLI.1.1-Ver.1.1_robotics-product-sdk-1.1.xml
+repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.38-QLI.1.2-Ver.1.0_robotics-product-sdk-1.0.xml
 repo sync -c -j8
 ```
 
@@ -58,14 +58,34 @@ repo sync -c -j8
 ```shell
 cd <workspace>
 
-MACHINE=qcm6490 DISTRO=qcom-robotics-ros2-humble source setup-robotics-environment
+MACHINE=<Machine_name> DISTRO=<Distro_name>  QCOM_SELECTED_BSP=<Build_override> source setup-robotics-environment <Build_directory>
 
 ../qirp-build qcom-robotics-full-image
 ```
 
-QIRP SDK artifacts: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk_<version>.tar.gz`
+| Parameter | RB3 Gen2 Vision kit | Ride SX |
+|---|---|---|
+| Machine_name | qcs6490-rb3gen2-vision-kit | qcs9100-ride-sx |
+| Distro_name  | qcom-robotics-ros2-humble  | qcom-robotics-ros2-humble |
+| Build_override  | custom  | custom |
+|   |   | base |
+| Build_directory  | build-qcs6490-custom  | build-qcs9100-custom |
+|   |   | build-qcs9100-base |
 
-Robotics image: `<workspace>/build-qcom-robotics-ros2-humble/tmp-glibc/deploy/images/qcm6490/qcom-robotics-full-image/`
+
+Results for different machines:
+
+RB3 Gen2 Vision Kit (qcs6490-rb3gen2-vision-kit)
+
+QIRP SDK artifacts: `<workspace>/build-qcs6490-custom/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk_<version>.tar.gz`
+
+Robotics image: `<workspace>/build-qcs6490-custom/tmp-glibc/deploy/images/qcs6490-rb3gen2-vision-kit/qcom-robotics-full-image`
+
+Ride SX (qcs9100-ride-sx, using the custom build override as an example)
+
+QIRP SDK artifacts: `<workspace>/build-qcs9100-custom/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk_<version>.tar.gz`
+
+Robotics image: `<workspace>/build-qcs9100-custom/tmp-glibc/deploy/images/qcs9100-ride-sx/qcom-robotics-full-image`
 
 # How to install QIRP SDK
  
