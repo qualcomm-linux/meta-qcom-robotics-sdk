@@ -1,0 +1,1 @@
+inherit psdk-image

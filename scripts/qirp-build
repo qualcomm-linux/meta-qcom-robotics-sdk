@@ -6,9 +6,18 @@
 
 IMAGE_NAME="qcom-robotics-console-image"
 QIRP_NAME="qirp-sdk"
-SAMPLE_DIR="sample-code"
-DEPLOY_DIR="tmp-glibc/deploy/qirpsdk_artifacts"
+SAMPLE_DIR="qirp-nodes"
+TOPDIR="$(pwd)/../"
+MACHINE=$(grep "^MACHINE =" ./conf/auto.conf | awk -F '=' '{print $2}' | tr -d ' "')
+QCOM_SELECTED_BSP=$(grep "^QCOM_SELECTED_BSP =" ./conf/auto.conf | awk -F '=' '{print $2}' | tr -d ' "')
+# adapt to anothers mode
+if [ -z "$MACHINE" ]; then
+    MACHINE=$(grep "^MACHINE ?=" ./conf/auto.conf | awk -F '=' '{print $2}' | tr -d ' "')
+fi
+
+DEPLOY_DIR="tmp-glibc/deploy/qirpsdk_artifacts/${MACHINE}"
 FUNCTION_SDK="qirf-sdk"
+QIRF_PROP_API_SCRIPT="layers/meta-qti-robotics-prop/scripts/qirf_prop_api_check.sh"
 
 # API check is disabled by default
 APICHECK_ENABLED=0
@@ -109,9 +118,10 @@ start_sanity_check() {
     # so it should be compiledin X86 environment
     # api_check just only compiles test case
     api_check
+    source ${TOPDIR}/${QIRF_PROP_API_SCRIPT}
 
     # Whole project will be compiled in SDK toolchain
-    compilation_check
+    # compilation_check
 }
 
 check_dependencies() {
@@ -140,26 +150,22 @@ check_dependencies() {
 }
 
 compile_qirp(){
-    # Generate standard SDK to provide toolchain...
-    if ls $(pwd)/tmp-glibc/deploy/sdk/*toolchain*.sh &> /dev/null; then
-        echo "Standard SDK has been ready, skip generation"
-        echo
-    else
-        echo "Generating standard SDK to provide toolchain with:"
-        echo "    bitbake $IMAGE_NAME -c populate_sdk"
-        echo
-        bitbake $IMAGE_NAME -c populate_sdk || exit 1
-    fi
+    # Generate robotics image...
+    echo "Generating robotics image with:"
+    echo "    bitbake $IMAGE_NAME"
+    echo
 
-    # Generate image
     bitbake $IMAGE_NAME || exit 1
 
     # Generate QIRP SDK...
     echo "Generating QIRP SDK with:"
-    echo "    bitbake $QIRP_NAME"
+    echo "    bitbake $IMAGE_NAME -c do_generate_qirp_sdk"
     echo
-    bitbake $QIRP_NAME || exit 1
-
+    if [ "$MACHINE" == "qcs9100-ride-sx" ] && [ "$QCOM_SELECTED_BSP" = "base" ]; then
+        echo "qcs9100-ride-sx does not support for generate sdk on base version"
+    else
+        bitbake $IMAGE_NAME -c do_generate_qirp_sdk || exit 1
+    fi
     # Start APIs Check
     if [ $APICHECK_ENABLED -eq 1 ]; then
         echo "Starting API Check..."

@@ -1,0 +1,10 @@
+{
+   "version": "2.1.2",
+   "samples": [
+       {"name": "qrb ros imu", "path": "nodes/platform/qrb_ros_imu" },
+       {"name": "qrb ros battery", "path": "nodes/platform/qrb_ros_battery" },
+       {"name": "qrb ros camera", "path": "nodes/platform/qrb_ros_camera" },
+       {"name": "qrb ros system monitor", "path": "nodes/platform/qrb_ros_system_monitor"},
+       {"name": "ocr service", "path": "nodes/platform/ocr_service"}
+   ]
+}

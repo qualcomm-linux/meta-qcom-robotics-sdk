@@ -46,10 +46,10 @@ repo sync -c -j8
 
 Example:
 
-To download the `qcom-6.6.38-QLI.1.2-Ver.1.1_robotics-product-sdk-1.1.xml` release, run this command:
+To download the `qcom-6.6.52-QLI.1.3-Ver.1.0_robotics-product-sdk-1.0.xml` release, run this command:
 
 ```
-repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.38-QLI.1.2-Ver.1.1_robotics-product-sdk-1.1.xml
+repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.52-QLI.1.3-Ver.1.0_robotics-product-sdk-1.0.xml
 repo sync -c -j8
 ```
 
@@ -110,6 +110,7 @@ tar -zxf qirp-sdk_<qirp_version>.tar.gz
 2. To deploy the QIRP artifacts, push the QIRP files to the device using the following commands.
 ```bash
 cd <qirp_decompressed_workspace>
+(ssh) mount -o remount,rw /usr
 scp ./runtime/qirp-sdk.tar.gz root@[ip-addr]:/opt/
 ssh root@[ip-addr]
 (ssh) cd /opt && tar -zxf ./qirp-sdk.tar.gz
@@ -134,8 +135,8 @@ The Qualcomm Sensor See Framework provides the IMU data that is obtained from th
 
 ```bash
 ssh root@[ip-addr]
-(ssh) export HOME=/opt
-(ssh) source /opt/qcom/qirp-sdk/qirp-setup.sh
+(ssh) export HOME=/home
+(ssh) source /usr/share/qirp-setup.sh
 (ssh) export ROS_DOMAIN_ID=xx
 (ssh) source /usr/bin/ros_setup.bash
 ```
@@ -169,8 +170,8 @@ The Qualcomm Camera-Server provides camera data that is obtained from the camera
 
 ```bash
 ssh root@[ip-addr]
-(ssh) export HOME=/opt
-(ssh) source /opt/qcom/qirp-sdk/qirp-setup.sh
+(ssh) export HOME=/home
+(ssh) source /usr/share/qirp-setup.sh
 (ssh) export ROS_DOMAIN_ID=xx
 (ssh) source /usr/bin/ros_setup.bash
 ```
@@ -236,15 +237,15 @@ colcon build --merge-install --cmake-args \
 cd demos/demo_nodes_cpp/install
 tar -czvf demo_nodes_cpp.tar.gz lib share
 scp demo_nodes_cpp.tar.gz root@[ip-addr]:/opt/
-ssh root@[ip-addr] 
-(ssh) tar -zxf /opt/demo_nodes_cpp.tar.gz -C /opt/qcom/qirp-sdk/usr/
+ssh root@[ip-addr]
+(ssh) tar -zxf /opt/demo_nodes_cpp.tar.gz -C /usr/
 ```
 
 **Run the demo application on the device**
 
 ```bash
-(ssh) export HOME=/opt
-(ssh) source /usr/bin/ros_setup.sh && source /opt/qcom/qirp-sdk/qirp-setup.sh 
+(ssh) export HOME=/home
+(ssh) source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh
 (ssh shell 1) ros2 run demo_nodes_cpp talker
 (ssh shell 2) ros2 run demo_nodes_cpp listener
 ```

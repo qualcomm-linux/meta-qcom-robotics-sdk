@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 PACKAGES = "${PN}"
-FILES:${PN} = "/${SDK_PN}/*"
+FILES:${PN} = "/*"
 DEPENDS:remove = "${BASEDEPENDS}"
 DEPENDS += "binutils-cross-aarch64"
 

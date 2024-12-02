@@ -2,25 +2,24 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 SSTATETASKS += "do_generate_product_sdk "
-SSTATE_OUT_DIR = "${DEPLOY_DIR}/qirpsdk_artifacts/"
-SSTATE_IN_DIR = "${QIRP_TOP_DIR}/${SDK_PN}"
-TMP_SSTATE_IN_DIR = "${QIRP_TOP_DIR}/${SDK_PN}_tmp"
+SSTATE_OUT_DIR = "${QIRP_OUTPUT}"
+SSTATE_IN_DIR = "${TOPDIR}/${SDK_PN}"
+TMP_SSTATE_IN_DIR = "${TOPDIR}/${SDK_PN}_tmp"
 SAMPLES_PATH ?= "NULL"
 TOOLCHAIN_PATH ?= "NULL"
 TOOLS_PATH ?= "NULL"
 README_PATH ?= "NULL"
 SETUP_PATH ?= "NULL"
+ARTIFACTS_PATH ?= "artifacts"
 
 python __anonymous () {
     package_type = d.getVar("IMAGE_PKGTYPE", True)
-    if package_type == "ipk":
-        bb.build.addtask('do_package_write_ipk', 'do_populate_sysroot', 'do_packagedata', d)
-        bb.build.addtask('do_generate_product_sdk', 'do_populate_sysroot', 'do_package_write_ipk', d)
-        d.appendVarFlag('do_package_write_ipk', 'prefuncs', ' do_reorganize_pkg_dir')
-    elif package_type == "deb":
-        bb.build.addtask('do_package_write_deb', 'do_populate_sysroot', 'do_packagedata', d)
-        bb.build.addtask('do_generate_product_sdk', 'do_populate_sysroot', 'do_package_write_deb', d)
-        d.appendVarFlag('do_package_write_deb', 'prefuncs', ' do_reorganize_pkg_dir')
+    package_generate_task = 'do_package_write_{}'.format(package_type)
+    bb.build.addtask(package_generate_task, 'do_populate_sysroot', 'do_packagedata', d)
+    bb.build.addtask('do_generate_product_sdk', 'do_populate_sysroot', package_generate_task, d)
+    function_sdk_list = d.getVar("RDEPENDS:{}".format(d.getVar("PN"))).split()
+    for function_sdk in function_sdk_list:
+        d.appendVarFlag("do_generate_product_sdk", 'depends', ' {}:do_generate_artifacts '.format(function_sdk))
 }
 
 addtask do_generate_product_sdk_setscene
@@ -33,18 +32,46 @@ do_generate_product_sdk[stamp-extra-info] = "${MACHINE_ARCH}"
 do_generate_product_sdk[nostamp] = "1"
 do_generate_product_sdk[network] = "1"
 
+RUNTIME_SCRIPTS = "install.sh uninstall.sh qirp-upgrade.sh"
 # Add a task to generate product sdk
 do_generate_product_sdk () {
     # generate Product SDK package
-    if [ ! -d ${TMP_SSTATE_IN_DIR}/${SDK_PN} ]; then
-        mkdir -p ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
+    if [ ! -d ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime ]; then
+        bbnote " creating qirp-sdk temp workdir ${TMP_SSTATE_IN_DIR} included subdir scripts , packages "
+        mkdir -p ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime/packages
+        mkdir -p ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime/scripts
     fi
-    cp -r ${WORKDIR}/*install.sh ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
-    cp -r ${WORKDIR}/qirp-setup.sh ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
-    cp -r ${WORKDIR}/qirp-upgrade.sh ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
-    cp ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/${PN}_*.${IMAGE_PKGTYPE} ${TMP_SSTATE_IN_DIR}/${SDK_PN}/
+
+    bbnote " copy workspace scripts install.sh uninstall.sh qirp-upgrade.sh from ${WORKDOR}to target workdir "
+    for script in ${RUNTIME_SCRIPTS}; do
+        if [ -e "${WORKDIR}/${script}" ]; then
+            cp "${WORKDIR}/${script}" ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime/scripts
+        else
+            bbwarn "${script} not exist in ${WORKDIR} , double check please"
+        fi
+    done
+
+    if ls ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/${PN}_*.${IMAGE_PKGTYPE} >/dev/null 2>&1; then
+        cp ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/${PN}_*.${IMAGE_PKGTYPE} ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime/packages/
+    else
+        bbwarn "no ${PN} package generated at ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}, please double check"
+    fi
+
+    bbnote " copy target package ${DEPLOY_DIR}/${ARTIFACTS_PATH}/*/packages/* from to target workdir "
+    if ls ${DEPLOY_DIR}/${ARTIFACTS_PATH}/*/packages/* >/dev/null 2>&1; then
+        bbnote "Function-sdk packages found in ${DEPLOY_DIR}/${ARTIFACTS_PATH} , copying"
+        cp ${DEPLOY_DIR}/${ARTIFACTS_PATH}/*/packages/*.${IMAGE_PKGTYPE} ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime/packages/
+    else
+        bbwarn "No function-sdk packages found in ${DEPLOY_DIR}/${ARTIFACTS_PATH}, QIRP-SDK Could be empty!"
+    fi
+
     cd ${TMP_SSTATE_IN_DIR}
-    tar -zcf ${SSTATE_IN_DIR}/${SDK_PN}.tar.gz ./${SDK_PN}/*
+    bbnote "packaged workdir runtime to ${SDK_PN}.tar.gz "
+    tar -zcf ${SSTATE_IN_DIR}/${SDK_PN}.tar.gz -C ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime .
+
+    if [ ! -d ${SSTATE_IN_DIR}/${SDK_PN}/runtime ]; then
+        install -d  ${SSTATE_IN_DIR}/${SDK_PN}/runtime
+    fi
 }
 
 # Add a task to copy sample code/toolchain/setup scripts,
@@ -52,7 +79,7 @@ do_generate_product_sdk () {
 organize_sdk_file () {
     # orgnanize runtime packages
     if ls ${SSTATE_IN_DIR}/${SDK_PN}* >/dev/null 2>&1; then
-        install -d ${SSTATE_IN_DIR}/${SDK_PN}/runtime
+        bbnote "Found runtime package"
         mv ${SSTATE_IN_DIR}/${SDK_PN}*.tar.gz ${SSTATE_IN_DIR}/${SDK_PN}/runtime/
     else
         bbfatal "No ${SDK_PN} packages generated, Robotics SDK functions will be missed! Please check and retry!"
@@ -64,15 +91,10 @@ organize_sdk_file () {
     jq -c '.samples[]' $CONFIG_FILE | while read line; do
         name=$(echo $line | jq -r '.name')
         oss_channel=$(echo $line | jq -r '.oss_channel')
-        chipset_support=$(echo $line | jq -r '.chipset_support')
         from_uri=$(echo $line | jq -r '.from_uri')
         from_local="${WORKSPACE}/$(echo $line | jq -r '.from_local')"
         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
-        if [[ $chipset_support != *${MACHINE}* ]];then
-            bbnote "Sample $name has not support on ${MACHINE} ..."
-            continue
-        fi
 
         if [[ "$oss_channel" == "false" && "$oss_channel" != "${OSS_CHANNEL_FLAG}" ]]; then
             bbnote "Skipping $name cause of channel mismatch ..."
@@ -81,27 +103,33 @@ organize_sdk_file () {
 
         #create destination dir
         install -d $to
-
-        if [ -n "$from_uri" ]; then
+        if [[ -n "$from_uri" && "$from_uri" != "null" ]]; then
             repo=$(echo $from_uri | sed -e 's/;branch=.*//')
             branch=$(echo $from_uri | sed -e 's/.*;branch=//')
 
             rm -rf $from_local
-
             git clone -b $branch $repo $from_local
         fi
 
         if [ -d "$from_local$name" ]; then
             cp -r $from_local$name $to
+            ls -al $from_local
+            bbnote "Copy sample source from $from_local$name to $to"
         fi
+
+        if [ -d "${SAMPLE_SOURCE}/$name" ]; then
+            bbnote "Copy sample source from ${SAMPLE_SOURCE}/$name to $to"
+            cp -rf ${SAMPLE_SOURCE}/$name $to
+        else
+            bbnote "Can't find  sample source from ${SAMPLE_SOURCE}/$name"
+        fi
+
     done
 
-    # orgnanize toolchain
-    if ls ${TOOLCHAIN_PATH}/ | grep -v ext >/dev/null 2>&1; then
-        install -d ${SSTATE_IN_DIR}/${SDK_PN}/toolchain
-        find ${TOOLCHAIN_PATH} -type f -not -name "*ext*" -exec cp {} ${SSTATE_IN_DIR}/${SDK_PN}/toolchain/ \;
-    else
-        bbfatal "No Standard SDK Toolchain found in ${TOOLCHAIN_PATH}, Please Note it!"
+    #orgnanize QIRP sample.json
+    SAMPLE_JESON="${WORKDIR}/samples.json"
+    if [ -n "$SAMPLE_JESON" ]; then
+        cp $SAMPLE_JESON ${SSTATE_IN_DIR}/${SDK_PN}/qirp-samples/
     fi
 
     # orgnanize tools
@@ -125,11 +153,6 @@ organize_sdk_file () {
     else
         bbwarn "No setup.sh script found in ${SETUP_PATH}, Please Note it!"
     fi
-
-    # organize all files as finial sdk
-    cd ${SSTATE_IN_DIR}
-    tar -zcf ${SSTATE_IN_DIR}/${SDK_PN}_${PV}.tar.gz ./${SDK_PN}/*
-    rm -r ${SSTATE_IN_DIR}/${SDK_PN}
 }
 
 python do_generate_product_sdk_setscene() {
