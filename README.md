@@ -114,8 +114,8 @@ cd <qirp_decompressed_workspace>
 scp ./runtime/qirp-sdk.tar.gz root@[ip-addr]:/opt/
 ssh root@[ip-addr]
 (ssh) cd /opt && tar -zxf ./qirp-sdk.tar.gz
-(ssh) chmod +x /opt/qirp-sdk/*.sh
-(ssh) cd /opt/qirp-sdk && ./install.sh
+(ssh) chmod +x /opt/scripts/*.sh
+(ssh) cd /opt/scripts && ./install.sh
 ```
 
 # How to run samples on QIRP SDK

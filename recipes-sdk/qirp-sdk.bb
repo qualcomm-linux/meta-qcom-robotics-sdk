@@ -12,7 +12,7 @@ SRC_URI =+ "file://qirp-upgrade.sh"
 SRC_URI =+ "file://samples.json"
 
 # The path infos of qirp content
-OSS_CHANNEL_FLAG = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-robotics-prop', 'false', 'true', d)}"
+OSS_CHANNEL_FLAG = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-robotics-extras', 'false', 'true', d)}"
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
 SETUP_PATH = "${FILE_DIRNAME}/files/setup.sh"
 

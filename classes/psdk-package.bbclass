@@ -92,6 +92,7 @@ organize_sdk_file () {
         name=$(echo $line | jq -r '.name')
         oss_channel=$(echo $line | jq -r '.oss_channel')
         from_uri=$(echo $line | jq -r '.from_uri')
+        sample_local="${WORKSPACE}/robotics/qirp-oss/"
         from_local="${WORKSPACE}/$(echo $line | jq -r '.from_local')"
         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
@@ -108,21 +109,19 @@ organize_sdk_file () {
             branch=$(echo $from_uri | sed -e 's/.*;branch=//')
 
             rm -rf $from_local
-            git clone -b $branch $repo $from_local
+            if [[ "$oss_channel" == "false" ]];then
+                git clone -b $branch $repo $from_local
+            else
+                git clone -b $branch $repo $sample_local
+            fi
         fi
 
         if [ -d "$from_local$name" ]; then
             cp -r $from_local$name $to
-            ls -al $from_local
+            rm -rf $sample_local
             bbnote "Copy sample source from $from_local$name to $to"
         fi
 
-        if [ -d "${SAMPLE_SOURCE}/$name" ]; then
-            bbnote "Copy sample source from ${SAMPLE_SOURCE}/$name to $to"
-            cp -rf ${SAMPLE_SOURCE}/$name $to
-        else
-            bbnote "Can't find  sample source from ${SAMPLE_SOURCE}/$name"
-        fi
 
     done
 

@@ -175,17 +175,10 @@
             "to": "qirp-samples/nodes/platform/"
         },
         {
-            "name": "qrb_ros_gpio",
+            "name": "GPIO-samples-gpiod",
             "oss_channel": "true",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/samples/add-ons/GPIO-samples-gpiod/",
-            "to": "qirp-samples/nodes/platform/"
-        },
-        {
-            "name": "qrb_ros_gpio_interfaces",
-            "oss_channel": "true",
-            "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/samples/add-ons/GPIO-samples-gpiod/",
+            "from_local": "robotics/qirp-oss/samples/add-ons/",
             "to": "qirp-samples/nodes/platform/"
         },
         {
