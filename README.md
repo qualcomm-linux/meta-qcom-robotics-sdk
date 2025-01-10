@@ -91,12 +91,12 @@ Robotics image: `<workspace>/build-qcs9100-custom/tmp-glibc/deploy/images/qcs910
 
 **Flash robotics image**
 
-Flash the robotics image to the device, see the [Flash image](https://docs.qualcomm.com/bundle/publicresource/topics/80-70015-254/flash_images.html?vproduct=1601111740013072&versionId=35c3bc73-6ae0-4179-b66b-a01844b5a87f), using the robotics image generated with previous steps.
+Flash the robotics image to the device, see the [Flash image](https://docs.qualcomm.com/bundle/publicresource/topics/80-70017-254/flash_images.html?vproduct=1601111740013072&latest=true) , using the robotics image generated with previous steps.
 
 **Prerequisite**
 
 - The prebuilt robotics image is flashed.
-- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70015-254/how_to.html?vproduct=1601111740013072&versionId=35c3bc73-6ae0-4179-b66b-a01844b5a87f#use-ssh).
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70017-254/how_to.html?vproduct=1601111740013072&latest=true#use-ssh).
 
 **Install QIRP SDK on the device**
 
@@ -130,7 +130,7 @@ The Qualcomm Sensor See Framework provides the IMU data that is obtained from th
 **Prerequisite**
 
 - The prebuilt robotics image is flashed.
-- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70015-254/how_to.html?vproduct=1601111740013072&versionId=35c3bc73-6ae0-4179-b66b-a01844b5a87f#use-ssh).
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70017-254/how_to.html?vproduct=1601111740013072&latest=true#use-ssh).
 
 **Set up QIRP SDK and ROS2 environment in each terminal on device**
 
@@ -164,7 +164,7 @@ The Qualcomm Camera-Server provides camera data that is obtained from the camera
 **Prerequisite**
 
 - The prebuilt robotics image is flashed.
-- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70015-254/how_to.html?vproduct=1601111740013072&versionId=35c3bc73-6ae0-4179-b66b-a01844b5a87f#use-ssh).
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70017-254/how_to.html?vproduct=1601111740013072&latest=true#use-ssh).
 
 
 **Set up QIRP SDK and ROS2 environment in each terminal on device**
@@ -196,7 +196,7 @@ The following example provides a general procedure for developing your first app
 **Prerequisite**
 
 - The prebuilt robotics image is flashed.
-- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70015-254/how_to.html?vproduct=1601111740013072&versionId=35c3bc73-6ae0-4179-b66b-a01844b5a87f#use-ssh).
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70017-254/how_to.html?vproduct=1601111740013072&latest=true#use-ssh).
 
 **Set up the cross-compile environment**
 
