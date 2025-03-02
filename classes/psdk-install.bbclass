@@ -69,13 +69,13 @@ python do_install() {
                         directory = from_path
                         for f in glob.glob(from_path):
                             bb.note("f = %s" %f)
-                            if not os.path.exists(f):
+                            if not os.path.islink(f) and not os.path.exists(f):
                                 bb.fatal("%s is not exsit, please check your config file" %f)
                             if not (os.path.exists(to_path[:to_path.rfind("/")])):
                                 bb.note("%s is not exist, have create it firstly" %to_path[:to_path.rfind("/")])
                                 os.makedirs(to_path[:to_path.rfind("/")])
                             bb.note("pick from <%s> to <%s>" %(f,to_path))
-                            copy_cmd = "cp -r %s %s" %(f,to_path)
+                            copy_cmd = "cp -rf %s %s" %(f,to_path)
                             subprocess.call(copy_cmd,shell=True)
                             record.write(f + '\n')
     def migrate_package(src_dir,dest_dir):
@@ -132,6 +132,12 @@ do_install[prefuncs] += "do_generate_artifacts_base"
 
 do_generate_artifacts(){
     mkdir -p ${FCUNTION_ARTIFACTS_TMP}/sample/${PN}
+    FILE_PATH="${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/${PN}_${PV}-${PR}*.${IMAGE_PKGTYPE}"
+    while ! ls $FILE_PATH 1> /dev/null 2>&1 ;do
+        bbwarn "${PN}_${PV}-${PR}*.${IMAGE_PKGTYPE} is not found ,wait 10s seconds for generation..."
+        sleep 10
+    done
+    bbnote "${PN}_${PV}-${PR}*.${IMAGE_PKGTYPE} found"
     cp ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/*${PN}*_${PV}-${PR}*.${IMAGE_PKGTYPE} ${FCUNTION_ARTIFACTS_TMP}/packages/
     cp -r ${FCUNTION_ARTIFACTS_TMP}/* ${SSTATE_IN_DIR}
 }

@@ -161,11 +161,8 @@ compile_qirp(){
     echo "Generating QIRP SDK with:"
     echo "    bitbake $IMAGE_NAME -c do_generate_qirp_sdk"
     echo
-    if [ "$MACHINE" == "qcs9100-ride-sx" ] && [ "$QCOM_SELECTED_BSP" = "base" ]; then
-        echo "qcs9100-ride-sx does not support for generate sdk on base version"
-    else
-        bitbake $IMAGE_NAME -c do_generate_qirp_sdk || exit 1
-    fi
+    bitbake $IMAGE_NAME -c do_generate_qirp_sdk || exit 1
+
     # Start APIs Check
     if [ $APICHECK_ENABLED -eq 1 ]; then
         echo "Starting API Check..."

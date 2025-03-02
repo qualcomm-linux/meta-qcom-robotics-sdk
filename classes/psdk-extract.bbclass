@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 inherit psdk-install
 
@@ -123,6 +123,7 @@ python do_unpack_extra () {
     def extract_package(file):
         extract_funcs = [
             ('.tar.gz', extract_targz),
+            ('.tar.zst', extract_tarzst),
             ('.tgz', extract_targz),
             ('.tar.xz', extract_tarxz),
             ('.txz', extract_txz),
@@ -150,6 +151,18 @@ python do_unpack_extra () {
         subprocess.call(mkdir_cmd,shell=True)
         # tar -zxf file -C out_path
         extract_cmd = "tar -zxf %s -C %s" %(file,out_path)
+        bb.note(extract_cmd)
+        subprocess.call(extract_cmd,shell=True)
+        pass
+
+    def extract_tarzst(file, out_path):
+        mkdir_cmd = "mkdir -p %s" %out_path
+        subprocess.call(mkdir_cmd,shell=True)
+        # unzstd -d file && tar -xf file -C out_path
+        extract_cmd = "unzstd -d %s" %file
+        bb.note(extract_cmd)
+        subprocess.call(extract_cmd,shell=True)
+        extract_cmd = "tar -xf %s -C %s" %(file[:-4],out_path)
         bb.note(extract_cmd)
         subprocess.call(extract_cmd,shell=True)
         pass

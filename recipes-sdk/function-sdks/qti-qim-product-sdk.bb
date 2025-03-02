@@ -7,9 +7,13 @@ COPY_PACKAGES = "0"
 
 # the information of function sdk package(s)
 CONFIGFILE = "${@d.getVar('CONFIG_SELECT')}"
-SDKSPATH = "${DEPLOY_DIR}/qim_prod_sdk_artifacts/${MACHINE}/qim-prod-sdk_*.tar.gz"
+SDKSPATH = "${DEPLOY_DIR}/qim_prod_sdk_artifacts/qim-prod-sdk_*.tar.gz"
 
-do_fetch_extra[depends] += "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-qim-product-sdk', 'qcom-qim-product-sdk:do_generate_qim_prod_sdk', '', d)}"
+do_fetch_extra[depends] += "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-qim-product-sdk', 'qim-product-sdk:do_generate_qim_prod_sdk', '', d)}"
+
+# Build sstate cache is old, so disable incremental build in internal
+# Not include in external layer, this flag is set for internal only.
+do_fetch_extra[nostamp] = "1"
 
 SYSROOT_DIRS_IGNORE += "/${PN}/runtime"
 
@@ -45,7 +49,7 @@ SKIP_OTHERS = " libgomp-dev \
              libtag1 \
              libtheora \
              libwebp \
-             mpg123 \
+             mpg123 \ 
 "
 PACKAGES = "${PN}"
 FILES:${PN} = "${libdir}/qim/* /usr/libexec/qim/* /usr/bin/qim/*"

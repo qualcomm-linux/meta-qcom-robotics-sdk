@@ -73,11 +73,46 @@
                     "tag": "QNN header files"
                 },
                 {
+                    "to": "/usr/include/",
+                    "from": [
+                        "qti-qnn/include/Genie/*"
+                    ],
+                    "tag": "Genie header files"
+                },
+                {
                     "to": "/usr/bin/",
                     "from": [
-                        "qti-qnn/bin/*"
+                        "qti-qnn/bin/envsetup.sh"
                     ],
-                    "tag": "QNN binaries"
+                    "tag": "QNN envsetup.sh binaries"
+                },
+                {
+                    "to": "/usr/bin/",
+                    "from": [
+                        "qti-qnn/bin/envcheck"
+                    ],
+                    "tag": "QNN envcheck binaries"
+                },
+                {
+                    "to": "/usr/bin/",
+                    "from": [
+                        "qti-qnn/bin/check-python-dependency"
+                    ],
+                    "tag": "QNN check-python-dependency binaries"
+                },
+                {
+                    "to": "/usr/bin/",
+                    "from": [
+                        "qti-qnn/bin/aarch64-oe-linux-gcc11.2/*"
+                    ],
+                    "tag": "QNN aarch64-oe-linux-gcc binaries"
+                },
+                {
+                    "to": "/usr/bin/x86_64_linux-clang/",
+                    "from": [
+                        "qti-qnn/bin/x86_64_linux-clang/*"
+                    ],
+                    "tag": "QNN x86_64_linux-clang binaries"
                 },
                 {
                     "to": "/usr/lib/x86_64-linux-clang/",
@@ -94,9 +129,9 @@
                     "tag": "QNN target libraries"
                 },
                 {
-                    "to": "/usr/lib/hexagon-v68/unsigned/",
+                    "to": "/usr/lib/",
                     "from": [
-                        "qti-qnn/lib/hexagon-v68/unsigned/*"
+                        "qti-qnn/lib/hexagon-v*"
                     ],
                     "tag": "QNN target libraries"
                 },
@@ -123,70 +158,63 @@
             "oss_channel": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/nodes/navigation/"
+            "to": "qirp-samples/demos/navigation/"
         },
         {
             "name": "vio",
             "oss_channel": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/nodes/navigation/"
+            "to": "qirp-samples/demos/navigation/"
         },
         {
             "name": "../followme",
             "oss_channel": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robot-followme.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/followme/",
-            "to": "qirp-samples/nodes/navigation/"
+            "to": "qirp-samples/demos/navigation/"
         },
         {
             "name": "vslam",
             "oss_channel": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git;branch=CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/nodes/navigation/"
+            "to": "qirp-samples/demos/navigation/"
         },
         {
             "name": "qrb_ros_imu",
             "oss_channel": "true",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/qrb-ros/platform/",
-            "to": "qirp-samples/nodes/platform/"
+            "from_local":"robotics/qirp-oss/qrb-ros/platform/",
+            "to": "qirp-samples/demos/platform/"
         },
         {
             "name": "qrb_ros_system_monitor",
             "oss_channel": "true",
-            "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/qrb-ros/platform/",
-            "to": "qirp-samples/nodes/platform/"
+            "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_system_monitor.git",
+            "branch":"main",
+            "to": "qirp-samples/demos/platform/"
         },
         {
             "name": "qrb_ros_battery",
             "oss_channel": "true",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
             "from_local": "robotics/qirp-oss/qrb-ros/platform/",
-            "to": "qirp-samples/nodes/platform/"
-        },
-        {
-            "name": "qrb_ros_camera",
-            "oss_channel": "true",
-            "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/qrb-ros/platform/",
-            "to": "qirp-samples/nodes/platform/"
-        },
-        {
-            "name": "GPIO-samples-gpiod",
-            "oss_channel": "true",
-            "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/samples/add-ons/",
-            "to": "qirp-samples/nodes/platform/"
+            "to": "qirp-samples/demos/platform/"
         },
         {
             "name": "ocr_service",
             "oss_channel": "true",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git;branch=robotics-sdk.qclinux.1.0.r1-rel",
             "from_local": "robotics/qirp-oss/samples/ai_nodes/",
-            "to": "qirp-samples/nodes/platform/"
+            "to": "qirp-samples/demos/platform/"
+        },
+        {
+            "name": "qrb_ros_camera",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_camera.git",
+            "branch":"main",
+            "to": "qirp-samples/demos/platform/"
         }
       ]
 }

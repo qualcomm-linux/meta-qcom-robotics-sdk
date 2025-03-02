@@ -17,7 +17,8 @@ python __anonymous () {
     package_generate_task = 'do_package_write_{}'.format(package_type)
     bb.build.addtask(package_generate_task, 'do_populate_sysroot', 'do_packagedata', d)
     bb.build.addtask('do_generate_product_sdk', 'do_populate_sysroot', package_generate_task, d)
-    function_sdk_list = d.getVar("RDEPENDS:{}".format(d.getVar("PN"))).split()
+    rdepends = d.getVar("RDEPENDS:{}".format(d.getVar("PN")))
+    function_sdk_list = rdepends.split() if rdepends else []
     for function_sdk in function_sdk_list:
         d.appendVarFlag("do_generate_product_sdk", 'depends', ' {}:do_generate_artifacts '.format(function_sdk))
 }
@@ -92,10 +93,9 @@ organize_sdk_file () {
         name=$(echo $line | jq -r '.name')
         oss_channel=$(echo $line | jq -r '.oss_channel')
         from_uri=$(echo $line | jq -r '.from_uri')
-        sample_local="${WORKSPACE}/robotics/qirp-oss/"
+        branch=$(echo $line | jq -r '.branch')
         from_local="${WORKSPACE}/$(echo $line | jq -r '.from_local')"
         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
-
 
         if [[ "$oss_channel" == "false" && "$oss_channel" != "${OSS_CHANNEL_FLAG}" ]]; then
             bbnote "Skipping $name cause of channel mismatch ..."
@@ -106,30 +106,18 @@ organize_sdk_file () {
         install -d $to
         if [[ -n "$from_uri" && "$from_uri" != "null" ]]; then
             repo=$(echo $from_uri | sed -e 's/;branch=.*//')
-            branch=$(echo $from_uri | sed -e 's/.*;branch=//')
-
-            rm -rf $from_local
-            if [[ "$oss_channel" == "false" ]];then
-                git clone -b $branch $repo $from_local
-            else
-                git clone -b $branch $repo $sample_local
+            branch=$(echo $branch | sed -e 's/.*;branch=//')
+            if [[ -d $to$name ]]; then
+                rm -rf $to$name
             fi
+            git clone -b $branch $repo $to$name
         fi
 
         if [ -d "$from_local$name" ]; then
             cp -r $from_local$name $to
-            rm -rf $sample_local
             bbnote "Copy sample source from $from_local$name to $to"
         fi
-
-
     done
-
-    #orgnanize QIRP sample.json
-    SAMPLE_JESON="${WORKDIR}/samples.json"
-    if [ -n "$SAMPLE_JESON" ]; then
-        cp $SAMPLE_JESON ${SSTATE_IN_DIR}/${SDK_PN}/qirp-samples/
-    fi
 
     # orgnanize tools
     if ls ${TOOLS_PATH}/* >/dev/null 2>&1; then
