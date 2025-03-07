@@ -46,10 +46,10 @@ repo sync -c -j8
 
 Example:
 
-To download the `qcom-6.6.52-QLI.1.3-Ver.1.1_robotics-product-sdk-1.1.xml   ` release, run this command:
+To download the `qcom-6.6.65-QLI.1.4-Ver.1.0_robotics-product-sdk-1.0.xml   ` release, run this command:
 
 ```
-repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-kirkstone -m qcom-6.6.52-QLI.1.3-Ver.1.1_robotics-product-sdk-1.1.xml
+repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-scarthgap -m qcom-6.6.65-QLI.1.4-Ver.1.0_robotics-product-sdk-1.0.xml
 repo sync -c -j8
 ```
 
@@ -63,14 +63,14 @@ MACHINE=<Machine_name> DISTRO=<Distro_name>  QCOM_SELECTED_BSP=<Build_override> 
 ../qirp-build qcom-robotics-full-image
 ```
 
-| Parameter | RB3 Gen2 Vision kit | Ride SX |
-|---|---|---|
-| Machine_name | qcs6490-rb3gen2-vision-kit | qcs9100-ride-sx |
-| Distro_name  | qcom-robotics-ros2-humble  | qcom-robotics-ros2-humble |
-| Build_override  | custom  | custom |
-|   |   | base |
-| Build_directory  | build-qcs6490-custom  | build-qcs9100-custom |
-|   |   | build-qcs9100-base |
+| Parameter | RB3 Gen2 Vision kit | IQ9 | IQ8 |
+|---|---|---|---|
+| Machine_name | qcs6490-rb3gen2-vision-kit | qcs9075-rb8-core-kit | qcs8300-ride-sx | 
+| Distro_name  | qcom-robotics-ros2-jazzy  | qcom-robotics-ros2-jazzy | qcom-robotics-ros2-jazzy |
+| Build_override  | custom  | custom | custom |
+|   |   | base | base |
+| Build_directory  | build-qcs6490-custom  | build-qcs9100-custom | build-qcs8300-custom |
+|   |   | build-qcs9100-base | build-qcs8300-base |
 
 
 Results for different machines:
@@ -81,11 +81,17 @@ QIRP SDK artifacts: `<workspace>/build-qcs6490-custom/tmp-glibc/deploy/qirpsdk_a
 
 Robotics image: `<workspace>/build-qcs6490-custom/tmp-glibc/deploy/images/qcs6490-rb3gen2-vision-kit/qcom-robotics-full-image`
 
-Ride SX (qcs9100-ride-sx, using the custom build override as an example)
+IQ9 (qcs9075-rb8-core-kit, using the custom build override as an example)
 
 QIRP SDK artifacts: `<workspace>/build-qcs9100-custom/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk_<version>.tar.gz`
 
-Robotics image: `<workspace>/build-qcs9100-custom/tmp-glibc/deploy/images/qcs9100-ride-sx/qcom-robotics-full-image`
+Robotics image: `<workspace>/build-qcs9100-custom/tmp-glibc/deploy/images/qcs9075-rb8-core-kit/qcom-robotics-full-image`
+
+Ride SX (qcs8300-ride-sx, using the custom build override as an example)
+
+QIRP SDK artifacts: `<workspace>/build-qcs8300-custom/tmp-glibc/deploy/qirpsdk_artifacts/qirp-sdk_<version>.tar.gz`
+
+Robotics image: `<workspace>/build-qcs8300-custom/tmp-glibc/deploy/images/qcs8300-ride-sx/qcom-robotics-full-image`
 
 # How to install QIRP SDK
 
@@ -136,7 +142,7 @@ The Qualcomm Sensor See Framework provides the IMU data that is obtained from th
 
 ```bash
 ssh root@[ip-addr]
-(ssh) export HOME=/home
+(ssh) export HOME=/opt
 (ssh) source /usr/share/qirp-setup.sh
 (ssh) export ROS_DOMAIN_ID=xx
 (ssh) source /usr/bin/ros_setup.bash
@@ -154,6 +160,32 @@ ssh root@[ip-addr]
 (ssh) ros2 topic echo /imu
 ```
 
+## Example 2 - Orbbec Camera ROS Node
+
+The orbbec-camera ROS node makes the Orbbec camera 335L work properly in RGB or depth mode. It can generate the RGB and depth information by ROS topics.
+
+**Prerequisite**
+
+- The prebuilt robotics image is flashed.
+- SSH is enabled in ‘Permissive’ mode with the steps mentioned in [Use SSH](https://docs.qualcomm.com/bundle/publicresource/topics/80-70017-254/how_to.html?vproduct=1601111740013072&latest=true#use-ssh).
+- The Orbbec camera 335L is available. For details, see Orbbec Gemini 335L [Product Page](https://www.orbbec.com/products/stereo-vision-camera/gemini-335l/).
+
+**Set up QIRP SDK and ROS2 environment in terminal on device**
+
+```bash
+ssh root@[ip-addr]
+(ssh) mount -o remount,rw /usr
+(ssh) export HOME=/opt
+(ssh) source /usr/share/qirp-setup.sh
+(ssh) cd /usr/share/orbbec_camera/scripts/
+(ssh) bash install_udev_rules.sh
+(ssh) udevadm control --reload-rules && udevadm trigger
+(ssh) source ../scripts/dds_config.sh
+(ssh) ros2 launch orbbec_camera gemini_330_series.launch.py
+```
+
+
+<!--
 ## Example 2 - Camera ROS Node
 
 With this camera ROS2 node, data can achieve zero-copy performance when coming out of the camera-server. This will greatly reduce the latency between ROS nodes.
@@ -171,7 +203,7 @@ The Qualcomm Camera-Server provides camera data that is obtained from the camera
 
 ```bash
 ssh root@[ip-addr]
-(ssh) export HOME=/home
+(ssh) export HOME=/opt
 (ssh) source /usr/share/qirp-setup.sh
 (ssh) export ROS_DOMAIN_ID=xx
 (ssh) source /usr/bin/ros_setup.bash
@@ -188,6 +220,7 @@ ssh root@[ip-addr]
 ```bash
 (ssh) ros2 topic echo /image
 ```
+-->
 
 # How to develop application with QIRP SDK
 
@@ -209,7 +242,7 @@ source setup.sh
 
 
 ```bash
-git clone https://github.com/ros2/demos.git -b humble
+git clone https://github.com/ros2/demos.git -b jazzy
 ```
 
 Change the `demos/demo_nodes_cpp/src/topics/talker.cpp` msg data in line46, such as changing 'Hello world' to 'get message success'：
@@ -245,7 +278,7 @@ ssh root@[ip-addr]
 **Run the demo application on the device**
 
 ```bash
-(ssh) export HOME=/home
+(ssh) export HOME=/opt
 (ssh) source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh
 (ssh shell 1) ros2 run demo_nodes_cpp talker
 (ssh shell 2) ros2 run demo_nodes_cpp listener
@@ -253,6 +286,6 @@ ssh root@[ip-addr]
 
 # Reference
 
-[Yocto Project Quick Build — The Yocto Project ® 4.0.23 documentation](https://docs.yoctoproject.org/4.0.23/brief-yoctoprojectqs/index.html)
+[Yocto Project Quick Build — The Yocto Project ® 5.0.7 documentation](https://docs.yoctoproject.org/5.0.7/brief-yoctoprojectqs/index.html)
 
-[qcom-manifest/README.md at qcom-linux-kirkstone · qualcomm-linux/qcom-manifest](https://github.com/qualcomm-linux/qcom-manifest/blob/qcom-linux-kirkstone/README.md)
+[qcom-manifest/README.md at qcom-linux-scarthgap · qualcomm-linux/qcom-manifest](https://github.com/qualcomm-linux/qcom-manifest/blob/qcom-linux-scarthgap/README.md)
