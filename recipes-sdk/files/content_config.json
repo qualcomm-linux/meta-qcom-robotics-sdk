@@ -156,6 +156,7 @@
         {
             "name": "auto-explore",
             "oss_channel": "false",
+            "individual_prj": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
@@ -164,14 +165,16 @@
         {
             "name": "vio",
             "oss_channel": "false",
+            "individual_prj": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
             "to": "qirp-samples/demos/navigation/"
         },
         {
-            "name": "../followme",
+            "name": "followme",
             "oss_channel": "false",
+            "individual_prj": "true",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robot-followme.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/followme/",
@@ -180,6 +183,7 @@
         {
             "name": "vslam",
             "oss_channel": "false",
+            "individual_prj": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
             "from_local": "robotics/robotics-prop/",
@@ -188,6 +192,7 @@
         {
             "name": "qrb_ros_imu",
             "oss_channel": "true",
+            "individual_prj": "false",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
             "branch":"robotics-sdk.qclinux.1.0.r1-rel",
             "from_local": "robotics/qirp-oss/qrb-ros/platform/",
@@ -196,13 +201,22 @@
         {
             "name": "qrb_ros_system_monitor",
             "oss_channel": "true",
+            "individual_prj": "true",
             "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_system_monitor.git",
             "branch":"main",
+            "to": "qirp-samples/demos/platform/"
+        },
+        {   "name": "qrb_ros_color_space_convert",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_color_space_convert.git",
+            "branch":"main",
+            "individual_prj": "true",
             "to": "qirp-samples/demos/platform/"
         },
         {
             "name": "qrb_ros_battery",
             "oss_channel": "true",
+            "individual_prj": "false",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
             "branch":"robotics-sdk.qclinux.1.0.r1-rel",
             "from_local": "robotics/qirp-oss/qrb-ros/platform/",
@@ -211,6 +225,7 @@
         {
             "name": "ocr_service",
             "oss_channel": "true",
+            "individual_prj": "false",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
             "branch":"robotics-sdk.qclinux.1.0.r1-rel",
             "from_local": "robotics/qirp-oss/samples/ai_nodes/",
@@ -219,9 +234,18 @@
         {
             "name": "qrb_ros_camera",
             "oss_channel": "true",
+            "individual_prj": "true",
             "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_camera.git",
             "branch":"main",
             "to": "qirp-samples/demos/platform/"
+        }
+      ],
+      "scripts": [
+        {
+              "name": "scripts",
+              "oss_channel": "true",
+              "from_local":"qrb_ros_samples_scripts/qrb_ros_system_monitor/",
+              "to": "qirp-samples/demos/platform/qrb_ros_system_monitor/"
         }
       ]
 }

@@ -28,7 +28,8 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     for file in $search_dir;do
         echo $file
         . "$file"
-    done
+    done 
+
 
     #unpack qirp-sdk tarball into runtime/qirp-sdk
     search_dir="runtime"
@@ -71,8 +72,8 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     echo "setup qirp sysroot done!"
 fi
 
-DOCKER_IMAGE_NAME=qirp_docker
-ROS_DISTRO=jazz
+DOCKER_IMAGE_NAME=qirp-docker
+ROS_DISTRO=jazzy
 CONTAINER_NAME=qirp_docker_container_host
 #CONTAINER_NAME=qirp_docker_container
 
@@ -84,22 +85,23 @@ function build_docker_image(){
         return
     fi
     # Check if Docker image exists
-    if ! docker images | grep -q "$DOCKER_IMAGE_NAME"; then
+    if ! docker images --format "{{.Repository}}" | grep -w ^$DOCKER_IMAGE_NAME$;then
         echo "Docker image $DOCKER_IMAGE_NAME not found, loading..."
-        docker pull --platform=linux/arm64/v8 ros:$ROS_DISTRO
+        docker pull --platform linux/arm64/v8 arm64v8/ros:$ROS_DISTRO-ros-base
         if [ $? -eq 0 ]; then
             echo "Docker image successfully loaded."
         else
             echo "Error loading Docker image."
-            exit 1
+            return
         fi
-        docker tag ros:$ROS_DISTRO qirp_docker:latest
+        docker tag arm64v8/ros:$ROS_DISTRO-ros-base $DOCKER_IMAGE_NAME:latest
     else
         echo "Docker image $DOCKER_IMAGE_NAME already exists."
     fi
 
+
     # Check if Docker container exists
-    if ! docker ps -a | grep -q "$CONTAINER_NAME"; then
+    if !  docker ps -a --format "{{.Names}}" | grep -w ^$CONTAINER_NAME$; then
         echo "Docker container $CONTAINER_NAME not found, starting..."
         docker run -d -it \
             -e LOCAL_USER_NAME=$(whoami) \
@@ -112,7 +114,7 @@ function build_docker_image(){
             echo "Docker container successfully started."
         else
             echo "Error starting Docker container."
-            exit 1
+            return
         fi
     else
         echo "Docker container $CONTAINER_NAME already exists."
@@ -120,10 +122,10 @@ function build_docker_image(){
     DOCKER_SCRIPTS=$(find $SDK_TOP_DIR/runtime/qirp-sdk/install-dir -name "qirp-setup.sh")
 
     docker cp $DOCKER_SCRIPTS $CONTAINER_NAME:/home
-    #docker exec $CONTAINER_NAME /bin/bash -c "sed -i '/curl -sSL/,+2d' /home/qirp-setup.sh "
+    docker exec $CONTAINER_NAME /bin/bash -c "sed -i '/curl -sSL/,+8d' /home/qirp-setup.sh "
     docker exec $CONTAINER_NAME /bin/bash /home/qirp-setup.sh
     docker commit $CONTAINER_NAME $DOCKER_IMAGE_NAME
-    docker save $DOCKER_IMAGE_NAME | gzip > $SDK_TOP_DIR/runtime/qirp_docker.tar.gz
+    docker save $DOCKER_IMAGE_NAME | gzip > $SDK_TOP_DIR/runtime/$DOCKER_IMAGE_NAME.tar.gz
 }
 
 
@@ -135,10 +137,6 @@ if [ "$1" == "uninstall" ]; then
         rm -rf runtime/qirp*/*
     fi
     echo "uninstall qirp sdk "
-
-elif [ "$1" == "docker" ];then
-    echo "building docker image..."
-    build_docker_image
 else
     #run sdk env setup
     export search_dir=$SDK_TOP_DIR/toolchain/install_dir/environment*linux
@@ -147,4 +145,9 @@ else
     done
     export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
     export PYTHONPATH=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/
+fi
+
+if [ "$1" == "docker" ];then
+    echo "building docker image..."
+    build_docker_image
 fi

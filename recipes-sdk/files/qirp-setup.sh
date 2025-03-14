@@ -4,8 +4,26 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 # current dir
 
+HOST_FILES=()
+
+HOST_LIB_PATH="/usr/lib"
+HOST_INCLUDE_PATH="/usr/include"
+CONTAINER_LIB_PATH="/usr/local/lib"
+CONTAINER_INCLUDE_PATH="/usr/local/include"
+
+HOST_devices+=("--device=/dev/dri/card0")
+HOST_devices+=("--device=/dev/dri/renderD128")
+HOST_devices+=("--device=/dev/kgsl-3d0")
+HOST_devices+=("--device=/dev/dma_heap/system")
+HOST_devices+=("--device=/dev/dma_heap/qcom,system")
+HOST_devices+=("--device=/dev/fastrpc-cdsp")
+HOST_devices+=("--device=/dev/video2")
+HOST_devices+=("--device=/dev/v4l-subdev8")
+HOST_devices+=("--device=/dev/video0")
+HOST_devices+=("--device=/dev/video33")
+
 # Define Docker image and container names
-IMAGE_NAME="qirp_docker"
+IMAGE_NAME="qirp-docker"
 CONTAINER_NAME="qirp-samples-container"
 
 linux_docker_param=$1
@@ -13,7 +31,7 @@ if [ "$2" == "--docker_path" ]; then
     echo "loading docker path from $3"
     IMAGE_PATH=$3
 else
-    IMAGE_PATH="/home/qirp_docker.tar.gz"
+    IMAGE_PATH="/home/qirp-docker.tar.gz"
 fi
 
 config_file="config.yaml"
@@ -26,63 +44,44 @@ apt_packages_base=( \
     ros-$ROS_DISTRO-cv-bridge \
     ros-$ROS_DISTRO-vision-msgs \
     ros-$ROS_DISTRO-sensor-msgs \
-    weston-qcom \
-    gstreamer1.0-plugins-qcom \
-    gstreamer1.0-tools \
-    camxapi-kt \
-    libqmmf-dev \
-    syslog-plumber-dev \
-    libimage-transport-dev \
-    qnn-tools \
-    libqnn-dev \
-    libqnn1 \
+    ros-$ROS_DISTRO-usb-cam  \
     libsndfile1-dev \
     libhdf5-dev \
     libopencv-dev \
     python3-numpy \
     python3-opencv \
-	python-is-python3 \
+    python-is-python3 \
     python3-pip \
     python3-colcon-common-extensions \
     python3-pandas \
     wget \
     libpulse-dev \
+    python3-requests \
+    vim \
+    unzip \
+    v4l-utils \
 )
 
-pip_packages_base=(
-    numpy==1.24.4 \
-    requests \
-    vcstool \
-    pytesseract \
+pip_packages_base=( \
+    typing_extensions  \
 )
 
 qrb_ros_node=( \
-    https://github.com/quic-qrb-ros/qrb_ros_camera.git \
-    https://github.com/quic-qrb-ros/lib_mem_dmabuf.git \
-    https://github.com/quic-qrb-ros/qrb_ros_transport.git \
-    https://github.com/quic-qrb-ros/qrb_ros_imu.git \
-    https://github.com/quic-qrb-ros/qrb_ros_transport.git \
-    https://github.com/quic-qrb-ros/qrb_ros_interfaces.git \
-    https://github.com/quic-qrb-ros/qrb_ros_audio_service.git \
-    https://github.com/quic-qrb-ros/qrb_ros_audio_common.git \
-    https://github.com/quic-qrb-ros/qrb_ros_yolo_processor.git \
 )
-
-#https://github.com/quic-qrb-ros/qrb_ros_nn_inference.git \
 
 apt_packages_sample=()
 pip_packages=()
 
 
-#---------main entry point ------------
+#---------main entry point of ubuntu ------------
 
-function check_workdir(){
+function check_workdir(){ 
     # check src dir if exit
     if [ -d "$DIR/src" ]; then
         echo "workdir is $DIR "
         echo "source code dir is $DIR/src "
     else
-        echo "no $DIR , creat it..."
+        echo "no $DIR/src , creat it..."
         mkdir -p "$DIR/src"
         if [ $? -eq 0 ]; then
             echo "$DIR/src successfully create"
@@ -106,15 +105,13 @@ function check_workdir(){
     fi
 
     cd $DIR
+    echo "change path to $DIR"
 
-    THIS_SCRIPT=$(readlink -f ${BASH_SOURCE[0]})
-    script_dir="$(dirname "${THIS_SCRIPT}")"
 }
 #--------setup in ubuntu -----------
 function ubuntu_setup(){
     try_times=5
     if [ ! -f "$DIR/env_check" ]; then
-        #git clone qirp-ros-samples /apt install
         scripts_env_setup
         download_qrb_ros_node $try_times
         touch $DIR/env_check
@@ -123,7 +120,6 @@ function ubuntu_setup(){
     download_model  $try_times
     download_model_label $try_times
     download_depends
-    #tensorflow_setup
     #build depends ros nodes
     source /opt/ros/$ROS_DISTRO/setup.sh
     cd $DIR; colcon build --executor sequential
@@ -138,17 +134,16 @@ function ubuntu_setup(){
 }
 function setup_env(){
     source /opt/ros/$ROS_DISTRO/setup.sh
-    source $DIR/install/setup.bash
+    #source $DIR/install/setup.bash
     if [ $? -eq 0 ]; then
         echo "setup_env successfully "
     else
         echo "setup_env  fail"
         exit 1
     fi
-
 }
 function scripts_env_setup(){
-
+    
     #download depends
     sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common curl
     if [ $? -eq 0 ]; then
@@ -158,20 +153,10 @@ function scripts_env_setup(){
         exit 1
     fi
 
-    #add qualcomm ppa
-    #sudo add-apt-repository ppa:carmel-team/jammy-release --login
-    echo 'y' | sudo add-apt-repository ppa:ubuntu-qcom-iot/qcom-ppa
-    if [ $? -eq 0 ]; then
-        echo "add-apt-repository ppa:ubuntu-qcom-iot/qcom-ppa successfully "
-    else
-        echo "add-apt-repository ppa:ubuntu-qcom-iot/qcom-ppa fail"
-        exit 1
-    fi
-
     #install ros base
+    #for jazzy
     sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null  
     if [ $? -eq 0 ]; then
         echo "add ros base successfully "
     else
@@ -179,13 +164,11 @@ function scripts_env_setup(){
         exit 1
     fi
 
-
-    sudo apt update
-    sudo apt upgrade
+    sudo apt update && sudo apt upgrade -y
     echo "apt install base pkgs ${apt_packages_base[@]} ... "
     #install apt pkgs
     for package in "${apt_packages_base[@]}"; do
-        sudo  DEBIAN_FRONTEND=noninteractive apt-get install -y $package
+        sudo  DEBIAN_FRONTEND=noninteractive apt-get install -y $package   --fix-missing
         if [ $? -eq 0 ]; then
             echo "apt-get install -y  $package successfully "
         else
@@ -193,18 +176,24 @@ function scripts_env_setup(){
             exit 1
         fi
     done
+    
     echo "pip install base pkgs ${pip_packages_base[@]} ... "
+    #can't pip install in ubuntu24.04 docker 
+    if [ -f /usr/lib/python3.12/EXTERNALLY-MANAGED ]; then
+        sudo mv /usr/lib/python3.12/EXTERNALLY-MANAGED  /usr/lib/python3.12/EXTERNALLY-MANAGED.bk
+    fi
+    
     #install pip pkgs
     for package in "${pip_packages_base[@]}"; do
-        pip install $package
+        sudo pip3 install --user --upgrade --force-reinstall $package
         if [ $? -eq 0 ]; then
             echo "pip install $package successfully "
         else
             echo "pip install $package fail"
             exit 1
-        fi
+        fi  
     done
-
+        
     #install yq tool
     sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_arm64
     if [ $? -eq 0 ]; then
@@ -213,12 +202,10 @@ function scripts_env_setup(){
         echo "add yq tool fail"
         exit 1
     fi
-
+    
     sudo chmod a+x /usr/local/bin/yq
-
-    #extra ops for camera
-    sudo cp /usr/include/log/log.h /usr/include/log.h
 }
+
 function download_qrb_ros_node(){
     cd $DIR/src
     local N=$1
@@ -228,7 +215,7 @@ function download_qrb_ros_node(){
     fi
 
     for node in ${qrb_ros_node[@]};do
-        if [ -f $DIR/src/$(echo $node | awk -F'/' '{print $NF}').done ]; then
+        if [ -f $DIR/src/$(echo $node | awk -F'/' '{print $NF}').done ]; then 
             echo "$node has been download in $DIR/src"
         else
             git clone $node
@@ -250,7 +237,7 @@ function read_configuration(){
         model+=($(yq eval '.model[]' $file))
         model_label+=($(yq eval '.model_label[]' $file))
         apt_packages+=($(yq eval '.apt[]' $file))
-        pip_packages+=($(yq eval '.pip[]' $file))
+        pip_packages+=($(yq eval '.pip[]' $file))                
     done
 
     echo "remove the repeat packages"
@@ -279,7 +266,7 @@ function download_model(){
             if [ -f $DIR/model/$model_name.done ]; then
                 echo "$model_name has been download in $DIR/model"
             else
-                wget -O $DIR/model/$model_name $link
+                wget --no-check-certificate -O $DIR/model/$model_name $link
                 if [ $? -eq 0 ]; then
                     echo "download $model_name successfully "
                     touch $DIR/model/$model_name.done
@@ -304,7 +291,7 @@ function download_model_label(){
             if [ -f $DIR/model/$label_name.done ]; then
                 echo "$label_name has been download in $DIR/model"
             else
-                wget -O $DIR/model/$label_name $link
+                wget --no-check-certificate -O $DIR/model/$label_name $link
                 if [ $? -eq 0 ]; then
                     echo "download $label_name successfully "
                     touch $DIR/model/$label_name.done
@@ -314,7 +301,7 @@ function download_model_label(){
                 fi
             fi
         done
-    fi
+    fi   
 
 }
 function download_depends(){
@@ -325,7 +312,7 @@ function download_depends(){
         if [[ $package == $search_item ]];then
             echo "$package has been install"
         else
-            sudo  DEBIAN_FRONTEND=noninteractive apt-get install -y $package
+            sudo  DEBIAN_FRONTEND=noninteractive apt-get install -y $package   --fix-missing
             if [ $? -eq 0 ]; then
                 echo "apt-get install -y  $package successfully "
             else
@@ -334,7 +321,7 @@ function download_depends(){
             fi
             search_item+=$package
         fi
-    done 
+    done    
     echo "pip install base pkgs ${pip_packages[@]} ... "
     search_item=""
     #install pip pkgs
@@ -342,7 +329,7 @@ function download_depends(){
         if [[ $package == $search_item ]];then
             echo "$package has been install"
         else
-            sudo pip install $package
+            sudo pip3 install --user --upgrade --force-reinstall $package
             if [ $? -eq 0 ]; then
                 echo "pip install $package successfully "
             else
@@ -357,7 +344,7 @@ function download_depends(){
 #--------setup in qclinux -----------
 function docker_check_install_depends(){
     # Check if Docker image exists
-    if ! docker images | grep -q "$IMAGE_NAME"; then
+    if ! docker images --format "{{.Repository}}" | grep -w ^$IMAGE_NAME$ ;then
         echo "Docker image $IMAGE_NAME not found, loading from $IMAGE_PATH ..."
         if [ -f $IMAGE_PATH ];then
             docker load -i "$IMAGE_PATH"
@@ -376,27 +363,39 @@ function docker_check_install_depends(){
     fi
 
     # Check if Docker container exists
-    if ! docker ps -a | grep -q "$CONTAINER_NAME"; then
+    if ! docker ps -a --format "{{.Names}}" | grep -w ^$CONTAINER_NAME$; then
         echo "Docker container $CONTAINER_NAME not found, starting..."
-        docker run -d -it \
+        docker run -d -it --rm \
             -e LOCAL_USER_NAME=$(whoami) \
             -e LOCAL_USER_ID=$(id | awk -F "(" '{print $1}' | sed 's/uid=//') \
             -e LOCAL_GROUP_ID=$(id | awk -F "(" '{print $2}' | awk -F " " '{print $NF}' | sed 's/gid=//') \
-            -v /$DIR/:/$DIR \
+            -v $Linux_DIR:$Linux_DIR \
+            ${HOST_FILES[@]} \
+            ${HOST_devices[@]} \
+            --network=host \
             --name=$CONTAINER_NAME \
             --security-opt seccomp=unconfined \
-            $IMAGE_NAME:latest /bin/bash
+            $IMAGE_NAME:latest   
         if [ $? -eq 0 ]; then
             echo "Docker container successfully started."
         else
             echo "Error starting Docker container."
             exit 1
         fi
+        
     else
         echo "Docker container $CONTAINER_NAME already exists."
     fi
+    
+    docker exec -it -u root $CONTAINER_NAME /bin/bash
+    if [ $? -eq 0 ]; then
+        echo "Docker container successfully started."
+    else
+        echo "Error starting Docker container."
+        exit 1
+    fi
 }
-function linux_setup(){
+function linux_env_setup(){
     echo "Linux setup"
 
     SDK_NAME="QIRP_SDK"
@@ -415,15 +414,11 @@ function linux_setup(){
 
     #qnn environment variables export
     export ADSP_LIBRARY_PATH=/lib/aarch64-oe-linux-gcc11.2:/lib/hexagon-v68/unsigned:${ADSP_LIBRARY_PATH}
-
     if [[ $linux_docker_param == "docker" ]];then
         echo "building docker image..."
-        if [ ! -f "$DIR/env_check" ]; then
-            docker_check_install_depends
-            #docker exec -it $CONTAINER_NAME bash -c "source /opt/ros/$ROS_DISTRO/setup.sh;cd $DIR; colcon build --executor sequential"
-            touch $DIR/env_check
-        fi
-    fi
+        docker_check_install_depends           
+    fi 
+    
 }
 
 
@@ -431,12 +426,13 @@ function linux_setup(){
 # if (target:ubuntu):
 #     apt install <toolchain list>
 function main(){
-    if lsb_release -a 2>/dev/null | grep -q "Ubuntu"; then
-        DIR="/home/ubuntu/qirp-sdk"
+    DIR="/home/ubuntu/qirp-sdk"
+    if lsb_release -a 2>/dev/null | grep -q "Ubuntu"; then  
         check_workdir
         ubuntu_setup
     else
-        linux_setup
+        Linux_DIR="/opt/qirp_ws"
+        linux_env_setup     
     fi
 }
 main

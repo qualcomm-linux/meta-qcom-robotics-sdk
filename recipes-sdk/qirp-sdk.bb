@@ -9,6 +9,9 @@ SRC_URI =+ "file://install.sh"
 SRC_URI =+ "file://uninstall.sh"
 SRC_URI =+ "file://qirp-setup.sh"
 SRC_URI =+ "file://qirp-upgrade.sh"
+SRC_URI =+ "file://samples.json"
+SRC_URI =+ "file://qrb_ros_samples_scripts/"
+
 
 # The path infos of qirp content
 OSS_CHANNEL_FLAG = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-robotics-extras', 'false', 'true', d)}"
@@ -21,14 +24,13 @@ PV = "2.2.0"
 FILES:${PN} = "/usr/share/qirp-setup.sh"
 
 # The functionality of qirp SDK
-RDEPENDS:${PN}:append = " qti-robotics qti-qnn "
+RDEPENDS:${PN}:append = " qti-robotics "
 RDEPENDS:${PN}:append:qcom-custom-bsp = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-qim-product-sdk', '', ' qti-qim-product-sdk ', d)}"
 
 DEPENDS:append = " \
     jq-native \
     git-native \
     qti-robotics \
-    qti-qnn \
 "
 
 DEPENDS:append:qcom-custom-bsp = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-qim-product-sdk', '', ' qti-qim-product-sdk ', d)}"

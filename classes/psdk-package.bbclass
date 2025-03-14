@@ -94,7 +94,8 @@ organize_sdk_file () {
         oss_channel=$(echo $line | jq -r '.oss_channel')
         from_uri=$(echo $line | jq -r '.from_uri')
         branch=$(echo $line | jq -r '.branch')
-        from_local="${WORKSPACE}/$(echo $line | jq -r '.from_local')"
+        individual_prj=$(echo $line | jq -r '.individual_prj')
+        from_local="$(echo $line | jq -r '.from_local')"
         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
         if [[ "$oss_channel" == "false" && "$oss_channel" != "${OSS_CHANNEL_FLAG}" ]]; then
@@ -104,19 +105,44 @@ organize_sdk_file () {
 
         #create destination dir
         install -d $to
+
         if [[ -n "$from_uri" && "$from_uri" != "null" ]]; then
-            repo=$(echo $from_uri | sed -e 's/;branch=.*//')
-            branch=$(echo $branch | sed -e 's/.*;branch=//')
-            if [[ -d $to$name ]]; then
-                rm -rf $to$name
+            # if "$individual_prj" == "false", that more than one feature include in this project
+            if [[ "$individual_prj" == "false" ]]; then
+                tempdir=$(mktemp -p ${WORKSPACE} -d)
+                bbnote "$name downloading: git clone -b $branch $from_uri $tempdir"
+                git clone -b $branch $from_uri $tempdir
+                find $tempdir -name "$name" -type d -prune -exec cp -r {} $to \;
+                rm -rf $tempdir
+            else
+                bbnote "$name downloading: git clone -b $branch $from_uri $to$name"
+                git clone -b $branch $from_uri $to$name
             fi
-            git clone -b $branch $repo $to$name
+            continue
         fi
 
-        if [ -d "$from_local$name" ]; then
-            cp -r $from_local$name $to
-            bbnote "Copy sample source from $from_local$name to $to"
+        if [ -d "${WORKSPACE}/$from_local$name" ]; then
+            bbnote "Copy sample source from ${WORKSPACE}/$from_local$name to $to"
+            cp -r ${WORKSPACE}/$from_local$name $to
         fi
+
+    done
+
+    #orgnanize QIRP sample.json
+    SAMPLE_JESON="${WORKDIR}/samples.json"
+    if [ -n "$SAMPLE_JESON" ]; then
+        cp $SAMPLE_JESON ${SSTATE_IN_DIR}/${SDK_PN}/qirp-samples/
+    fi
+
+    jq -c '.scripts[]' $CONFIG_FILE | while read line; do
+         name=$(echo $line | jq -r '.name')
+         from_local="${WORKDIR}/$(echo $line | jq -r '.from_local')"
+         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
+
+         if [ -d "$from_local$name" ]; then
+             cp -r $from_local$name $to
+             bbnote "Copy sample source from $from_local$name to $to"
+         fi
     done
 
     # orgnanize tools

@@ -32,7 +32,7 @@ The purpose of this document is to help a developer get started with the QIRP SD
 
 ## Host Setup and Download the Yocto Project BSP
 
-Refer to https://github.com/qualcomm-linux/qcom-manifest/blob/qcom-linux-kirkstone/README.md setup the host environment.
+Refer to https://github.com/qualcomm-linux/qcom-manifest/blob/qcom-linux-scarthgap/README.md setup the host environment.
 
 ## Download the layer of QIRP SDK
 
@@ -46,10 +46,10 @@ repo sync -c -j8
 
 Example:
 
-To download the `qcom-6.6.65-QLI.1.4-Ver.1.0_robotics-product-sdk-1.0.xml   ` release, run this command:
+To download the `qcom-6.6.65-QLI.1.4-Ver.1.1_robotics-product-sdk-1.1.xml   ` release, run this command:
 
 ```
-repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-scarthgap -m qcom-6.6.65-QLI.1.4-Ver.1.0_robotics-product-sdk-1.0.xml
+repo init -u https://github.com/quic-yocto/qcom-manifest -b qcom-linux-scarthgap -m qcom-6.6.65-QLI.1.4-Ver.1.1_robotics-product-sdk-1.1.xml
 repo sync -c -j8
 ```
 
