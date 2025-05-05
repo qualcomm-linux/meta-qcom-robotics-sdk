@@ -7,7 +7,7 @@ on:
 permissions:
   issues: write
   pull-requests: write
-  
+
 jobs:
   stale:
     runs-on: ubuntu-latest
@@ -19,4 +19,3 @@ jobs:
             days-before-pr-stale: 30
             stale-pr-message: "This PR is stale. Add a nice message, can mention maintainers or maintainer team to draw attention"
             stale-issue-message: "This issue is stale. Add a nice message, can mention maintainers or maintainer team to draw attention"
-            

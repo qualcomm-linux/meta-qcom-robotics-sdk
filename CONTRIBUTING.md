@@ -12,7 +12,7 @@ In general, contributors should develop on branches based off of `main` and pull
 
 1. Please read our [code of conduct](CODE-OF-CONDUCT.md) and [license](LICENSE.txt).
 1. [Fork](https://github.com/qualcomm/<REPLACE-ME>/fork) and clone the repository.
-    
+
     ```bash
     git clone https://github.com/<username>/<REPLACE-ME>.git
     ``` 
@@ -31,7 +31,7 @@ In general, contributors should develop on branches based off of `main` and pull
 
 1. Make your changes, add tests, and make sure the tests still pass.
 1. Commit your changes using the [DCO](https://developercertificate.org/). You can attest to the DCO by commiting with the **-s** or **--signoff** options or manually adding the "Signed-off-by":
-    
+
     ```bash
     git commit -s -m "Really useful commit message"`
     ```
