@@ -1,6 +1,8 @@
 name: Qualcomm Organization Repolinter
 
 on: [push, pull_request]
+permissions:
+  contents: read
 
 jobs:
   repolinter:
