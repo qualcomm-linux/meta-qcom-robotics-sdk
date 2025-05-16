@@ -6,7 +6,7 @@
 SDK_NAME="QIRP_SDK"
 
 FOUND_PKGS=""
-PKG_LIST_DIR="/data/"
+PKG_LIST_DIR="/usr/share/qirp-sdk/data/"
 PKG_LIST_FILE="$PKG_LIST_DIR/$SDK_NAME.list"
 
 ALL_PKGS="\
@@ -23,7 +23,7 @@ function check_permission() {
 
 # scan packages in current path
 function scan_packages() {
-    FOUND_PKGS=`find . -name "*.ipk" -o -name "*.deb" \
+    FOUND_PKGS=`find ../packages -name "*.ipk" -o -name "*.deb" \
         | grep -v "\-dbg_" \
         | grep -v "\-dev_" \
         | grep -v "\-staticdev_" \
@@ -32,7 +32,7 @@ function scan_packages() {
 
 # install packages and save list to file
 function install_packages() {
-    
+
     if lsb_release -a 2>/dev/null | grep -q "Ubuntu"; then
         install_command="dpkg -i --force-overwrite --force-depends "
     else

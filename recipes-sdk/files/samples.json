@@ -1,0 +1,50 @@
+{
+    "version": "2.2.0",
+    "samples": [
+        {
+            "name": "qrb ros imu",
+            "path": "demos/platform/qrb_ros_imu",
+            "executable_binary_path": "demos/platform/qrb_ros_imu/install/qrb_ros_imu/lib/qrb_ros_imu/imu_node",
+            "run_commands": [
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 run qrb_ros_imu imu_node",
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 topic echo /imu"
+            ]
+        },
+        {
+            "name": "qrb ros battery",
+            "path": "demos/platform/qrb_ros_battery",
+            "executable_binary_path": "demos/platform/qrb_ros_battery/install/qrb_ros_battery/lib/qrb_ros_battery/battery_node",
+            "run_commands": [
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 run $package_name battery_node",
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 topic echo /battery_stats"
+            ]
+        },
+        {
+            "name": "qrb ros camera",
+            "path": "demos/platform/qrb_ros_camera",
+            "executable_binary_path": "demos/platform/qrb_ros_camera/install/qrb_ros_camera/lib/qrb_ros_camera/qrb_ros_camera",
+            "run_commands": [
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 launch qrb_ros_camera qrb_ros_camera_launch.py"
+            ]
+        },
+        {
+            "name": "qrb ros system monitor",
+            "path": "demos/platform/qrb_ros_system_monitor",
+            "executable_binary_path": "demos/platform/qrb_ros_system_monitor/install/lib/qrb_ros_system_monitor",
+            "run_commands": [
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 run qrb_ros_system_monitor qrb_ros_system_monitor",
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 topic echo /memory"
+            ]
+        },
+        {
+            "name": "ocr service",
+            "path": "demos/platform/ocr_service",
+            "executable_binary_path": "demos/platform/ocr_service/install/ocr_service/lib/ocr_service/ocr_service",
+            "run_commands": [
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 run ocr_service ocr_client test",
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 run ocr_service ocr_testnode --topic test --picture /usr/digital_720p.png",
+                "export HOME=/home && source /usr/bin/ros_setup.sh && source /usr/share/qirp-setup.sh && ros2 run ocr_service ocr_server"
+            ]
+        }
+    ]
+}

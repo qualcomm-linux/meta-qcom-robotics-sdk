@@ -6,7 +6,7 @@
 SDK_NAME="QIRP_SDK"
 
 REMOVE_PKGS=()
-PKG_LIST_FILE="/data/$SDK_NAME.list"
+PKG_LIST_FILE="/usr/share/qirp-sdk/data/$SDK_NAME.list"
 
 # check permission for execute this script
 function check_permission() {

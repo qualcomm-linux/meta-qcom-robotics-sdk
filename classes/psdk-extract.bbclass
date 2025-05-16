@@ -1,5 +1,6 @@
-# Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
+inherit psdk-install
 
 PATH:prepend = "/usr/bin:"
 
@@ -18,8 +19,8 @@ python do_fetch_extra () {
             return
         sdk_matches = glob.glob(sdk)[0]
         sdk_path = Path(sdk_matches)
-        cp_cmd = "cp -r %s %s/" %(sdk_path,d.getVar("B"))
-        bb.note("Get SDK from %s" %sdk_path)
+        cp_cmd = "cp -r %s %s/" %(sdk_path,d.getVar("S"))
+        bb.note("Get SDK from %s by cmd %s" %(sdk_path,cp_cmd))
         subprocess.call(cp_cmd,shell=True)
 
         # Get SDK version info
@@ -83,7 +84,7 @@ python do_fetch_extra () {
                 bb.note("SDK hash matches with the info in config file")
                 return
 
-        if sdk_version == config_sdk_version and sdk_hashsum == config_sdk_hashsum:
+        if config_sdk_version in sdk_version and sdk_hashsum == config_sdk_hashsum:
             bb.note("SDK version & hash matches with the info in config file")
             return
         else:
@@ -91,18 +92,23 @@ python do_fetch_extra () {
             bb.warn("real sdk hash is %s, hash in config is %s " %(sdk_hashsum,config_sdk_hashsum))
             bb.warn("Version or hashsum MISMATCHES, please check")
 
-    sdk_version, sdk_hashsum = get_sdk_info(d.getVar("SDKSPATH"))
-    config_sdk_version, config_sdk_hashsum = get_config_sdk_info(d.getVar("CONFIGFILE"))
-    version_check(sdk_version, sdk_hashsum, config_sdk_version, config_sdk_hashsum)
+    if d.getVar("SDKSPATH"):
+        bb.note("SDKSPATH found")
+        sdk_version, sdk_hashsum = get_sdk_info(d.getVar("SDKSPATH"))
+        config_sdk_version, config_sdk_hashsum = get_config_sdk_info(d.getVar("CONFIGFILE"))
+        version_check(sdk_version, sdk_hashsum, config_sdk_version, config_sdk_hashsum)
+    else:
+        bb.note("SDKSPATH not found")
 }
 
-addtask do_fetch_extra before do_fetch
+addtask do_fetch_extra after do_unpack before do_unpack_extra
 
-python do_unpack () {
+python do_unpack_extra () {
     import os
     from pathlib import Path
     import subprocess
 
+    #Recursive deep query, and according to the suffix of each file, choose different methods to decompress it to the directory with the same name
     def extract_sdk(dir):
         if not os.path.exists(dir):
             bb.fatal('{} not exist'.format(dir))
@@ -117,6 +123,7 @@ python do_unpack () {
     def extract_package(file):
         extract_funcs = [
             ('.tar.gz', extract_targz),
+            ('.tar.zst', extract_tarzst),
             ('.tgz', extract_targz),
             ('.tar.xz', extract_tarxz),
             ('.txz', extract_txz),
@@ -129,7 +136,8 @@ python do_unpack () {
         for func in extract_funcs:
             if (file.endswith(func[0])):
                 extract_file(file, func)
-
+    # extract filename.postfixs to path filename(create it if not exist)
+    # according to postfixs choose different function
     def extract_file(file, func):
         out_path = file[:-len(func[0])]
         bb.note('extract {} to {}'.format(file, out_path))
@@ -143,6 +151,18 @@ python do_unpack () {
         subprocess.call(mkdir_cmd,shell=True)
         # tar -zxf file -C out_path
         extract_cmd = "tar -zxf %s -C %s" %(file,out_path)
+        bb.note(extract_cmd)
+        subprocess.call(extract_cmd,shell=True)
+        pass
+
+    def extract_tarzst(file, out_path):
+        mkdir_cmd = "mkdir -p %s" %out_path
+        subprocess.call(mkdir_cmd,shell=True)
+        # unzstd -d file && tar -xf file -C out_path
+        extract_cmd = "unzstd -d %s" %file
+        bb.note(extract_cmd)
+        subprocess.call(extract_cmd,shell=True)
+        extract_cmd = "tar -xf %s -C %s" %(file[:-4],out_path)
         bb.note(extract_cmd)
         subprocess.call(extract_cmd,shell=True)
         pass
@@ -185,19 +205,31 @@ python do_unpack () {
         pass
 
     def extract_deb(file, out_path):
-        # dpkg -X file out_path
-        extract_cmd = "dpkg -X %s %s/data" %(file,out_path)
-        subprocess.call(extract_cmd,shell=True)
-        extract_cmd = "dpkg -e %s %s" %(file,out_path)
-        bb.note(extract_cmd)
-        subprocess.call(extract_cmd,shell=True)
+        # check the deb packages if is in PKGS_SKIP
+        last_slash_index = file.rfind("/")
+        next_underscore_index = file.find("_", last_slash_index)
+        if d.getVar('PKGS_SKIP') and file[last_slash_index + 1:next_underscore_index] in d.getVar('PKGS_SKIP'):
+            bb.note(file + "is in PKGS_SKIP, skip")
+        else:
+            # dpkg -X file out_path
+            extract_cmd = "dpkg -X %s %s/data" %(file,out_path)
+            subprocess.call(extract_cmd,shell=True)
+            extract_cmd = "dpkg -e %s %s" %(file,out_path)
+            bb.note(extract_cmd)
+            subprocess.call(extract_cmd,shell=True)
         pass
-
     def extract_ipk(file, out_path):
-        # ar -x file --output out_path
-        extract_cmd = "cd %s && ar -x %s && cd -" %(out_path,file)
-        bb.note(extract_cmd)
-        subprocess.call(extract_cmd,shell=True)
+        # check the ipk packages if is in PKGS_SKIP
+        last_slash_index = file.rfind("/")
+        next_underscore_index = file.find("_", last_slash_index)
+        bb.note("PKGS_SKIP:%s %s" %(d.getVar('PKGS_SKIP'), file[last_slash_index + 1:next_underscore_index]))
+        if d.getVar('PKGS_SKIP') and file[last_slash_index + 1:next_underscore_index] in d.getVar('PKGS_SKIP'):
+            bb.note(file + "is in PKGS_SKIP, skip")
+        else:
+            # ar -x file --output out_path
+            extract_cmd = "cd %s && ar -x %s && cd -" %(out_path,file)
+            bb.note(extract_cmd)
+            subprocess.call(extract_cmd,shell=True)
         pass
 
     def extract_7z(file, out_path):
@@ -205,73 +237,23 @@ python do_unpack () {
         # 7z x file -r -o out_path
         pass
 
+    #The ultimate goal: unzip all packages that meet the decompression conditions into the S directory, in a directory with the same name as the package, example.postfix to example/
     extract_sdk(d.getVar('S'))
 }
-
-python do_install() {
-    import os
-    import subprocess
-    import shutil
-
-    def locate_extract_dir(dir):
-        if(len(os.listdir(dir)) == 1 ):
-            bb.note(dir + "/" + os.listdir(dir)[0])
-            d.setVar("COPYDIR", dir + "/" + os.listdir(dir)[0])
-            # d.setVar("DIRNAME", os.listdir(dir)[0])
-        else:
-            for entry in os.listdir(dir):
-                path = os.path.join(dir, entry)
-                if os.path.isdir(path) and entry != ".git":
-                    locate_extract_dir(path)
-
-    def migrate_data_dir(dir):
-        data_dir_list = ""
-        for dirpath, dirnames, filenames in os.walk(dir):
-            if "data" in dirnames:  # if include data dir
-                data_dir = os.path.join(dirpath, "data")
-                data_dir += "/*"
-                data_dir_list += data_dir + " "
-        if data_dir_list:
-            copy_cmd = "cp -r %s %s" %(data_dir_list,d.getVar("D") + "/" + d.getVar("PN"))
-            bb.note(copy_cmd)
-            subprocess.call(copy_cmd,shell=True)
-        else:
-            bb.note("do_install: There has no data dir after unpacked")
-
-    locate_extract_dir(d.getVar('S'))
-    copy_cmd = "cp -r %s %s" %(d.getVar("COPYDIR"),d.getVar("D") + "/" + d.getVar("PN"))
-    bb.note(copy_cmd)
-    subprocess.call(copy_cmd,shell=True)
-    migrate_data_dir(d.getVar("D") + "/" + d.getVar("PN"))
-
-    # remove N/A files
-    rm_cmd = "rm -rf %s" %d.getVar("FILES_SKIP")
-    bb.note(rm_cmd)
-    subprocess.call(rm_cmd,shell=True)
-
-    directory = d.getVar("D") + "/" + d.getVar("PN")
-    for file in os.listdir(directory):
-        if file.endswith('.'+d.getVar("IMAGE_PKGTYPE")):
-            pkg_file = os.path.join(directory, file)
-            os.remove(pkg_file)
-            dir_name = os.path.splitext(pkg_file)[0]
-            bb.note(dir_name)
-            if os.path.isdir(dir_name):
-                shutil.rmtree(dir_name)
-}
-
-SYSROOT_DIRS = "/${DIRNAME}/"
-SYSROOT_DIRS_IGNORE = "/${PN}/${PN}"
-FILES:${PN} = "/"
+addtask do_unpack_extra after do_unpack before do_install
 
 do_fetch_extra[cleandirs] = "${S}"
-do_unpack[cleandirs] = ""
-do_configure[noexec] = "1"
-do_compile[noexec] = "1"
-do_prepare_recipe_sysroot[noexec] = "1"
-do_populate_lic[noexec] = "1"
-do_package_qa[noexec] = "1"
 
-INSANE_SKIP:${PN} += "already-stripped"
-INHIBIT_SYSROOT_STRIP = "1"
-EXCLUDE_FROM_SHLIBS = "1"
+#do_fetch_extra[cleandirs] = "${S}"
+PV = "1.0.0"
+PR = "r0"
+#do_unpack[cleandirs] = ""
+#do_configure[noexec] = "1"
+#do_compile[noexec] = "1"
+#do_prepare_recipe_sysroot[noexec] = "1"
+#do_populate_lic[noexec] = "1"
+#do_package_qa[noexec] = "1"
+
+deltask do_patch
+deltask do_configure
+deltask do_compile

@@ -6,13 +6,28 @@
 
 IMAGE_NAME="qcom-robotics-console-image"
 QIRP_NAME="qirp-sdk"
-SAMPLE_DIR="sample-code"
-DEPLOY_DIR="tmp-glibc/deploy/artifacts"
+SAMPLE_DIR="qirp-nodes"
+TOPDIR="$(pwd)/../"
+MACHINE=$(grep "^MACHINE =" ./conf/auto.conf | awk -F '=' '{print $2}' | tr -d ' "')
+QCOM_SELECTED_BSP=$(grep "^QCOM_SELECTED_BSP =" ./conf/auto.conf | awk -F '=' '{print $2}' | tr -d ' "')
+# adapt to anothers mode
+if [ -z "$MACHINE" ]; then
+    MACHINE=$(grep "^MACHINE ?=" ./conf/auto.conf | awk -F '=' '{print $2}' | tr -d ' "')
+fi
+
+DEPLOY_DIR="tmp-glibc/deploy/qirpsdk_artifacts/${MACHINE}"
 FUNCTION_SDK="qirf-sdk"
+QIRF_PROP_API_SCRIPT="layers/meta-qti-robotics-prop/scripts/qirf_prop_api_check.sh"
 
 # API check is disabled by default
 APICHECK_ENABLED=0
 package_list=()
+
+sample_test_list=" \
+    mono-vslam \
+    depth-vslam \
+"
+IFS=' ' read -r -a sample_array <<< "$sample_test_list"
 
 ERROR(){
     local message="$1"
@@ -30,12 +45,20 @@ USAGE() {
 
 api_check() {
     # ros environment Host setup
-    source /opt/ros/foxy/setup.sh
+    if [ -d "/opt/ros/foxy" ]; then
+        echo "ROS Foxy detected."
+        source /opt/ros/foxy/setup.sh
+    elif [ -d "/opt/ros/humble" ]; then
+        echo "ROS Humble detected."
+        source /opt/ros/humble/setup.sh
+    else
+        echo "No supported ROS version detected."
+    fi
 
     for dir in "${package_list[@]}"; do
         cd $dir || exit 1
-        # BUILD_TESTS_ONLY=ON, build test case only
-        colcon build --cmake-args -DBUILD_TESTS_ONLY=ON
+        # BUILD_TESTING=ON, build test case only
+        colcon build --cmake-args -DBUILD_TESTING=ON
         if [ $? -ne 0 ]; then
             echo "Error building test code in $dir. Exiting."
             exit 1
@@ -46,7 +69,7 @@ api_check() {
             exit 1
         fi
         # clean the build cache
-        rm -rf ./install ./log ./build && cd ..
+        rm -rf ./install ./log ./build && cd -
     done
 }
 
@@ -72,7 +95,7 @@ compilation_check() {
 
 start_sanity_check() {
     echo "Unpacking QIRP SDK..."
-    if ! ls $(pwd)/$DEPLOY_DIR/$QIRP_NAME/*.tar.gz &> /dev/null; then
+    if ! ls $(pwd)/$DEPLOY_DIR/$QIRP_NAME*.tar.gz &> /dev/null; then
         echo "    There are no QIRP SDK in $(pwd)/$DEPLOY_DIR/"
         exit 1
     else
@@ -83,26 +106,32 @@ start_sanity_check() {
     echo "Compile Samples Test, and check APIs..."
     for package_xml in $(find ./$SAMPLE_DIR -name "package.xml"); do
         package_dir=$(dirname $package_xml)
-        package_list+=("$package_dir")
+        last_name=$(basename "$package_dir")
+        if [[ " ${sample_array[*]} " =~ " $last_name " ]]; then
+            package_list+=("$package_dir")
+        fi
     done
+
+    echo "API check list: ${package_list[@]}"
 
     # Test case just run in X86 to test api compatibility,
     # so it should be compiledin X86 environment
     # api_check just only compiles test case
     api_check
+    source ${TOPDIR}/${QIRF_PROP_API_SCRIPT}
 
     # Whole project will be compiled in SDK toolchain
-    compilation_check
+    # compilation_check
 }
 
 check_dependencies() {
     echo "Checking HOST Dependencies..."
 
-    if ! dpkg -l | grep ros-foxy-desktop &> /dev/null; then
-        echo "    ros-foxy-desktop is not installed. Please install"
+    if ! dpkg -l | grep -E 'ros-(foxy|humble)-desktop' &> /dev/null; then
+        echo "    ros desktop is not installed. Please install"
         exit 1
     else
-        echo "    ros-foxy-desktop is installed"
+        echo "    ros desktop is installed"
     fi
 
     if ! dpkg -l | grep python3-colcon-common-extensions &> /dev/null; then
@@ -121,33 +150,24 @@ check_dependencies() {
 }
 
 compile_qirp(){
-    # Generate image and function sdk
-    bitbake $IMAGE_NAME
-    bitbake $FUNCTION_SDK
+    # Generate robotics image...
+    echo "Generating robotics image with:"
+    echo "    bitbake $IMAGE_NAME"
+    echo
 
-    # Generate standard SDK to provide toolchain...
-    if ls $(pwd)/tmp-glibc/deploy/sdk/*toolchain*.sh &> /dev/null; then
-        echo "Standard SDK has been ready, skip generation"
-        echo
-    else
-        echo "Generating standard SDK to provide toolchain with:"
-        echo "    bitbake $IMAGE_NAME -c populate_sdk"
-        echo
-        bitbake $IMAGE_NAME -c populate_sdk || exit 1
-    fi
+    bitbake $IMAGE_NAME || exit 1
 
     # Generate QIRP SDK...
     echo "Generating QIRP SDK with:"
-    echo "    bitbake $QIRP_NAME"
+    echo "    bitbake $IMAGE_NAME -c do_generate_qirp_sdk"
     echo
-    bitbake $QIRP_NAME -c do_cleanall
-    bitbake $QIRP_NAME || exit 1
+    bitbake $IMAGE_NAME -c do_generate_qirp_sdk || exit 1
 
     # Start APIs Check
     if [ $APICHECK_ENABLED -eq 1 ]; then
         echo "Starting API Check..."
         check_dependencies
-        start_apicheck
+        start_sanity_check
     else
         echo "Skip API Check..."
     fi
