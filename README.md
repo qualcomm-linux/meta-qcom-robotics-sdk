@@ -43,6 +43,7 @@ How to contact maintainers. E.g. GitHub Issues, GitHub Discussions could be indi
 * [Open a Discussion on GitHub](../../discussions)
 * E-mail
   * dapeyuan@qti.qualcomm.com
+  * jialchen@qti.qualcomm.com
   * huiyqiu@qti.qualcomm.com
 
 

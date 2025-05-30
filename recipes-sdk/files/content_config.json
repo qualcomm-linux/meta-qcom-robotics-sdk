@@ -16,21 +16,6 @@
             ]
         },
         {
-            "name": "qti-qirf",
-            "description":"QIRF SDK",
-            "version": "latest",
-            "hashsum": "latest",
-            "pickup_files": [
-                {
-                    "to": "/opt/qcom/qirp-sdk/",
-                    "from": [
-                        "opt/qcom/qirf-sdk/"
-                    ],
-                    "tag": "all files"
-                }
-            ]
-        },
-        {
             "name": "qti-qim-product-sdk",
             "description":"QIM Product SDK",
             "version": "latest",
@@ -58,98 +43,6 @@
                     "tag": "QIM Binary exec"
                 }
             ]
-        },
-        {
-            "name": "qti-qnn",
-            "description":"QNN SDK",
-            "version": "latest",
-            "hashsum": "latest",
-            "pickup_files": [
-                {
-                    "to": "/usr/include/",
-                    "from": [
-                        "qti-qnn/include/QNN/*"
-                    ],
-                    "tag": "QNN header files"
-                },
-                {
-                    "to": "/usr/include/",
-                    "from": [
-                        "qti-qnn/include/Genie/*"
-                    ],
-                    "tag": "Genie header files"
-                },
-                {
-                    "to": "/usr/bin/",
-                    "from": [
-                        "qti-qnn/bin/envsetup.sh"
-                    ],
-                    "tag": "QNN envsetup.sh binaries"
-                },
-                {
-                    "to": "/usr/bin/",
-                    "from": [
-                        "qti-qnn/bin/envcheck"
-                    ],
-                    "tag": "QNN envcheck binaries"
-                },
-                {
-                    "to": "/usr/bin/",
-                    "from": [
-                        "qti-qnn/bin/check-python-dependency"
-                    ],
-                    "tag": "QNN check-python-dependency binaries"
-                },
-                {
-                    "to": "/usr/bin/",
-                    "from": [
-                        "qti-qnn/bin/aarch64-oe-linux-gcc11.2/*"
-                    ],
-                    "tag": "QNN aarch64-oe-linux-gcc binaries"
-                },
-                {
-                    "to": "/usr/bin/x86_64_linux-clang/",
-                    "from": [
-                        "qti-qnn/bin/x86_64_linux-clang/*"
-                    ],
-                    "tag": "QNN x86_64_linux-clang binaries"
-                },
-                {
-                    "to": "/usr/lib/x86_64-linux-clang/",
-                    "from": [
-                        "qti-qnn/lib/x86_64-linux-clang/*"
-                    ],
-                    "tag": "QNN HOST libraries"
-                },
-                {
-                    "to": "/usr/lib/",
-                    "from": [
-                        "qti-qnn/lib/aarch64-oe-linux-gcc11.2/*"
-                    ],
-                    "tag": "QNN target libraries"
-                },
-                {
-                    "to": "/usr/lib/",
-                    "from": [
-                        "qti-qnn/lib/hexagon-v*"
-                    ],
-                    "tag": "QNN target libraries"
-                },
-                {
-                    "to": "/usr/lib/python/qti/",
-                    "from": [
-                        "qti-qnn/lib/python/qti/*"
-                    ],
-                    "tag": "QNN python module"
-                },
-                {
-                    "to": "/usr/share/",
-                    "from": [
-                        "qti-qnn/share/*"
-                    ],
-                    "tag": "QNN share files"
-                }
-            ]
         }
     ],
     "samples": [
@@ -159,8 +52,9 @@
             "individual_prj": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
+            "src_rev":"ccce713490a33f549df75bf1c0c1a593fe024384",
             "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/demos/navigation/"
+            "to": "qirp-samples/robotics/navigation/"
         },
         {
             "name": "vio",
@@ -168,17 +62,19 @@
             "individual_prj": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
+            "src_rev":"ccce713490a33f549df75bf1c0c1a593fe024384",
             "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/demos/navigation/"
+            "to": "qirp-samples/robotics/navigation/"
         },
         {
             "name": "followme",
             "oss_channel": "false",
-            "individual_prj": "true",
+            "individual_prj": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robot-followme.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
-            "from_local": "robotics/followme/",
-            "to": "qirp-samples/demos/navigation/"
+            "src_rev":"aeddee4452d478216d3a5fc5da02980e1c016b84",
+            "from_local":"robotics/robotsdk/",
+            "to": "qirp-samples/robotics/"
         },
         {
             "name": "vslam",
@@ -186,41 +82,45 @@
             "individual_prj": "false",
             "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
             "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
+            "src_rev":"ccce713490a33f549df75bf1c0c1a593fe024384",
             "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/demos/navigation/"
+            "to": "qirp-samples/robotics/navigation/vslam/"
         },
         {
             "name": "qrb_ros_imu",
             "oss_channel": "true",
             "individual_prj": "false",
-            "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
-            "branch":"robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/qrb-ros/platform/",
-            "to": "qirp-samples/demos/platform/"
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_imu.git",
+            "branch":"main",
+            "src_rev":"8584d91b3dbf94f92350cdb0f5e6655699c49032",
+            "to": "qirp-samples/platform/"
         },
         {
             "name": "qrb_ros_system_monitor",
             "oss_channel": "true",
-            "individual_prj": "true",
-            "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_system_monitor.git",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_system_monitor.git",
             "branch":"main",
-            "to": "qirp-samples/demos/platform/"
+            "src_rev":"8680cbe57fc62a68f3e2d98f4e9b726bb8bce726",
+            "individual_prj": "ture",
+            "to": "qirp-samples/platform/"
         },
-        {   "name": "qrb_ros_color_space_convert",
+        {
+            "name": "qrb_ros_color_space_convert",
             "oss_channel": "true",
-            "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_color_space_convert.git",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_color_space_convert.git",
             "branch":"main",
+            "src_rev":"7350bfdaed8ca181f0ec5c6b7e9335b98c8eb60b",
             "individual_prj": "true",
-            "to": "qirp-samples/demos/platform/"
+            "to": "qirp-samples/platform/"
         },
         {
             "name": "qrb_ros_battery",
             "oss_channel": "true",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_battery.git",
+            "branch":"main",
+            "src_rev":"37bf3ff7fe37975c3a8d839340e9a473544d5db4",
             "individual_prj": "false",
-            "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
-            "branch":"robotics-sdk.qclinux.1.0.r1-rel",
-            "from_local": "robotics/qirp-oss/qrb-ros/platform/",
-            "to": "qirp-samples/demos/platform/"
+            "to": "qirp-samples/platform/"
         },
         {
             "name": "ocr_service",
@@ -228,24 +128,44 @@
             "individual_prj": "false",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
             "branch":"robotics-sdk.qclinux.1.0.r1-rel",
+            "src_rev":"f09dc67edf91484b6223ca90307cf4a88ab02276",
             "from_local": "robotics/qirp-oss/samples/ai_nodes/",
-            "to": "qirp-samples/demos/platform/"
+            "to": "qirp-samples/platform/"
         },
         {
             "name": "qrb_ros_camera",
             "oss_channel": "true",
-            "individual_prj": "true",
-            "from_uri":"https://github.com/quic-qrb-ros/qrb_ros_camera.git",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_camera.git",
             "branch":"main",
-            "to": "qirp-samples/demos/platform/"
+            "src_rev":"dd700e95bd749a96641d6d60b38c83b340f0a120",
+            "individual_prj": "true",
+            "to": "qirp-samples/platform/"
+        },
+        {
+            "name": "ai_vision",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
+            "branch":"main",
+            "src_rev":"a62bda7a21d8c15580c90a38e68fab866faa4f25",
+            "individual_prj": "false",
+            "to": "qirp-samples/"
+        },
+        {
+            "name": "simulation_sample_amr_simple_motion",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
+            "branch":"main",
+            "src_rev":"a62bda7a21d8c15580c90a38e68fab866faa4f25",
+            "individual_prj": "false",
+            "to": "qirp-samples/robotics/"
         }
       ],
       "scripts": [
         {
-              "name": "scripts",
-              "oss_channel": "true",
-              "from_local":"qrb_ros_samples_scripts/qrb_ros_system_monitor/",
-              "to": "qirp-samples/demos/platform/qrb_ros_system_monitor/"
-        }
+            "name": "scripts",
+            "oss_channel": "true",
+            "from_local":"qrb_ros_samples_scripts/qrb_ros_system_monitor/",
+            "to": "qirp-samples/platform/qrb_ros_system_monitor/"
+            }
       ]
 }

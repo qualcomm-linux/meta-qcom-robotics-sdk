@@ -6,7 +6,7 @@ SDK_VERSION = "2.2.0"
 
 do_generate_qirp_sdk(){
     # orgnanize toolchain
-    if ls ${TOOLCHAIN_PATH}/* | grep -v ext >/dev/null 2>&1; then
+    if ls ${TOOLCHAIN_PATH}/* | xargs -n1 basename | grep -v ext >/dev/null 2>&1; then
         bbnote "Standard SDK Toolchain found in ${TOOLCHAIN_PATH}, copy to {QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain/"
         install -d ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain
         find ${TOOLCHAIN_PATH} -type f -not -name "*ext*" -exec cp {} ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain/ \;
@@ -15,7 +15,7 @@ do_generate_qirp_sdk(){
     fi
     cd ${QIRP_SSTATE_IN_DIR}
     tar -zcf ${QIRP_SSTATE_IN_DIR}/${SDK_PN}_${SDK_VERSION}.tar.gz ./${SDK_PN}/*
-
+    rm -rf ${QIRP_SSTATE_IN_DIR}/${SDK_PN}
 }
 addtask do_generate_qirp_sdk after do_populate_sdk
 

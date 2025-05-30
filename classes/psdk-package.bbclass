@@ -94,6 +94,7 @@ organize_sdk_file () {
         oss_channel=$(echo $line | jq -r '.oss_channel')
         from_uri=$(echo $line | jq -r '.from_uri')
         branch=$(echo $line | jq -r '.branch')
+        src_rev=$(echo $line | jq -r '.src_rev')
         individual_prj=$(echo $line | jq -r '.individual_prj')
         from_local="$(echo $line | jq -r '.from_local')"
         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
@@ -109,14 +110,14 @@ organize_sdk_file () {
         if [[ -n "$from_uri" && "$from_uri" != "null" ]]; then
             # if "$individual_prj" == "false", that more than one feature include in this project
             if [[ "$individual_prj" == "false" ]]; then
-                tempdir=$(mktemp -p ${WORKSPACE} -d)
-                bbnote "$name downloading: git clone -b $branch $from_uri $tempdir"
-                git clone -b $branch $from_uri $tempdir
-                find $tempdir -name "$name" -type d -prune -exec cp -r {} $to \;
+                bbnote "$name downloading: git clone -b $branch $from_uri $tempdir && cd $tempdir && git checkout $src_rev && cd -"
+                tempdir=$(mktemp -p ${TOPDIR} -d)
+                git clone -b $branch $from_uri $tempdir/ && cd $tempdir/ && git checkout $src_rev && cd -
+                find $tempdir/ -name "$name" -type d -prune -exec cp -r {} $to \;
                 rm -rf $tempdir
             else
-                bbnote "$name downloading: git clone -b $branch $from_uri $to$name"
-                git clone -b $branch $from_uri $to$name
+                bbnote "$name downloading: git clone -b $branch $from_uri $to$name && cd $to$name && git checkout $src_rev && cd -"
+                git clone -b $branch $from_uri $to$name && cd $to$name && git checkout $src_rev && cd -
             fi
             continue
         fi
@@ -135,14 +136,14 @@ organize_sdk_file () {
     fi
 
     jq -c '.scripts[]' $CONFIG_FILE | while read line; do
-         name=$(echo $line | jq -r '.name')
-         from_local="${WORKDIR}/$(echo $line | jq -r '.from_local')"
-         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
+        name=$(echo $line | jq -r '.name')
+        from_local="${WORKDIR}/$(echo $line | jq -r '.from_local')"
+        to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
-         if [ -d "$from_local$name" ]; then
-             cp -r $from_local$name $to
-             bbnote "Copy sample source from $from_local$name to $to"
-         fi
+        if [ -d "$from_local$name" ]; then
+            cp -r $from_local$name $to
+            bbnote "Copy sample source from $from_local$name to $to"
+        fi
     done
 
     # orgnanize tools
