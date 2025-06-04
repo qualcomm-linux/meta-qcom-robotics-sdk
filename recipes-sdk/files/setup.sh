@@ -241,6 +241,9 @@ else
     if [[ $? -eq 0 ]]; then
         echo " "
         echo "Setup QIRP Cross Compile Successfully"
+    else
+        echo "something error. please fix it first"
+        return 1
     fi
 
 fi
@@ -251,5 +254,8 @@ if [ "$1" == "docker" ];then
     if [[ $? -eq 0 ]]; then
         echo " "
         echo "building docker image Successfully"
+    else
+        echo "something error. please fix it first"
+        return 1
     fi
 fi

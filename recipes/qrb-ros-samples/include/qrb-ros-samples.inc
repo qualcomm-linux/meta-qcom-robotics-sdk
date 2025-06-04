@@ -5,7 +5,7 @@ LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a"
 
 SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=main"
-SRCREV = "a62bda7a21d8c15580c90a38e68fab866faa4f25"
+SRCREV = "047c407a651719501807803ac7ec8d4e8a6216eb"
 
 inherit ros_${ROS_BUILD_TYPE}
 inherit ros_distro_${ROS_DISTRO} pkgconfig
