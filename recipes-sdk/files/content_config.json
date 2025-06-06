@@ -89,7 +89,7 @@
         {
             "name": "qrb_ros_imu",
             "oss_channel": "true",
-            "individual_prj": "false",
+            "individual_prj": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_imu.git",
             "branch":"main",
             "src_rev":"8584d91b3dbf94f92350cdb0f5e6655699c49032",
@@ -119,7 +119,7 @@
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_battery.git",
             "branch":"main",
             "src_rev":"37bf3ff7fe37975c3a8d839340e9a473544d5db4",
-            "individual_prj": "false",
+            "individual_prj": "true",
             "to": "qirp-samples/platform/"
         },
         {
