@@ -105,11 +105,11 @@
             "to": "qirp-samples/platform/"
         },
         {
-            "name": "qrb_ros_color_space_convert",
+            "name": "sample_colorspace_convert",
             "oss_channel": "true",
-            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_color_space_convert.git",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
             "branch":"main",
-            "src_rev":"7350bfdaed8ca181f0ec5c6b7e9335b98c8eb60b",
+            "src_rev":"4f346e8e739551e02cdcf48057b3307031b1cad9",
             "individual_prj": "true",
             "to": "qirp-samples/platform/"
         },
