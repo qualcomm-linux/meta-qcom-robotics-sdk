@@ -1,10 +1,16 @@
+**After repository creation:**
+- [ ] Update this `README.md`. Update the Project Name, description, and all sections. Remove this checklist.
+- [ ] If required, update `LICENSE.txt` and the License section with your project's approved license
+- [ ] Search this repo for "REPLACE-ME" and update all instances accordingly
+- [ ] Update `CONTRIBUTING.md` as needed
+- [ ] Review the workflows in `.github/workflows`, updating as needed.
+- [ ] Review and update the suggested Issue and PR templates as needed in `.github/ISSUE_TEMPLATE` and `.github/PULL_REQUEST_TEMPLATE`
+
 # Project Name
 
 *\<update with your project name and a short description\>*
 
-*\<search this repo for "REPLACE-ME" and update all instances accordingly\>*
-
-Project that does ... implemented in ... runs on Qualcomm® *\<processor\>*
+Project that does ... implemented in ... runs on Qualcomm® *\<processor\>* 
 
 ## Branches
 
