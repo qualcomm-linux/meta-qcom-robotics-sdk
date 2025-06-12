@@ -110,7 +110,7 @@
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
             "branch":"main",
             "src_rev":"4f346e8e739551e02cdcf48057b3307031b1cad9",
-            "individual_prj": "true",
+            "individual_prj": "false",
             "to": "qirp-samples/platform/"
         },
         {
