@@ -7,7 +7,6 @@ THIS_SCRIPT=$(readlink -f ${BASH_SOURCE[0]})
 scriptdir="$(dirname "${THIS_SCRIPT}")"
 export SDK_TOP_DIR=$scriptdir
 cd $SDK_TOP_DIR
-
 #create toolchain dir
 if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     #check dependencys
@@ -28,7 +27,7 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     for file in $search_dir;do
         echo $file
         . "$file"
-    done 
+    done
 
 
     #unpack qirp-sdk tarball into runtime/qirp-sdk
@@ -82,19 +81,20 @@ function build_docker_image(){
     if ! command -v docker &> /dev/null
     then
         echo "docker command not found ! please install it first"
-        return
+        return 1
     fi
     # Check if Docker image exists
     if ! docker images --format "{{.Repository}}" | grep -w ^$DOCKER_IMAGE_NAME$;then
         echo "Docker image $DOCKER_IMAGE_NAME not found, loading..."
-        docker pull --platform linux/arm64/v8 arm64v8/ros:$ROS_DISTRO-ros-base
+        docker pull --platform linux/arm64/v8 docker-registry.qualcomm.com/fulaliu/arm64v8/ros:jazzy-ros-base
+        #docker pull --platform linux/arm64/v8 arm64v8/ros:$ROS_DISTRO-ros-base
         if [ $? -eq 0 ]; then
             echo "Docker image successfully loaded."
         else
             echo "Error loading Docker image."
-            return
+            return 1
         fi
-        docker tag arm64v8/ros:$ROS_DISTRO-ros-base $DOCKER_IMAGE_NAME:latest
+        docker tag docker-registry.qualcomm.com/fulaliu/arm64v8/ros:jazzy-ros-base $DOCKER_IMAGE_NAME:latest
     else
         echo "Docker image $DOCKER_IMAGE_NAME already exists."
     fi
@@ -114,7 +114,7 @@ function build_docker_image(){
             echo "Docker container successfully started."
         else
             echo "Error starting Docker container."
-            return
+            return 1
         fi
     else
         echo "Docker container $CONTAINER_NAME already exists."
@@ -122,13 +122,97 @@ function build_docker_image(){
     DOCKER_SCRIPTS=$(find $SDK_TOP_DIR/runtime/qirp-sdk/install-dir -name "qirp-setup.sh")
 
     docker cp $DOCKER_SCRIPTS $CONTAINER_NAME:/home
-    docker exec $CONTAINER_NAME /bin/bash -c "sed -i '/curl -sSL/,+8d' /home/qirp-setup.sh "
+    #docker exec $CONTAINER_NAME /bin/bash -c "sed -i '/curl -sSL/,+8d' /home/qirp-setup.sh "
     docker exec $CONTAINER_NAME /bin/bash /home/qirp-setup.sh
     docker commit $CONTAINER_NAME $DOCKER_IMAGE_NAME
     docker save $DOCKER_IMAGE_NAME | gzip > $SDK_TOP_DIR/runtime/$DOCKER_IMAGE_NAME.tar.gz
 }
+DIR=$SDK_TOP_DIR/qirp-samples
+config_file="config.yaml"
+try_times=5
+function download_model(){
+    local N=$1
+    local sample_dir=$2
+    if [ $((N -1)) == 0 ];then
+        echo "Fail to download_model $try_times times,  please download from qualcomm ai hub manually"
+        return 1
+    fi
 
+    if [ ${#model[@]} -ne 0 ]; then
+        for smodel in "${model[@]}"; do
+            IFS=',' read model_name link <<< $smodel
+            if [ -f $sample_dir/model/$model_name.done ]; then
+                echo "$model_name has been download in $sample_dir/model"
+            else
+                wget --no-check-certificate -O $sample_dir/model/$model_name $link
+                if [ $? -eq 0 ]; then
+                    echo "download $model_name successfully "
+                    touch $sample_dir/model/$model_name.done
+                else
+                    download_model $((N-1)) $sample_dir
+                fi
+            fi
+        done
+    fi
+}
+function download_model_label(){
+    local N=$1
+    local sample_dir=$2
+    if [ $((N -1)) == 0 ];then
+        echo "Fail to download_model $try_times times, please download from qualcomm ai hub manually "
+        return 1
+    fi
+    if [ ${#model_label[@]} -ne 0 ]; then
+        for smodel in "${model_label[@]}"; do
+            IFS=',' read label_name link <<< $smodel
+            if [ -f $sample_dir/model/$label_name.done ]; then
+                echo "$label_name has been download in $sample_dir/model"
+            else
+                wget --no-check-certificate -O $sample_dir/model/$label_name $link
+                if [ $? -eq 0 ]; then
+                    echo "download $label_name successfully "
+                    touch $sample_dir/model/$label_name.done
+                else
+                    download_model_label $((N-1)) $sample_dir
+                fi
+            fi
+        done
+    fi
 
+}
+function download_ai_model(){
+    #check if install yq tool
+
+    if ! command -v yq &> /dev/null
+    then
+        echo ""
+        echo "No yq tools found in HOST, Please install yq tool with below steps:"
+        echo " sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64"
+        echo " sudo chmod a+x /usr/local/bin/yq"
+        echo ""
+        return 1
+    fi
+
+    #read config file
+    conf=$(find "$DIR" -type f -name $config_file)
+    for file in $conf; do
+        model=()
+        model_label=()
+        echo "Reading conf file: $file"
+        model+=($(yq eval '.model[]' $file))
+        model_label+=($(yq eval '.model_label[]' $file))
+        sample_dir=$(dirname $(realpath $file))/..
+        echo "----------------------------------------"
+        echo "need to download model ${model[@]}"
+        echo "need to download model_label ${model_label[@]}"
+        echo "----------------------------------------"
+        if [ ! -d $sample_dir/model ];then
+            mkdir $sample_dir/model
+        fi
+        download_model  $try_times  $sample_dir
+        download_model_label $try_times $sample_dir
+    done
+}
 
 #install or uninstall qirp
 if [ "$1" == "uninstall" ]; then
@@ -145,9 +229,27 @@ else
     done
     export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
     export PYTHONPATH=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/
+    export CMAKE_ARGS="-DPYTHON_EXECUTABLE=${OECORE_NATIVE_SYSROOT}/usr/bin/python3 \
+       -DPython3_NumPy_INCLUDE_DIR=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/numpy/core/include \
+       -DCMAKE_MAKE_PROGRAM=/usr/bin/make \
+       -DSYSROOT_LIBDIR=${OECORE_TARGET_SYSROOT}/usr/lib \
+       -DSYSROOT_INCDIR=${OECORE_TARGET_SYSROOT}/usr/include \
+       -DPYTHON_SOABI=cpython-312-aarch64-linux-gnu \
+       -DBUILD_TESTING=OFF"
+
+    download_ai_model
+    if [[ $? -eq 0 ]]; then
+        echo " "
+        echo "Setup QIRP Cross Compile Successfully"
+    fi
+
 fi
 
 if [ "$1" == "docker" ];then
     echo "building docker image..."
     build_docker_image
+    if [[ $? -eq 0 ]]; then
+        echo " "
+        echo "building docker image Successfully"
+    fi
 fi
