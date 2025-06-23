@@ -146,7 +146,7 @@
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
             "branch":"main",
-            "src_rev":"047c407a651719501807803ac7ec8d4e8a6216eb",
+            "src_rev":"4e5a0560e4ba6073c099e02aa4de7d63a59ffd56",
             "individual_prj": "false",
             "to": "qirp-samples/"
         },
