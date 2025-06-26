@@ -84,81 +84,6 @@ fi
 IMAGE_NAME="qirp-docker"
 CONTAINER_NAME="qirp-samples-container"
 
-input=$1
-if [ "$2" == "--docker_path" ]; then
-    echo "loading docker path from $3"
-    IMAGE_PATH=$3
-else
-    IMAGE_PATH="/home/qirp-docker.tar.gz"
-fi
-
-config_file="config.yaml"
-ROS_DISTRO=jazzy
-
-model=()
-model_label=()
-apt_packages_base=( \
-    ros-$ROS_DISTRO-ros-base \
-    ros-$ROS_DISTRO-cv-bridge \
-    ros-$ROS_DISTRO-vision-msgs \
-    ros-$ROS_DISTRO-sensor-msgs \
-    ros-$ROS_DISTRO-usb-cam  \
-    ros-$ROS_DISTRO-rclcpp  \
-    ros-$ROS_DISTRO-std-msgs \
-    ros-$ROS_DISTRO-fastcdr  \
-    ros-$ROS_DISTRO-rosidl-default-runtime  \
-    ros-$ROS_DISTRO-ocr-msg  \
-    ros-$ROS_DISTRO-rclcpp-components  \
-    ros-$ROS_DISTRO-rcutils  \
-    qnn-tools \
-    libqnn-dev \
-    libqnn1 \
-    # libsndfile1-dev \
-    # libhdf5-dev \
-    tesseract-ocr \
-    libopencv-dev \
-    python3-numpy \
-    python3-opencv \
-    python-is-python3 \
-    python3-pip \
-    python3-colcon-common-extensions \
-    python3-pandas \
-    wget \
-    libpulse-dev \
-    python3-requests \
-    vim \
-    unzip \
-    v4l-utils \
-)
-#qrb ros packages
-apt_packages_base+=( \
-    ros-$ROS_DISTRO-qrb-ros-transport-image-type \
-    ros-$ROS_DISTRO-qrb-ros-transport-imu-type \
-    ros-$ROS_DISTRO-qrb-ros-transport-point-cloud2-type \
-    ros-$ROS_DISTRO-lib-mem-dmabuf \
-    ros-$ROS_DISTRO-ocr-msg  \
-    ros-$ROS_DISTRO-ocr-service  \
-    ros-$ROS_DISTRO-qrb-ros-system-monitor  \
-    ros-$ROS_DISTRO-qrb-ros-system-monitor-interfaces  \
-    qcom-battery-client  \
-    qcom-battery-service  \
-    ros-$ROS_DISTRO-qrb-ros-battery  \
-    # qcom-sensors-service  \
-    # ros-$ROS_DISTRO-qrb-sensor-client  \
-    ros-$ROS_DISTRO-qrb-ros-imu  \
-)
-
-pip_packages_base=( \
-    typing_extensions  \
-    pytesseract \
-)
-
-qrb_ros_node=( \
-)
-
-apt_packages_sample=()
-pip_packages=()
-
 ai_model_list=( \
     MediaPipeHandDetector.tflite,https://huggingface.co/qualcomm/MediaPipe-Hand-Detection/resolve/0d0b12ccd12b96457185ff9cfab75eb7c7ab3ad6/MediaPipeHandDetector.tflite?download=true  \
     MediaPipeHandLandmarkDetector.tflite,https://huggingface.co/qualcomm/MediaPipe-Hand-Detection/resolve/0d0b12ccd12b96457185ff9cfab75eb7c7ab3ad6/MediaPipeHandLandmarkDetector.tflite?download=true  \
@@ -166,154 +91,6 @@ ai_model_list=( \
     ResNet101Quantized.tflite,https://huggingface.co/qualcomm/ResNet101Quantized/resolve/653916aac7c732d28863aa449176299ba2890c15/ResNet101Quantized.tflite?download=true  \
     imagenet_labels.txt,https://raw.githubusercontent.com/quic/ai-hub-models/refs/heads/main/qai_hub_models/labels/imagenet_labels.txt  \
  )
-
-#---------main entry point of ubuntu ------------
-
-function check_workdir(){
-    # check src dir if return
-    if [ ! -d "$DIR/src" ]; then
-        mkdir -p "$DIR/src"
-        if [ $? -eq 0 ]; then
-            echo "$DIR/src successfully create"
-        else
-            echo "create $DIR fail"
-            return  1
-        fi
-    fi
-}
-#--------setup in ubuntu -----------
-function ubuntu_setup(){
-    #try_times=5
-    #git clone https://github.qualcomm.com/QUIC-QRB-ROS/qrb_ros_samples.git
-    if [[ $input == "update" ]];then
-        scripts_env_setup
-        if [ $? -eq 0 ]; then
-            echo "scripts_env_setup successfully "
-        else
-            echo "scripts_env_setup  fail"
-            return 1
-        fi
-    fi
-    # download_qrb_ros_node $try_times
-    # download_depends
-    #build depends ros nodes
-    source /opt/ros/$ROS_DISTRO/setup.sh
-    # cd $DIR; colcon build --executor sequential
-    # if [ $? -eq 0 ]; then
-        # echo "colcon build ros nodes successfully "
-    # else
-        # echo "colcon build ros nodes fail"
-        # return  1
-    # fi
-    # cd -
-    setup_env
-}
-function setup_env(){
-    source /opt/ros/$ROS_DISTRO/setup.sh
-    # if [ -f $DIR/install/setup.bash ]; then
-        # source $DIR/install/setup.bash
-    # fi
-    export USB_CAMERA_PATH=$(v4l2-ctl --list-devices | grep -A1 "USB Camera" | tail -n1 | tr -d ' \t' &>/dev/null)
-}
-function scripts_env_setup(){
-
-    #download depends
-    sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common curl
-    if [ $? -eq 0 ]; then
-        echo "apt-get install -y  software-properties-common curl successfully "
-    else
-        echo "apt-get install -y  software-properties-common curl  fail"
-        return 1
-    fi
-
-    #install qnn libs in real ubuntu env, not in docker
-    if [ -f /.dockerenv ]; then
-        echo "current in docker , not install qnn and ros base"
-        pip3 uninstall numpy
-    else
-        #add qualcomm carmel ppa
-        echo "Add qualcomm carmel ppa , wait few minutes..."
-        sudo add-apt-repository ppa:ubuntu-qcom-iot/qcom-noble-ppa
-        sudo add-apt-repository -y ppa:ubuntu-qcom-iot/qirp
-
-
-        #add ros apt source
-        sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-        if [ $? -eq 0 ]; then
-            echo "add ros base successfully "
-        else
-            echo "add ros base fail"
-            return  1
-        fi
-        sudo apt update && sudo apt upgrade -y
-    fi
-
-    echo "apt install base pkgs ${apt_packages_base[@]} ... "
-    #install apt pkgs
-    for package in "${apt_packages_base[@]}"; do
-        sudo  DEBIAN_FRONTEND=noninteractive apt-get install -y $package   --fix-missing
-        if [ $? -eq 0 ]; then
-            echo "apt-get install -y  $package successfully "
-        else
-            echo "apt-get install -y  $package  fail"
-            return  1
-        fi
-    done
-
-    echo "pip install base pkgs ${pip_packages_base[@]} ... "
-    #can't pip install in ubuntu24.04 docker
-    if [ -f /usr/lib/python3.12/EXTERNALLY-MANAGED ]; then
-        sudo mv /usr/lib/python3.12/EXTERNALLY-MANAGED  /usr/lib/python3.12/EXTERNALLY-MANAGED.bk
-    fi
-
-    #install pip pkgs
-    for package in "${pip_packages_base[@]}"; do
-        pip install $package
-        if [ $? -eq 0 ]; then
-            echo "pip install $package successfully "
-        else
-            echo "pip install $package fail"
-            return  1
-        fi
-    done
-
-
-    #install yq tool
-    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_arm64
-    if [ $? -eq 0 ]; then
-        echo "add yq tool successfully "
-    else
-        echo "add yq tool fail"
-        return  1
-    fi
-
-    sudo chmod a+x /usr/local/bin/yq
-}
-
-function download_qrb_ros_node(){
-    cd $DIR/src
-    local N=$1
-    if [ $((N -1)) == 0 ];then
-        echo "try to git clone $node $try_times times, fail"
-        return  1
-    fi
-
-    for node in ${qrb_ros_node[@]};do
-        if [ -f $DIR/src/$(echo $node | awk -F'/' '{print $NF}').done ]; then
-            echo "$node has been download in $DIR/src"
-        else
-            git clone $node
-            if [ $? -eq 0 ]; then
-                echo "git clone $node successfully "
-                touch $DIR/src/$(echo $node | awk -F'/' '{print $NF}').done
-            else
-                download_qrb_ros_node $((N-1))
-                return  1
-            fi
-        fi
-    done
-}
 
 #--------setup in qclinux -----------
 function docker_check_install_depends(){
@@ -388,34 +165,46 @@ function linux_env_setup(){
 
     #qnn environment variables export
     export ADSP_LIBRARY_PATH=/usr/lib/rfsa/adsp:${ADSP_LIBRARY_PATH}
-    date -s "2025-03-20"
-    setenforce 0
     export HOME=/opt
     source /usr/bin/ros_setup.sh
-    if [[ $input == "docker" ]];then
-        echo "building docker image..."
-        docker_check_install_depends
-    fi
-
 }
-check_wifi_and_connect() {
-    local wifi_status=$(nmcli -t -f WIFI g)
 
+function check_network_connection() {
+    local wifi_connected=0
+    local ethernet_connected=0
+
+    # Check WiFi
+    local wifi_status=$(nmcli -t -f WIFI g)
     if [[ "$wifi_status" == "enabled" ]]; then
         local connection_status=$(nmcli -t -f ACTIVE,SSID dev wifi | grep '^yes' | cut -d':' -f2)
         if [[ -n "$connection_status" ]]; then
             echo "Connected to WiFi: $connection_status"
+            wifi_connected=1
         else
             echo "Not connected to any WiFi network."
-            return 1
         fi
     else
         echo "WiFi is disabled."
+    fi
+
+    # Check Ethernet
+    local ethernet_status=$(nmcli -t -f DEVICE,STATE dev | grep '^eth' | awk -F: '{print $2}')
+    if [[ "$ethernet_status" == "connected" ]]; then
+        echo "Ethernet is connected."
+        ethernet_connected=1
+    else
+        echo "Ethernet is not connected."
+    fi
+
+    # Return 0 if either WiFi or Ethernet is connected
+    if [[ $wifi_connected -eq 1 || $ethernet_connected -eq 1 ]]; then
+        return 0
+    else
         return 1
     fi
 }
 
-download_ai_model(){
+function download_ai_model(){
     if [ ! -d /opt/model/ ];then
         echo "no model direction in /opt/model"
         mkdir /opt/model
@@ -436,34 +225,64 @@ download_ai_model(){
         fi
     done
 }
-#--------------main point
-# if (target:ubuntu):
-#     apt install <toolchain list>
-function main(){
-    DIR="/home/ubuntu/qirp-sdk"
-    if lsb_release -a 2>/dev/null | grep -q "Ubuntu"; then
-        echo " "
-        echo "if this is first time to setup qirp sdk environment or need to update force"
-        echo "please use update params, for example : source qirp-setup.sh update "
-        echo " "
-        check_workdir
-        ubuntu_setup
-        if [ $? -eq 0 ]; then
-            echo "setup_env successfully "
-        else
-            echo "setup_env  fail"
-        fi
-    else
-        Linux_DIR="/opt/qirp_ws"
-        linux_env_setup
-        check_wifi_and_connect
-        if [[ $? -eq 0 ]]; then
-            echo "WiFi checks passed successfully!"
-            download_ai_model
-        else
-            echo "Something went wrong. Please check WiFi or network status."
-        fi
-        echo "setup_env successfully "
-    fi
+
+function show_help() {
+    echo "Usage: source /usr/share/qirp-setup.sh [OPTION]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help        Show this help message."
+    echo "  -m, --model       Download AI sample models required for execution."
+    echo "  -d, --docker      Load Docker on the device."
+    echo "  --docker_path     Specify the local Docker image path (default: /home/qirp-docker.tar.gz)."
+    echo ""
+    echo "Examples:"
+    echo "  source /usr/share/qirp-setup.sh --help"
+    echo "  source /usr/share/qirp-setup.sh --model"
+    echo "  source /usr/share/qirp-setup.sh --docker --docker_path /your/custom/path.tar.gz"
 }
-main
+
+
+#--------------main point--------------#
+main(){
+    
+    case "$1" in
+        -h|--help)
+            show_help
+            return 1
+            ;;
+        -m|--model)
+            check_network_connection
+            if [[ $? -eq 0 ]]; then
+                echo "Network checks passed successfully!"
+                download_ai_model
+            else
+                echo "Something went wrong. Please check network status."
+                return 1
+            fi
+            ;;
+        -d|--docker)
+            echo "building docker image..."
+            date -s "2025-03-20"
+            if [ "$2" == "--docker_path" ]; then
+                echo "loading docker path from $3"
+                IMAGE_PATH=$3
+            else
+                IMAGE_PATH="/home/qirp-docker.tar.gz"
+            fi
+            docker_check_install_depends
+            if [[ $? -eq 0 ]]; then
+                echo "docker load successfully!"
+            else
+                echo "docker load  wrong."
+                return 1
+            fi
+            ;;
+        *)
+            echo "Setting up QIRP QCLinux for execution on device"
+        ;;
+    esac
+    linux_env_setup
+    echo "Setting up QIRP QCLinux successfully"
+}
+
+main $1 $2 $3

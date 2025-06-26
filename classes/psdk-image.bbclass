@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
 
-SDK_VERSION = "2.2.0"
+SDK_VERSION = "2.3.0"
 
 do_generate_qirp_sdk(){
     # orgnanize toolchain
-    if ls ${TOOLCHAIN_PATH}/* | xargs -n1 basename | grep -v ext >/dev/null 2>&1; then
+    if ls ${TOOLCHAIN_PATH}/* | xargs -n1 basename | grep ${TOOLCHAIN_OUTPUTNAME} >/dev/null 2>&1; then
         bbnote "Standard SDK Toolchain found in ${TOOLCHAIN_PATH}, copy to {QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain/"
         install -d ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain
-        find ${TOOLCHAIN_PATH} -type f -not -name "*ext*" -exec cp {} ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain/ \;
+        find ${TOOLCHAIN_PATH} -type f -name "${TOOLCHAIN_OUTPUTNAME}*" -exec cp {} ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain/ \;
     else
         bbwarn "No Standard SDK Toolchain found in ${TOOLCHAIN_PATH}, Please Note it!"
     fi
