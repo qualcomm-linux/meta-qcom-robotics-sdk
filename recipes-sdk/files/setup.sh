@@ -183,14 +183,18 @@ function download_model_label(){
 function download_ai_model(){
     #check if install yq tool
 
-    if ! command -v yq &> /dev/null
-    then
-        echo ""
-        echo "No yq tools found in HOST, Please install yq tool with below steps:"
-        echo " sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64"
-        echo " sudo chmod a+x /usr/local/bin/yq"
-        echo ""
-        return 1
+    if ! command -v yq &> /dev/null; then
+        ARCH=$(uname -m)
+        if [ "$ARCH" = "x86_64" ]; then
+            echo "sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64"
+        elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+            echo "sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_arm64"
+        else
+            echo "Unsupported architecture: $ARCH"
+            return 1
+        fi
+
+        echo "sudo chmod +x /usr/local/bin/yq"
     fi
 
     #read config file
