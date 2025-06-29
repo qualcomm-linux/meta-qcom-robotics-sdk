@@ -169,31 +169,38 @@ function linux_env_setup(){
     export HOME=/opt
     source /usr/bin/ros_setup.sh
 }
-function check_network_connection() {
-    local wifi_status=$(nmcli -t -f WIFI g)
 
-    # check WiFi connect status
+function check_network_connection() {
+    local wifi_connected=0
+    local ethernet_connected=0
+
+    # Check WiFi
+    local wifi_status=$(nmcli -t -f WIFI g)
     if [[ "$wifi_status" == "enabled" ]]; then
         local connection_status=$(nmcli -t -f ACTIVE,SSID dev wifi | grep '^yes' | cut -d':' -f2)
         if [[ -n "$connection_status" ]]; then
             echo "Connected to WiFi: $connection_status"
+            wifi_connected=1
         else
             echo "Not connected to any WiFi network."
-            #return 1
         fi
     else
         echo "WiFi is disabled."
     fi
 
-    # check Ethernet connect status
+    # Check Ethernet
     local ethernet_status=$(nmcli -t -f DEVICE,STATE dev | grep '^eth' | awk -F: '{print $2}')
-
     if [[ "$ethernet_status" == "connected" ]]; then
         echo "Ethernet is connected."
-    elif [[ 1==$(cat /sys/class/net/eth0/carrier) ]];then
-        echo "Ethernet is connected."
+        ethernet_connected=1
     else
         echo "Ethernet is not connected."
+    fi
+
+    # Return 0 if either WiFi or Ethernet is connected
+    if [[ $wifi_connected -eq 1 || $ethernet_connected -eq 1 ]]; then
+        return 0
+    else
         return 1
     fi
 }
