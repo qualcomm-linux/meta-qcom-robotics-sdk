@@ -105,15 +105,6 @@
             "to": "qirp-samples/platform/"
         },
         {
-            "name": "sample_colorspace_convert",
-            "oss_channel": "true",
-            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
-            "branch":"main",
-            "src_rev":"22ccd6ab72efe4f65a4d8019fbf0b004d3c66ef6",
-            "individual_prj": "false",
-            "to": "qirp-samples/platform/"
-        },
-        {
             "name": "qrb_ros_battery",
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_battery.git",
