@@ -92,7 +92,7 @@
             "individual_prj": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_imu.git",
             "branch":"main",
-            "src_rev":"8584d91b3dbf94f92350cdb0f5e6655699c49032",
+            "src_rev":"e567bc29ca2d96737167a7c3720c3cd86b706c6a",
             "to": "qirp-samples/platform/"
         },
         {
@@ -128,7 +128,7 @@
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_camera.git",
             "branch":"main",
-            "src_rev":"dd700e95bd749a96641d6d60b38c83b340f0a120",
+            "src_rev":"8f9598e0da29fb02af91f841a25a2cc7c1018601",
             "individual_prj": "true",
             "to": "qirp-samples/platform/"
         },
