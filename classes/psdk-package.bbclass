@@ -24,6 +24,7 @@ python __anonymous () {
 }
 
 addtask do_generate_product_sdk_setscene
+addtask do_overlay_config after do_install before do_generate_product_sdk
 do_generate_product_sdk[postfuncs] += "organize_sdk_file"
 do_generate_product_sdk[sstate-inputdirs] = "${SSTATE_IN_DIR}"
 do_generate_product_sdk[sstate-outputdirs] = "${SSTATE_OUT_DIR}"
@@ -73,6 +74,48 @@ do_generate_product_sdk () {
     if [ ! -d ${SSTATE_IN_DIR}/${SDK_PN}/runtime ]; then
         install -d  ${SSTATE_IN_DIR}/${SDK_PN}/runtime
     fi
+}
+
+# Overlay json file
+# When prop(extras) layer exist, overlay content_config_overlay.json to content_config.json
+python do_overlay_config () {
+    import json
+    import os
+
+    workdir = d.getVar('WORKDIR')
+    config_file = d.getVar('CONFIGFILE')
+    overlay_file = d.getVar('CONFIG_OVERLAY_FILE')
+
+    if not config_file:
+        bb.fatal("CONFIGFILE is not defined.")
+
+    if not overlay_file:
+        bb.note("Overlay file does not exist. Skipping overlay operation.")
+        return
+
+    config_file = os.path.join(workdir, config_file)
+    overlay_file = os.path.join(workdir, overlay_file)
+    bb.note("config_file path is: %s" % config_file)
+    bb.note("overlay_file is: %s" % overlay_file)
+
+    try:
+        with open(config_file, 'r') as f1, open(overlay_file, 'r') as f2:
+            data_oss = json.load(f1)
+            data_prop = json.load(f2)
+
+        if 'samples' in data_prop:
+            existing_names = {item['name'] for item in data_oss.get('samples', [])}
+            for item in data_prop['samples']:
+                if item['name'] not in existing_names:
+                    data_oss.setdefault('samples', []).append(item)
+
+        with open(config_file, 'w') as fout:
+            json.dump(data_oss, fout, indent=4, ensure_ascii=False)
+
+        bb.note(f"Merged JSON written to {config_file}")
+
+    except Exception as e:
+        bb.fatal(f"Failed to merge JSON files: {e}")
 }
 
 # Add a task to copy sample code/toolchain/setup scripts,
