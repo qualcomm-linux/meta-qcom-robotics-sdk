@@ -136,19 +136,19 @@
             "name": "ai_vision",
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
-            "branch":"main",
-            "src_rev":"2f73efad3a67244db37cb22a76ba0c08619506fe",
+            "branch":"jazzy-rel",
+            "src_rev":"${QRB_ROS_SAMPLE_REV}",
             "individual_prj": "false",
             "to": "qirp-samples/"
         },
         {
-            "name": "simulation_sample_amr_simple_motion",
+            "name": "robotics",
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
-            "branch":"main",
-            "src_rev":"c52e002726bf2dd9845df9c5c3bf94439ad54476",
+            "branch":"jazzy-rel",
+            "src_rev":"${QRB_ROS_SAMPLE_REV}",
             "individual_prj": "false",
-            "to": "qirp-samples/robotics/"
+            "to": "qirp-samples/"
         }
       ],
       "scripts": [
