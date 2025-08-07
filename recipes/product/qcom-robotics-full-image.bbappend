@@ -7,4 +7,5 @@ FUNCTION:append:qcom-custom-bsp = " \
     sample-object-segmentation \
     sample-resnet101 \
     simulation-sample-amr-simple-motion \
+    sample-remote-assistant \
 "
