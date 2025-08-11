@@ -5,9 +5,6 @@
 #
 # This script sets up the environment for QIRP SDK and optionally downloads AI models.
 
-# Exit on error, exit on pipefail
-set -eo pipefail
-
 # Log function for consistent output
 log_info() {
     echo "[INFO] $1"
@@ -18,11 +15,16 @@ log_error() {
 }
 
 ai_model_list=(
-    MediaPipeHandDetector.tflite,https://huggingface.co/qualcomm/MediaPipe-Hand-Detection/resolve/0d0b12ccd12b96457185ff9cfab75eb7c7ab3ad6/MediaPipeHandDetector.tflite?download=true
-    MediaPipeHandLandmarkDetector.tflite,https://huggingface.co/qualcomm/MediaPipe-Hand-Detection/resolve/0d0b12ccd12b96457185ff9cfab75eb7c7ab3ad6/MediaPipeHandLandmarkDetector.tflite?download=true
+    MediaPipeHandDetector.bin,https://huggingface.co/qualcomm/MediaPipe-Hand-Detection/resolve/7c266a43cf0328c5e00c96007a339ae41ddffa65/MediaPipeHandDetector.bin?download=true
+    MediaPipeHandLandmarkDetector.bin,https://huggingface.co/qualcomm/MediaPipe-Hand-Detection/resolve/7c266a43cf0328c5e00c96007a339ae41ddffa65/MediaPipeHandLandmarkDetector.bin?download=true
     anchors_palm.npy,https://raw.githubusercontent.com/zmurez/MediaPipePyTorch/65f2549ba35cd61dfd29f402f6c21882a32fabb1/anchors_palm.npy
     ResNet101_w8a8.bin,https://huggingface.co/qualcomm/ResNet101/resolve/121564046ebb2353d4a0aa67bf89c11e0c8e80d9/ResNet101_w8a8.bin?download=true
     imagenet_labels.txt,https://raw.githubusercontent.com/quic/ai-hub-models/refs/heads/main/qai_hub_models/labels/imagenet_labels.txt
+    HRNetPose.bin,https://huggingface.co/qualcomm/HRNetPose/resolve/6011b6e69a84dad8f53fb555b11035a5e26c8755/HRNetPose.bin?download=true
+    MediaPipeFaceDetector.bin,https://huggingface.co/qualcomm/MediaPipe-Face-Detection/resolve/0dd669a326ec24a884e51b82741997299d937705/MediaPipeFaceDetector.bin
+    MediaPipeFaceLandmarkDetector.bin,https://huggingface.co/qualcomm/MediaPipe-Face-Detection/resolve/0dd669a326ec24a884e51b82741997299d937705/MediaPipeFaceLandmarkDetector.bin
+    anchors_face.npy,https://raw.githubusercontent.com/zmurez/MediaPipePyTorch/65f2549ba35cd61dfd29f402f6c21882a32fabb1/anchors_face.npy
+    Depth-Anything-V2.bin,https://huggingface.co/qualcomm/Depth-Anything-V2/resolve/19ce3645e11de17eed7e869eebcc07dd352834f3/Depth-Anything-V2.bin?download=true
 )
 
 #--------setup in qclinux -----------
