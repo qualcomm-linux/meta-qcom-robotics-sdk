@@ -147,10 +147,14 @@ organize_sdk_file () {
             continue
         fi
 
+
         #create destination dir
         install -d $to
 
         if [[ -n "$from_uri" && "$from_uri" != "null" ]]; then
+            if [[ "$from_uri" == *"qrb_ros_samples"* ]];then
+                src_rev="${QRB_ROS_SAMPLE_REV}"
+            fi
             # if "$individual_prj" == "false", that more than one feature include in this project
             if [[ "$individual_prj" == "false" ]]; then
                 bbnote "$name downloading: git clone -b $branch $from_uri $tempdir && cd $tempdir && git checkout $src_rev && cd -"
