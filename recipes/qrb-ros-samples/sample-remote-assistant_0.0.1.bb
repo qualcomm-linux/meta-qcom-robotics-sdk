@@ -20,7 +20,11 @@ ROS_EXEC_DEPENDS = " \
     std-msgs \
     sensor-msgs \
     geometry-msgs \
+    vision-msgs \
+    qrb-ros-slam-msgs \
+    nav-msgs \
     python3 \
+    python3-pyyaml \
     python3-numpy \
     python3-pybind11 \
 "
