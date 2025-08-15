@@ -1,7 +1,7 @@
 inherit psdk-image
 
 # enable sample packages enabled by default
-FUNCTION:append:qcom-custom-bsp = " \
+CORE_IMAGE_BASE_INSTALL:append = " \
     sample-hand-detection \
     sample-object-detction \
     sample-object-segmentation \
