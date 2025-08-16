@@ -8,4 +8,7 @@ CORE_IMAGE_BASE_INSTALL:append = " \
     sample-resnet101 \
     simulation-sample-amr-simple-motion \
     sample-remote-assistant \
+    sample-depth-estimation \
+    sample-hrnet-pose-estimation \
+    sample-face-detection \
 "
