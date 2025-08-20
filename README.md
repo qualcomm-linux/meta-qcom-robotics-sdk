@@ -10,7 +10,7 @@
 
 *\<update with your project name and a short description\>*
 
-Project that does ... implemented in ... runs on Qualcomm® *\<processor\>* 
+Project that does ... implemented in ... runs on Qualcomm® *\<processor\>*
 
 ## Branches
 

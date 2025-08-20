@@ -15,11 +15,11 @@ In general, contributors should develop on branches based off of `main` and pull
 
     ```bash
     git clone https://github.com/<username>/<REPLACE-ME>.git
-    ``` 
+    ```
 
 1. Create a new branch based on `main`:
 
-    ```bash 
+    ```bash
     git checkout -b <my-branch-name> main
     ```
 
