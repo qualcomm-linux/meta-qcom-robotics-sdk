@@ -47,46 +47,6 @@
     ],
     "samples": [
         {
-            "name": "auto-explore",
-            "oss_channel": "false",
-            "individual_prj": "false",
-            "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
-            "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
-            "src_rev":"ccce713490a33f549df75bf1c0c1a593fe024384",
-            "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/robotics/navigation/"
-        },
-        {
-            "name": "vio",
-            "oss_channel": "false",
-            "individual_prj": "false",
-            "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
-            "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
-            "src_rev":"ccce713490a33f549df75bf1c0c1a593fe024384",
-            "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/robotics/navigation/"
-        },
-        {
-            "name": "followme",
-            "oss_channel": "false",
-            "individual_prj": "false",
-            "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robot-followme.git",
-            "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
-            "src_rev":"aeddee4452d478216d3a5fc5da02980e1c016b84",
-            "from_local":"robotics/robotsdk/",
-            "to": "qirp-samples/robotics/"
-        },
-        {
-            "name": "vslam",
-            "oss_channel": "false",
-            "individual_prj": "false",
-            "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robotics-prop.git",
-            "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
-            "src_rev":"ccce713490a33f549df75bf1c0c1a593fe024384",
-            "from_local": "robotics/robotics-prop/",
-            "to": "qirp-samples/robotics/navigation/vslam/"
-        },
-        {
             "name": "qrb_ros_imu",
             "oss_channel": "true",
             "individual_prj": "true",
