@@ -11,5 +11,6 @@ CORE_IMAGE_BASE_INSTALL:append = " \
     sample-depth-estimation \
     sample-hrnet-pose-estimation \
     sample-face-detection \
+    sample-apriltag \
     simulation-sample-pick-and-place \
 "
