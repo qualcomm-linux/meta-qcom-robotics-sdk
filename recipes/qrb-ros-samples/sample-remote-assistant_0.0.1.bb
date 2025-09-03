@@ -1,9 +1,9 @@
 ROS_BUILD_TYPE = "ament_python"
 
-ROS_CN = "sample_hand_detection"
-ROS_BPN = "sample_hand_detection"
+ROS_CN = "simulation_remote_assistant"
+ROS_BPN = "simulation_remote_assistant"
 
-S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
+S = "${WORKDIR}/git/robotics/${ROS_CN}"
 
 ROS_BUILD_DEPENDS = " \
 "
@@ -20,7 +20,11 @@ ROS_EXEC_DEPENDS = " \
     std-msgs \
     sensor-msgs \
     geometry-msgs \
+    vision-msgs \
+    qrb-ros-slam-msgs \
+    nav-msgs \
     python3 \
+    python3-pyyaml \
     python3-numpy \
     python3-pybind11 \
 "

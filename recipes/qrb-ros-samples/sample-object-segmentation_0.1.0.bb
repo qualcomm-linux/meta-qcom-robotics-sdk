@@ -1,7 +1,7 @@
 ROS_BUILD_TYPE = "ament_python"
 
-ROS_CN = "sample_resnet101_quantized"
-ROS_BPN = "sample_resnet101_quantized"
+ROS_CN = "sample_object_segmentation"
+ROS_BPN = "sample_object_segmentation"
 
 S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
 

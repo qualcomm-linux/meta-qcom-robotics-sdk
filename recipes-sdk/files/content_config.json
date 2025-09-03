@@ -47,22 +47,12 @@
     ],
     "samples": [
         {
-            "name": "followme",
-            "oss_channel": "false",
-            "individual_prj": "true",
-            "from_uri": "https://qpm-git.qualcomm.com/home2/git/revision-history/platform/vendor/qcom-proprietary/robot-followme.git",
-            "branch":"CUST_ID-robotics.qclinux.1.0.r1-rel",
-            "src_rev":"11634a2627032aaba3fee0796221a7c369dc17bb",
-            "from_local":"robotics/robotsdk/",
-            "to": "qirp-samples/robotics/"
-        },
-        {
             "name": "qrb_ros_imu",
             "oss_channel": "true",
             "individual_prj": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_imu.git",
             "branch":"main",
-            "src_rev":"8584d91b3dbf94f92350cdb0f5e6655699c49032",
+            "src_rev":"e567bc29ca2d96737167a7c3720c3cd86b706c6a",
             "to": "qirp-samples/platform/"
         },
         {
@@ -72,15 +62,6 @@
             "branch":"main",
             "src_rev":"8680cbe57fc62a68f3e2d98f4e9b726bb8bce726",
             "individual_prj": "ture",
-            "to": "qirp-samples/platform/"
-        },
-        {
-            "name": "sample_colorspace_convert",
-            "oss_channel": "true",
-            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
-            "branch":"main",
-            "src_rev":"4f346e8e739551e02cdcf48057b3307031b1cad9",
-            "individual_prj": "false",
             "to": "qirp-samples/platform/"
         },
         {
@@ -107,7 +88,7 @@
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_camera.git",
             "branch":"main",
-            "src_rev":"dd700e95bd749a96641d6d60b38c83b340f0a120",
+            "src_rev":"8f9598e0da29fb02af91f841a25a2cc7c1018601",
             "individual_prj": "true",
             "to": "qirp-samples/platform/"
         },
@@ -115,19 +96,19 @@
             "name": "ai_vision",
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
-            "branch":"main",
-            "src_rev":"e4100d52ef9e13c8ce20b6288651c8bcc294ae29",
+            "branch":"jazzy-rel",
+            "src_rev":"${QRB_ROS_SAMPLE_REV}",
             "individual_prj": "false",
             "to": "qirp-samples/"
         },
         {
-            "name": "simulation_sample_amr_simple_motion",
+            "name": "robotics",
             "oss_channel": "true",
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_samples.git",
-            "branch":"main",
-            "src_rev":"a62bda7a21d8c15580c90a38e68fab866faa4f25",
+            "branch":"jazzy-rel",
+            "src_rev":"${QRB_ROS_SAMPLE_REV}",
             "individual_prj": "false",
-            "to": "qirp-samples/robotics/"
+            "to": "qirp-samples/"
         }
       ],
       "scripts": [

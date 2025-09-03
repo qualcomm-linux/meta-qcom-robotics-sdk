@@ -1,7 +1,7 @@
 ROS_BUILD_TYPE = "ament_python"
 
-ROS_CN = "sample_hand_detection"
-ROS_BPN = "sample_hand_detection"
+ROS_CN = "sample_object_detction"
+ROS_BPN = "sample_object_detction"
 
 S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
 
@@ -34,3 +34,6 @@ DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS} ${ROS_EXPORT_DEPENDS} $
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
 require include/qrb-ros-samples.inc
+
+
+
