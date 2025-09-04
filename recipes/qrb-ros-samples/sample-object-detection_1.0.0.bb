@@ -1,7 +1,7 @@
 ROS_BUILD_TYPE = "ament_python"
 
-ROS_CN = "sample_object_detction"
-ROS_BPN = "sample_object_detction"
+ROS_CN = "sample_object_detection"
+ROS_BPN = "sample_object_detection"
 
 S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
 
