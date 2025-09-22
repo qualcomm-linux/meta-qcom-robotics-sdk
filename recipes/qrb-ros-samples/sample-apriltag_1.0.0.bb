@@ -18,8 +18,6 @@ ROS_EXPORT_DEPENDS = " \
 ROS_EXEC_DEPENDS = " \
     image-proc \
     rclcpp-components \
-    qrb-ros-camera \
-    qrb-ros-colorspace-convert \
     apriltag-ros \
 "
 
