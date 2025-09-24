@@ -22,7 +22,7 @@ ROS_EXEC_DEPENDS = " \
     geometry-msgs \
     vision-msgs \
     qrb-ros-slam-msgs \
-    nav-msgs \
+    nav2-msgs \
     python3 \
     python3-pyyaml \
     python3-numpy \
