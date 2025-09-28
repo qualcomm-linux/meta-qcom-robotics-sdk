@@ -29,7 +29,7 @@ to collectively build the **QIR SDK**.
 ## Usage
 
 As part of QIR, this project requires ​​collaborative usage with other components​​. Detailed instructions are provided in:
-- [QIR SDK User Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70020-265?vproduct=1601111740013072&facet=Qualcomm%20Intelligent%20Robotics%20SDK&latest=true)
+- [QIR SDK User Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70020-265/?vproduct=1601111740013072&latest=true&facet=Intelligent_Robotics_Product.SDK.2.0)
 
 ## Development
 
