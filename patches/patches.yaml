@@ -1,0 +1,13 @@
+patches:
+  meta-ros:
+    path: "layers/meta-ros"
+    patches:
+      - patch_path: "layers/meta-qcom-robotics-sdk/patches/0001-jazzy-remove-recipes-from-blacklist.patch"
+      - patch_path: "layers/meta-qcom-robotics-sdk/patches/0003-ros2-fix-rosbag2-py-cannot-run-issue.patch"
+      - patch_path: "layers/meta-qcom-robotics-sdk/patches/0001-jazzy-remove-outdated-revision.patch"
+      - patch_path: "layers/meta-qcom-robotics-sdk/patches/0001-jazzy-remove-outdated-appends.patch"
+      - patch_path: "layers/meta-qcom-robotics-sdk/patches/0001-jazzy-set-ROS_UNRESOLVED_DEP.patch"
+  poky:
+    path: "layers/poky"
+    patches:
+      - patch_path: "layers/meta-qcom-robotics-sdk/patches/Initial-commit-of-license.patch"
