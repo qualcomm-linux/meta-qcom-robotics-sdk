@@ -1,0 +1,15 @@
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index d1d037f97c5f..95d72b013d16 100644
+
+Upstream-Status: Pending
+
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -454,6 +454,7 @@ get_pfnblock_migratetype(const struct page *page, unsigned long pfn)
+ #endif
+ 	return flags & MIGRATETYPE_MASK;
+ }
++EXPORT_SYMBOL(get_pfnblock_migratetype);
+ 
+ /**
+  * __set_pfnblock_flags_mask - Set the requested group of flags for
