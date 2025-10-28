@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+
+distro: poky-altcfg
+
+defaults:
+  repos:
+    branch: master
+
+repos:
+  meta-qcom:
+
+  oe-core:
+    url: https://github.com/openembedded/openembedded-core
+    layers:
+      meta:
+
+  bitbake:
+    url: https://github.com/openembedded/bitbake
+    layers:
+      .: disabled
+
+  meta-yocto:
+    url: https://git.yoctoproject.org/meta-yocto
+    layers:
+      meta-poky:
+
+local_conf_header:
+  base: |
+    CONF_VERSION = "2"
+    INHERIT += "buildstats-summary"
+    INHERIT += "buildhistory"
+    INHERIT += "rm_work"
+  cmdline: |
+    KERNEL_CMDLINE_EXTRA:append = " qcom_scm.download_mode=1"
+  qcomflash: |
+    IMAGE_CLASSES += "image_types_qcom"
+    IMAGE_FSTYPES += "qcomflash"
+  extra: |
+    DISTRO_FEATURES:append = " efi pni-names"
+    EXTRA_IMAGE_FEATURES = "allow-empty-password empty-root-password allow-root-login"
+    IMAGE_ROOTFS_EXTRA_SPACE = "307200"
+    WATCHDOG_RUNTIME_SEC:pn-systemd = "30"
+
+machine: unset
+
+target:
+  - core-image-base

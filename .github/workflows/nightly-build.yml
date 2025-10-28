@@ -1,0 +1,23 @@
+name: Nightly Build
+
+on:
+  schedule:
+  # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
+  # so that build notification emails will be sent out properly.
+  - cron: "22 1 * * *"   # daily job - pick a random "minute"  - top of hour can be busy in github
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+  packages: read
+
+jobs:
+  build-nightly:
+    uses: ./.github/workflows/build-yocto.yml
+  test-nightly:
+    uses: ./.github/workflows/test.yml
+    needs: build-nightly
+    secrets: inherit
+    with:
+      build_id: ${{ github.run_id }}

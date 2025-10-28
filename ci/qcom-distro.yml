@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+
+distro: qcom-distro
+
+repos:
+  meta-qcom-distro:
+    url: https://github.com/qualcomm-linux/meta-qcom-distro
+    branch: main
+
+  meta-openembedded:
+    url: https://github.com/openembedded/meta-openembedded
+    layers:
+      meta-filesystems:
+      meta-gnome:
+      meta-multimedia:
+      meta-networking:
+      meta-oe:
+      meta-python:
+      meta-xfce:
+
+  meta-virtualization:
+    url: https://git.yoctoproject.org/git/meta-virtualization
+    branch: master
+
+  meta-audioreach:
+    url: https://github.com/Audioreach/meta-ar
+    branch: main
+
+local_conf_header:
+  virtualization:
+    SKIP_META_VIRT_SANITY_CHECK = "1"
+
+target:
+  - qcom-multimedia-image

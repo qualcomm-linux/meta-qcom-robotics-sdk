@@ -1,0 +1,75 @@
+name: Test PR build
+
+run-name: "Tests triggered by PR: ${{ github.event.workflow_run.display_title }}"
+
+on:
+  workflow_run:
+    workflows: ["Build on PR"]
+    types:
+      - completed
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+  packages: read
+
+jobs:
+  test:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    with:
+      build_id: ${{ github.event.workflow_run.id }}
+
+  publish-test-results:
+    name: "Publish Tests Results"
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Download event file
+        uses: actions/download-artifact@v4
+        with:
+            run-id: ${{ github.event.workflow_run.id }}
+            path: artifacts
+            github-token: ${{ github.token }}
+
+      - name: "List files"
+        run: |
+          echo $GITHUB_WORKSPACE
+          ls -R $GITHUB_WORKSPACE
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          commit: ${{ github.event.workflow_run.head_sha }}
+          event_file: artifacts/Event File/event.json
+          event_name: ${{ github.event.workflow_run.event }}
+          files: "${{ github.workspace }}/artifacts/**/*.xml"
+
+      - name: Prepare PR comment
+        id: pr_comment_prep
+        run: |
+          echo "## Test run [workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" > pr-comment.txt
+          echo "## Test jobs for commit ${{ github.event.workflow_run.head_sha }}" >> pr-comment.txt
+          for json_file in $(find ${{ github.workspace }} -name "test-job-*.json")
+          do
+              DEVICE_TYPE=$(cat "$json_file" | jq -r ".requested_device_type")
+              URL=$(cat "$json_file" | jq -r ".url")
+              JOB_ID=$(cat "$json_file" | jq -r ".id")
+              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL)"
+              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL)" >> pr-comment.txt
+          done
+          PR_NUMBER=$(cat "artifacts/Event File/event.json" | jq -r ".number")
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          file-path: pr-comment.txt
+          pr-number: ${{ steps.pr_comment_prep.outputs.pr_number }}
