@@ -1,0 +1,205 @@
+name: Build Yocto
+
+on:
+  workflow_call:
+    outputs:
+      artifacts_url:
+        description: "URL to retrieve build artifacts"
+        value: ${{ jobs.create-output.outputs.url }}
+
+env:
+  CACHE_DIR: /efs/qli/meta-qcom
+  KAS_REPO_REF_DIR: /efs/qli/meta-qcom/kas-mirrors
+  KAS_CONTAINER: /efs/qli/meta-qcom/kas-mirrors/kas-container
+
+jobs:
+  kas-setup:
+    if: github.repository == 'qualcomm-linux/meta-qcom'
+    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    steps:
+      - name: Update kas-container
+        run: |
+          LATEST=$(git ls-remote --tags --refs --sort="v:refname" https://github.com/siemens/kas | tail -n1 | sed 's/.*\///')
+          wget -qO ${KAS_CONTAINER} https://raw.githubusercontent.com/siemens/kas/refs/tags/$LATEST/kas-container
+          chmod +x ${KAS_CONTAINER}
+
+      - name: Update kas mirrors
+        run: |
+          for r in $(find ${KAS_REPO_REF_DIR}/* -maxdepth 0 -type d); do
+            echo "pre-fetch: $r"
+            git -C $r fetch --prune origin '+refs/*:refs/*'
+          done
+
+      - uses: actions/checkout@v4
+
+      - name: Run kas lock
+        run: |
+          ${KAS_CONTAINER} lock --update ci/base.yml:ci/qcom-distro.yml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kas-lock
+          path: ci/*.lock.yml
+
+  yocto-run-checks:
+    needs: kas-setup
+    if: github.repository == 'qualcomm-linux/meta-qcom'
+    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: kas-lock
+          path: ci/
+
+      - name: Run yocto-check-layer
+        run: |
+          ci/kas-container-shell-helper.sh ci/yocto-check-layer.sh
+
+      - name: Run Yocto patchreview
+        run: |
+          ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
+
+  compile_warm_up:
+    needs: [kas-setup, yocto-run-checks]
+    if: github.repository == 'qualcomm-linux/meta-qcom'
+    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    strategy:
+      fail-fast: true
+      matrix:
+        machine:
+          - qcs6490-rb3gen2-core-kit
+          - qcom-armv8a
+        distro:
+          - name: poky-altcfg
+            yamlfile: ""
+          - name: qcom-distro
+            yamlfile: ':ci/qcom-distro.yml'
+          - name: qcom-distro-prop-image
+            yamlfile: ':ci/qcom-distro-prop-image.yml'
+        kernel:
+          - type: default
+            dirname: ""
+            yamlfile: ""
+    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.kernel.dirname }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run kas build
+        uses: ./.github/actions/compile
+        with:
+          machine: ${{matrix.machine}}
+          distro_yaml: ${{matrix.distro.yamlfile}}
+          distro_name: ${{matrix.distro.name}}
+          kernel_yaml: ${{matrix.kernel.yamlfile}}
+          kernel_dirname: ${{matrix.kernel.dirname}}
+          cache_dir: ${CACHE_DIR}
+          kas: ${KAS_CONTAINER}
+
+  compile:
+    needs: compile_warm_up
+    if: github.repository == 'qualcomm-linux/meta-qcom'
+    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    outputs:
+      url: ${{ steps.compile_kas.outputs.url }}
+    strategy:
+      fail-fast: true
+      matrix:
+        machine:
+          - iq-8275-evk
+          - iq-9075-evk
+          - qcm6490-idp
+          - qcs615-adp-air
+          - qcs8300-ride-sx
+          - qcs9100-ride-sx
+          - qrb2210-rb1-core-kit
+          - qcom-armv7a
+        distro:
+          - name: poky-altcfg
+            yamlfile: ""
+          - name: qcom-distro
+            yamlfile: ':ci/qcom-distro.yml'
+          - name: qcom-distro-prop-image
+            yamlfile: ':ci/qcom-distro-prop-image.yml'
+        kernel:
+          - type: default
+            dirname: ""
+            yamlfile: ""
+        include:
+          # Additional builds for specific machines
+          - machine: qcom-armv8a
+            distro:
+                name: qcom-distro
+                yamlfile: ':ci/qcom-distro.yml'
+            kernel:
+                type: additional
+                dirname: "+linux-yocto-dev"
+                yamlfile: ":ci/linux-yocto-dev.yml"
+          - machine: qcom-armv8a
+            distro:
+                name: qcom-distro
+                yamlfile: ':ci/qcom-distro.yml'
+            kernel:
+                type: additional
+                dirname: "+linux-yocto-lts"
+                yamlfile: ":ci/linux-yocto-lts.yml"
+        exclude:
+          # Incompatible builds
+          - machine: qcom-armv7a
+            distro:
+                name: qcom-distro-prop-image
+    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.kernel.dirname }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run kas build
+        uses: ./.github/actions/compile
+        id: compile_kas
+        with:
+          machine: ${{matrix.machine}}
+          distro_yaml: ${{matrix.distro.yamlfile}}
+          distro_name: ${{matrix.distro.name}}
+          kernel_yaml: ${{matrix.kernel.yamlfile}}
+          kernel_dirname: ${{matrix.kernel.dirname}}
+          cache_dir: ${CACHE_DIR}
+          kas: ${KAS_CONTAINER}
+
+  publish_summary:
+    needs: compile
+    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    steps:
+      - name: 'Download build URLs'
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: build-url*
+
+      - name: "Print output"
+        shell: bash
+        id: print-output
+        run: |
+          echo "## Download URLs" >> $GITHUB_STEP_SUMMARY
+          export BUILD_URL=""
+          for FILE in build-url*
+          do
+              # Extract build OS and machine name
+              remainder="$FILE"
+              BUILD_URL_STR="${remainder%%_*}"; remainder="${remainder#*_}"
+              MACHINE="${remainder%%_*}"; remainder="${remainder#*_}"
+              OS="${remainder%%_*}"
+              BUILD_URL=$(cat "$FILE/$FILE")
+              echo "### ${MACHINE} ${OS}" >> $GITHUB_STEP_SUMMARY
+              echo "[${BUILD_URL}](${BUILD_URL})" >> $GITHUB_STEP_SUMMARY
+          done
+          # for backward compatibility only
+          # This section should be removed once the patch is merged
+          echo "${BUILD_URL}" > build_url
+      - name: Upload build URL
+        uses: actions/upload-artifact@v4
+        with:
+          overwrite: true
+          name: build_url
+          path: build_url
+
+
