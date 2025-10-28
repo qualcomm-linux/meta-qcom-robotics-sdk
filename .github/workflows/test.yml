@@ -1,0 +1,150 @@
+name: Tests
+
+on:
+  workflow_call:
+    inputs:
+      build_id:
+        required: true
+        type: string
+
+jobs:
+  prepare-jobs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        machine:
+          - iq-8275-evk
+          - iq-9075-evk
+          - qcm6490-idp
+          - qcs615-adp-air
+          - qcs6490-rb3gen2-core-kit
+          - qcs8300-ride-sx
+          - qcs9100-ride-sx
+          - qrb2210-rb1-core-kit
+          - qcom-armv8a
+          - qcom-armv7a
+        distro:
+          - name: poky-altcfg
+          - name: qcom-distro
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 'Download build URLs'
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.build_id }}
+          pattern: build-url*
+
+      - name: "Generate testjobs"
+        run: |
+          export BUILD_URL_FILE="$GITHUB_WORKSPACE/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}"
+          echo "${BUILD_URL_FILE}"
+          if [ -f "$BUILD_URL_FILE" ]; then
+              # install dependencies
+              export BUILD_URL=$(cat "${BUILD_URL_FILE}")
+              pip install jinja2
+              if [ "${{ matrix.machine }}" = "qcom-armv8a" ]; then
+                  python3 ci/generatetests.py --templates ci/lava --os ${{ matrix.distro.name }} --device dragonboard-410c --build-url "${BUILD_URL}"
+                  python3 ci/generatetests.py --templates ci/lava --os ${{ matrix.distro.name }} --device dragonboard-820c --build-url "${BUILD_URL}"
+                  echo "MACHINE=dragonboard" >> $GITHUB_ENV
+              else
+                  python3 ci/generatetests.py --templates ci/lava --os ${{ matrix.distro.name }} --device ${{ matrix.machine }} --build-url "${BUILD_URL}"
+                  echo "MACHINE=${{ matrix.machine }}" >> $GITHUB_ENV
+              fi
+          fi
+      - name: 'Upload test jobs'
+        uses: actions/upload-artifact@v4
+        with:
+          name: testjobs-${{ matrix.machine }}-${{ matrix.distro.name }}
+          path: ${{ env.MACHINE}}*-${{ matrix.distro.name }}-*.yaml
+
+  prepare-job-list:
+    needs: prepare-jobs
+    runs-on: ubuntu-latest
+    outputs:
+      jobmatrix: ${{ steps.listjobs.outputs.jobmatrix }}
+    steps:
+      - name: 'Download job templates'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: testjobs-*
+
+      - name: "List jobs"
+        id: listjobs
+        run: |
+          JOBFILES=$(find . -name *.yaml)
+          JOBFILES=$(echo "$JOBFILES" | sed -e "s/^/\"/" | sed -e "s/$/\",/" | tr -d "\n" | sed -e "s/.$//")
+          JOBFILES="[${JOBFILES}]"
+          J=$(jq -cn --argjson jobfiles "$JOBFILES" '{target: $jobfiles}')
+          echo "jobmatrix=$J" >> $GITHUB_OUTPUT
+          echo "Preparing testjob files"
+
+  submit-job:
+    needs: prepare-job-list
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.prepare-job-list.outputs.jobmatrix) }}
+    steps:
+      - name: 'Download job templates'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: testjobs-*
+
+      - name: 'Prepare output file name'
+        run: |
+          OUTPUT_NAME=$(echo "${{ matrix.target }}" | sed "s|\/|-|g")
+          echo "RESULT_NAME=${OUTPUT_NAME#??}" >> $GITHUB_ENV
+
+      - name: Submit ${{ matrix.target }}
+        timeout-minutes: 20
+        uses: foundriesio/lava-action@v8
+        with:
+          lava_token: ${{ secrets.LAVATOKEN }}
+          lava_url: 'lava.infra.foundries.io'
+          job_definition: ${{ matrix.target }}
+          wait_for_job: true
+          fail_action_on_failure: false
+          fail_action_on_incomplete: false
+          save_result_as_artifact: true
+          save_job_details: true
+          result_file_name: "${{ env.RESULT_NAME }}"
+
+  publish-test-results:
+    name: "Publish Tests Results"
+    needs: submit-job
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: "List files"
+        run: |
+          echo $GITHUB_WORKSPACE
+          ls -R $GITHUB_WORKSPACE
+
+      - name: Publish Test Job Details
+        run: |
+          for json_file in $(find ${{ github.workspace }} -name "test-job-*.json")
+          do
+              DEVICE_TYPE=$(cat "$json_file" | jq -r ".requested_device_type")
+              URL=$(cat "$json_file" | jq -r ".url")
+              JOB_ID=$(cat "$json_file" | jq -r ".id")
+              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL)"
+              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL)" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: "${{ github.workspace }}/artifacts/**/*.xml"
+          action_fail: true
+          action_fail_on_inconclusive: true
