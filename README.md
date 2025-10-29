@@ -1,47 +1,44 @@
-**After repository creation:**
-- [ ] Update this `README.md`. Update the Project Name, description, and all sections. Remove this checklist.
-- [ ] If required, update `LICENSE.txt` and the License section with your project's approved license
-- [ ] Search this repo for "REPLACE-ME" and update all instances accordingly
-- [ ] Update `CONTRIBUTING.md` as needed
-- [ ] Review the workflows in `.github/workflows`, updating as needed. See https://docs.github.com/en/actions for information on what these files do and how they work.
-- [ ] Review and update the suggested Issue and PR templates as needed in `.github/ISSUE_TEMPLATE` and `.github/PULL_REQUEST_TEMPLATE`
+# Welcome to the Qualcomm Intelligent Robotics SDK (QIR SDK)
 
-# Project Name
+The Qualcomm® Intelligent Robotics(QIR) SDK is a collection of components that enable you to develop robotic features on Qualcomm platforms. This SDK is applicable to the Qualcomm Linux releases.
 
-*\<update with your project name and a short description\>*
+The QIR SDK provides the following:
+- Reference code in Robot Operating System (ROS) packages to develop robotic applications.
+- E2E（end-to-end）scenario samples to evaluate robotic platforms.
+- Integrated cross-compile toolchain, which includes common build tools, such as aarch64-oe-linux-gcc, make, cmake, and ROS core.
+- Tools and scripts to speed up the development.
+- Provide some basic ROS nodes to help you build your ros application, such as qrb_ros_camera, qrb_ros_nn_inference,etc.
 
-Project that does ... implemented in ... runs on Qualcomm® *\<processor\>*
+This will guide you through developing your first sample application. It explains how to:
+- Flash the prebuilt Qualcomm linux image and configure the environment.
+- Run sample applications.
+- Develop sample applications using the prebuilt image and QIR SDK.
+- Generate customized images and QIR SDK.
+- Provide a Gazebo simulation environment for testing and debugging robotic applications.
 
 ## Branches
 
 **main**: Primary development branch. Contributors should develop submissions based on this branch, and submit pull requests to this branch.
 
-## Requirements
-
-List requirements to run the project, how to install them, instructions to use docker container, etc...
-
-## Installation Instructions
-
-How to install the software itself.
-
 ## Usage
 
-Describe how to use the project.
+As part of QIR, this project requires ​​collaborative usage with other components​​. Detailed instructions are provided in:
+- [QIR SDK User Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-265/qir-sdk-landing-page.html?vproduct=1601111740013072&version=1.6&facet=Intelligent_Robotics_Product.SDK.2.0)
 
 ## Development
 
-How to develop new features/fixes for the software. Maybe different than "usage". Also provide details on how to contribute via a [CONTRIBUTING.md file](CONTRIBUTING.md).
+How to develop new features/fixes for the software. Maybe different than "usage". Also provide details on how to contribute via a [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Getting in Contact
 
-How to contact maintainers. E.g. GitHub Issues, GitHub Discussions could be indicated for many cases. However a mail list or list of Maintainer e-mails could be shared for other types of discussions. E.g.
+How to contact maintainers. E.g. GitHub Issues, GitHub Discussions could be indicated for many cases. However a mail list or list of Maintainer e-mails could be shared for other types of discussions.
 
 * [Report an Issue on GitHub](../../issues)
-* [Open a Discussion on GitHub](../../discussions)
-* [E-mail us](mailto:REPLACE-ME@qti.qualcomm.com) for general questions
+* E-mail
+    * dapeyuan@qti.qualcomm.com
+    * jialchen@qti.qualcomm.com
+    * huiyqiu@qti.qualcomm.com
 
 ## License
 
-*\<update with your project name and license\>*
-
-*\<REPLACE-ME\>* is licensed under the [BSD-3-clause License](https://spdx.org/licenses/BSD-3-Clause.html). See [LICENSE.txt](LICENSE.txt) for the full license text.
+**meta-qcom-robotics-sdk** is licensed under the [BSD-3-clause License](https://spdx.org/licenses/BSD-3-Clause.html). See [LICENSE.txt](LICENSE.txt) for the full license text.
