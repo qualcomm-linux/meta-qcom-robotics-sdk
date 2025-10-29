@@ -1,0 +1,58 @@
+#This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+#
+#Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+From 91c191868c19a1c41c092cb48a9e4e549846e533 Mon Sep 17 00:00:00 2001
+From: weijshen <quic_weijshen@quicinc.com>
+Date: Fri, 25 Apr 2025 18:21:50 +0800
+Subject: [PATCH] {jazzy}: set ROS_UNRESOLVED_DEP
+
+1. set ROS_UNRESOLVED_DEP-rapidjson-dev to rapidjson
+2. set ROS_UNRESOLVED_DEP-liboctomap-dev to octomap
+3. set ROS_UNRESOLVED_DEP-libomp-dev from openmp to llvm
+openmp is not available in QLI, use llvm to replace it.
+
+Signed-off-by: weijshen <quic_weijshen@quicinc.com>
+---
+ .../include/jazzy/generated/superflore-ros-distro.inc         | 4 ++--
+ meta-ros2-jazzy/conf/ros-distro/include/jazzy/ros-distro.inc  | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/meta-ros2-jazzy/conf/ros-distro/include/jazzy/generated/superflore-ros-distro.inc b/meta-ros2-jazzy/conf/ros-distro/include/jazzy/generated/superflore-ros-distro.inc
+index 467325fad..4ac78bbe5 100644
+--- a/meta-ros2-jazzy/conf/ros-distro/include/jazzy/generated/superflore-ros-distro.inc
++++ b/meta-ros2-jazzy/conf/ros-distro/include/jazzy/generated/superflore-ros-distro.inc
+@@ -5294,7 +5294,7 @@ ROS_UNRESOLVED_DEP-liblz4 = "ROS_UNRESOLVED_DEP-liblz4"
+ ROS_UNRESOLVED_DEP-liblz4-dev = "ROS_UNRESOLVED_DEP-liblz4-dev"
+ ROS_UNRESOLVED_DEP-libnlopt-cxx-dev = "ROS_UNRESOLVED_DEP-libnlopt-cxx-dev"
+ ROS_UNRESOLVED_DEP-libnlopt-dev = "ROS_UNRESOLVED_DEP-libnlopt-dev"
+-ROS_UNRESOLVED_DEP-liboctomap-dev = "ROS_UNRESOLVED_DEP-liboctomap-dev"
++ROS_UNRESOLVED_DEP-liboctomap-dev = "octomap"
+ ROS_UNRESOLVED_DEP-libomp-dev = "ROS_UNRESOLVED_DEP-libomp-dev"
+ ROS_UNRESOLVED_DEP-libopenexr-dev = "ROS_UNRESOLVED_DEP-libopenexr-dev"
+ ROS_UNRESOLVED_DEP-libopenni2-dev = "ROS_UNRESOLVED_DEP-libopenni2-dev"
+@@ -5348,7 +5348,7 @@ ROS_UNRESOLVED_DEP-qml-module-qtquick-window2 = "ROS_UNRESOLVED_DEP-qml-module-q
+ ROS_UNRESOLVED_DEP-qml-module-qtquick2 = "ROS_UNRESOLVED_DEP-qml-module-qtquick2"
+ ROS_UNRESOLVED_DEP-qtquickcontrols2-5-dev = "ROS_UNRESOLVED_DEP-qtquickcontrols2-5-dev"
+ ROS_UNRESOLVED_DEP-range-v3 = "ROS_UNRESOLVED_DEP-range-v3"
+-ROS_UNRESOLVED_DEP-rapidjson-dev = "ROS_UNRESOLVED_DEP-rapidjson-dev"
++ROS_UNRESOLVED_DEP-rapidjson-dev = "rapidjson"
+ ROS_UNRESOLVED_DEP-ros-ign-bridge = "ROS_UNRESOLVED_DEP-ros-ign-bridge"
+ ROS_UNRESOLVED_DEP-ros-ign-gazebo = "ROS_UNRESOLVED_DEP-ros-ign-gazebo"
+ ROS_UNRESOLVED_DEP-rti-connext-dds-6.0.1 = "ROS_UNRESOLVED_DEP-rti-connext-dds-6.0.1"
+diff --git a/meta-ros2-jazzy/conf/ros-distro/include/jazzy/ros-distro.inc b/meta-ros2-jazzy/conf/ros-distro/include/jazzy/ros-distro.inc
+index 62b1d3c61..3230aa74d 100644
+--- a/meta-ros2-jazzy/conf/ros-distro/include/jazzy/ros-distro.inc
++++ b/meta-ros2-jazzy/conf/ros-distro/include/jazzy/ros-distro.inc
+@@ -287,7 +287,7 @@ ROS_UNRESOLVED_DEP-python3-venv = "python3"
+
+ ROS_UNRESOLVED_DEP-libopencv-imgproc-dev = "opencv"
+
+-ROS_UNRESOLVED_DEP-libomp-dev = "openmp"
++ROS_UNRESOLVED_DEP-libomp-dev = "llvm"
+
+ ROS_UNRESOLVED_DEP-libqt5-svg = "qtsvg"
+
+--
+2.34.1
+

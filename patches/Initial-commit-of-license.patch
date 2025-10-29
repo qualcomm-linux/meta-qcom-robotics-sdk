@@ -1,0 +1,80 @@
+From 4bda50f28919d62410feabae530e6f7186812938 Mon Sep 17 00:00:00 2001
+From: Beth Flanagan <elizabeth.flanagan@intel.com>
+Date: Thu, 27 Jan 2011 11:25:12 -0800
+Subject: Initial commit of license reporting:
+
+This is an intial commit for the license reporting system. A few notes:
+The LICENSE fields needs to be standardized throughout poky. As it
+stands, we throw a warning if the license file is not found (either
+because it does not exist or because LICENSE_FILE_CHKSUM is munged)
+in the generic license directory. This should eventually become an
+error.
+
+I've seen a few places where Apache-v2.0 is written differently and
+I'm sure this will throw the above warning. This does not put the
+license data on the rootfs. Also, I provide both the actual license
+text and a link to the best guess of the generic_license. That guessing
+is not very robust and I'm loath to get into a bunch of pattern matching
+rather than standardize LICENSE.
+
+This adds one new param to poky.conf and one new to license.bbclass:
+
+LICENSE_DIR: the base directory we copy all the license results to (set
+in license.bbclass)
+COMMON_LICENSE_DIR: this is the directory that holds all the common
+generic license files. currently meta/files/common-licenses (set in
+poky.conf)
+
+TODO:
+- We should verify the common-licenses. I stripped these from my Ubuntu
+  10.10 system.
+- We should allow the capability of licenses on the rootfs, although the
+  resulting image created would be a lot larger.
+- More common-licenses. I don't include bzip, zlib, ICS.... I should,
+  but that means tracking down a lot of licenses.
+- General cleanup of licensing and standardization of names. We should
+  standardize on a naming convention. What's in licenses.conf should
+  match up with what is in the recipes which should match with what is
+  in common-licenses. Outside the scope of this though. See:
+  http://bugzilla.pokylinux.org/show_bug.cgi?id=650
+---
+ meta/files/common-licenses/BSD | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+ create mode 100644 meta/files/common-licenses/BSD
+
+(limited to 'meta/files/common-licenses/BSD')
+
+diff --git a/meta/files/common-licenses/BSD b/meta/files/common-licenses/BSD
+new file mode 100644
+index 0000000000..c7a0aa4f94
+--- /dev/null
++++ b/meta/files/common-licenses/BSD
+@@ -0,0 +1,26 @@
++Copyright (c) The Regents of the University of California.
++All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions
++are met:
++1. Redistributions of source code must retain the above copyright
++   notice, this list of conditions and the following disclaimer.
++2. Redistributions in binary form must reproduce the above copyright
++   notice, this list of conditions and the following disclaimer in the
++   documentation and/or other materials provided with the distribution.
++3. Neither the name of the University nor the names of its contributors
++   may be used to endorse or promote products derived from this software
++   without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++SUCH DAMAGE.
+-- 
+cgit 1.2.3-korg

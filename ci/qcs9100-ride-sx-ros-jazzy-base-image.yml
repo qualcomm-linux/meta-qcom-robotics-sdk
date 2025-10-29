@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+  includes:
+  - ci/robotics-base.yml
+
+distro: qcom-robotics-ros2-jazzy
+
+local_conf_header:
+  soc: |
+    SOC_ARCH = "qcs9100_ride_sx"
+
+machine: qcs9100-ride-sx
