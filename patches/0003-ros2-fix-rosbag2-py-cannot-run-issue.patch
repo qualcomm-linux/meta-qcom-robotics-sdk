@@ -1,0 +1,37 @@
+#This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+#
+#Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+From 84e56fe1e08cc6836a01714d02591e50540e512c Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <quic_jiaxshi@quicinc.com>
+Date: Fri, 1 Nov 2024 11:00:27 +0800
+Subject: [PATCH] {ros2}: fix rosbag2-py cannot run issue
+
+Add python module extention argument to ament_cmake for using
+pybind11_add_module function.
+
+Upstream-Status: Pending
+
+Signed-off-by: Jiaxing Shi <quic_jiaxshi@quicinc.com>
+---
+ meta-ros2/classes/ros_ament_cmake.bbclass | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/meta-ros2/classes/ros_ament_cmake.bbclass b/meta-ros2/classes/ros_ament_cmake.bbclass
+index 3691b80d1..8c2c49c9e 100644
+--- a/meta-ros2/classes/ros_ament_cmake.bbclass
++++ b/meta-ros2/classes/ros_ament_cmake.bbclass
+@@ -13,9 +13,10 @@ PYTHON_SOABI_ARCH_SUFFIX:arm = ""
+ # https://git.openembedded.org/openembedded-core/commit/?h=dunfell&id=6beab388e73b3ac6157650855a6c1fb1d71e8015
+ PYTHON_SOABI_ARCH:i686 = "i386-${TARGET_OS}"
+ PYTHON_SOABI = "cpython-${@d.getVar('PYTHON_BASEVERSION').replace('.', '')}${PYTHON_ABI}-${PYTHON_SOABI_ARCH}${PYTHON_SOABI_ARCH_SUFFIX}"
++PYTHON_MODULE_EXTENSION=".${PYTHON_SOABI}.so"
+ 
+ EXTRA_OECMAKE:append = " -DBUILD_TESTING=OFF"
+-EXTRA_OECMAKE:append:class-target = " -DPYTHON_SOABI=${PYTHON_SOABI}"
++EXTRA_OECMAKE:append:class-target = " -DPYTHON_SOABI=${PYTHON_SOABI} -DPYTHON_MODULE_EXTENSION=${PYTHON_MODULE_EXTENSION}"
+ 
+ # XXX Without STAGING_DIR_HOST path included, rmw-implementation:do_configure() fails with:
+ #
+-- 
+2.34.1
