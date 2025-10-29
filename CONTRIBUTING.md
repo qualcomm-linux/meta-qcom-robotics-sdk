@@ -1,4 +1,4 @@
-# Contributing to meta-qcom-robotics-sdk
+# Contributing to <REPLACE-ME>
 
 Hi there!
 We’re thrilled that you’d like to contribute to this project.
@@ -11,10 +11,10 @@ In general, contributors should develop on branches based off of `main` and pull
 ## Submitting a pull request
 
 1. Please read our [code of conduct](CODE-OF-CONDUCT.md) and [license](LICENSE.txt).
-1. [Fork](https://github.com/qualcomm-linux/meta-qcom-robotics-sdk/fork) and clone the repository.
+1. [Fork](https://github.com/qualcomm/<REPLACE-ME>/fork) and clone the repository.
 
     ```bash
-    git clone https://github.com/<username>/meta-qcom-robotics-sdk.git
+    git clone https://github.com/<username>/<REPLACE-ME>.git
     ```
 
 1. Create a new branch based on `main`:
@@ -26,7 +26,7 @@ In general, contributors should develop on branches based off of `main` and pull
 1. Create an upstream `remote` to make it easier to keep your branches up-to-date:
 
     ```bash
-    git remote add upstream https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
+    git remote add upstream https://github.com/qualcomm/<REPLACE-ME>.git
     ```
 
 1. Make your changes, add tests, and make sure the tests still pass.
@@ -50,8 +50,21 @@ In general, contributors should develop on branches based off of `main` and pull
 
     The `-u` is shorthand for `--set-upstream`. This will set up the tracking reference so subsequent runs of `git push` or `git pull` can omit the remote and branch.
 
-1. [Submit a pull request](https://github.com/qualcomm-linux/meta-qcom-robotics-sdk/pulls) from your branch to `main`.
+1. [Submit a pull request](https://github.com/qualcomm/<REPLACE-ME>/pulls) from your branch to `main`.
 1. Pat yourself on the back and wait for your pull request to be reviewed.
+
+## Security Analysis of Pull Requests
+
+To maintain the security and integrity of this project, all pull requests from external contributors are automatically scanned using [Semgrep](https://github.com/semgrep/semgrep) to detect insecure coding patterns and potential security flaws.
+
+**Static Analysis with Semgrep:**  We use Semgrep to perform lightweight, fast static analysis on every PR. This helps identify risky code patterns and logic flaws early in the development process.
+
+**Contributor Responsibility:** If any issues are flagged, contributors are expected to resolve them before the PR can be merged.
+
+**Continuous Improvement:** Our Semgrep ruleset evolves over time to reflect best practices and emerging security concerns.
+
+By submitting a PR, you agree to participate in this process and help us keep the project secure for everyone.
+
 
 Here are a few things you can do that will increase the likelihood of your pull request to be accepted:
 
