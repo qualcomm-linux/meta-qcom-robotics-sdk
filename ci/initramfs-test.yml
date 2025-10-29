@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+
+target:
+  - initramfs-firmware-db8074-image
+  - initramfs-firmware-dragonboard410c-image
+  - initramfs-firmware-dragonboard820c-image
+  - initramfs-firmware-dragonboard845c-image
+  - initramfs-firmware-qar2130p-image
+  - initramfs-firmware-qcs8300-ride-image
+  - initramfs-firmware-rb1-image
+  - initramfs-firmware-rb2-image
+  - initramfs-firmware-rb3gen2-image
+  - initramfs-firmware-rb5-image
+  - initramfs-firmware-sa8775p-ride-image
+  - initramfs-firmware-sm8150-hdk-image
+  - initramfs-firmware-sm8350-hdk-image
+  - initramfs-firmware-sm8450-hdk-image
+  - initramfs-firmware-sm8550-hdk-image
+  - initramfs-firmware-sm8650-hdk-image
+  - initramfs-kerneltest-full-image
+  - initramfs-kerneltest-image
+  - initramfs-test-full-image
+  - initramfs-test-image
+  - initramfs-tiny-image
