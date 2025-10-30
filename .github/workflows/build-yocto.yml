@@ -14,7 +14,7 @@ env:
 
 jobs:
   kas-setup:
-    if: github.repository == 'qualcomm-linux/meta-qcom'
+    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
     runs-on: [self-hosted, qcom-u2404, amd64-ssd]
     steps:
       - name: Update kas-container
@@ -34,7 +34,7 @@ jobs:
 
       - name: Run kas lock
         run: |
-          ${KAS_CONTAINER} lock --update ci/base.yml:ci/qcom-distro.yml
+          ${KAS_CONTAINER} lock --update ci/robotics-base.yml:ci/qcs9100-ride-sx-ros-jazzy-base-image.yml
 
       - uses: actions/upload-artifact@v4
         with:
@@ -43,7 +43,7 @@ jobs:
 
   yocto-run-checks:
     needs: kas-setup
-    if: github.repository == 'qualcomm-linux/meta-qcom'
+    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
     runs-on: [self-hosted, qcom-u2404, amd64-ssd]
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
 
   compile_warm_up:
     needs: [kas-setup, yocto-run-checks]
-    if: github.repository == 'qualcomm-linux/meta-qcom'
+    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
     runs-on: [self-hosted, qcom-u2404, amd64-ssd]
     strategy:
       fail-fast: true
@@ -99,7 +99,7 @@ jobs:
 
   compile:
     needs: compile_warm_up
-    if: github.repository == 'qualcomm-linux/meta-qcom'
+    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
     runs-on: [self-hosted, qcom-u2404, amd64-ssd]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
@@ -107,21 +107,11 @@ jobs:
       fail-fast: true
       matrix:
         machine:
-          - iq-8275-evk
           - iq-9075-evk
-          - qcm6490-idp
-          - qcs615-adp-air
-          - qcs8300-ride-sx
-          - qcs9100-ride-sx
-          - qrb2210-rb1-core-kit
-          - qcom-armv7a
         distro:
-          - name: poky-altcfg
-            yamlfile: ""
-          - name: qcom-distro
-            yamlfile: ':ci/qcom-distro.yml'
-          - name: qcom-distro-prop-image
-            yamlfile: ':ci/qcom-distro-prop-image.yml'
+          - name: ros-jazzy-base-image
+            yamlfile: ':ci/qcs9100-ride-sx-ros-jazzy-base-image.yml'
+
         kernel:
           - type: default
             dirname: ""

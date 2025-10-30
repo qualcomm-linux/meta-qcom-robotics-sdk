@@ -1,4 +1,6 @@
 # Default reviewers for all changes in entire repository,
 # unless a later match takes precedence
+*  @tengf @huiyqiu
 
 # Reviewers to be assigned for any changes in ci/ subdirectory
+ci/*  @tengf @huiyqiu
