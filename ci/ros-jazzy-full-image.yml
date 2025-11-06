@@ -3,6 +3,6 @@
 header:
   version: 14
   includes:
-  - ci/qcs8300-ride-sx-ros-jazzy-base-image.yml
+  - ci/ros-jazzy-base-image.yml
 
 target: qcom-robotics-full-image

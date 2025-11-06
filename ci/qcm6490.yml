@@ -3,6 +3,4 @@
 header:
   version: 14
   includes:
-  - ci/qcs6490-rb3gen2-core-kit-ros-jazzy-base-image.yml
-
-target: qcom-robotics-full-image
+  - ci/base.yml

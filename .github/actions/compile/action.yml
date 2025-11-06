@@ -21,7 +21,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v6
       with:
         name: kas-lock
         path: ci/
@@ -39,24 +39,25 @@ runs:
       run: |
         mkdir $KAS_WORK_DIR
         ${{inputs.kas}} dump --resolve-env --resolve-local --resolve-refs \
-          ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} > kas-build.yml
+          ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} > kas-build.yml
+        cat kas-build.yml
 
     - name: Kas qcom world build
       shell: bash
       run: |
-        ${{inputs.kas}} build ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}:ci/world.yml
+        ${{inputs.kas}} build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
         mv $KAS_WORK_DIR/build/buildchart.svg buildchart-world.svg
 
     - name: Kas build images
       shell: bash
       run: |
-        ${{inputs.kas}} build ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}
+        ${{inputs.kas}} build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
         mv $KAS_WORK_DIR/build/buildchart.svg .
 
         if [ "${{ inputs.machine }}" = "qcom-armv8a" ]; then
-          ${{inputs.kas}} build ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}:ci/initramfs-test.yml
+          ${{inputs.kas}} build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}:ci/initramfs-test.yml
         fi
 
     - uses: actions/upload-artifact@v4
@@ -77,6 +78,9 @@ runs:
         # The upload-private-artifact-action runs from a container that
         # expects file to be relative to our PWD. deploy_dir is outside
         # that, so we move things around:
+        echo "Current workdir: $(pwd)"
+        echo "Image path: "
+        ls ../kas/build/tmp/deploy
         deploy_dir=../kas/build/tmp/deploy/images/${{inputs.machine}}
         uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
         mkdir -p $uploads_dir
@@ -102,9 +106,6 @@ runs:
       id: print-output
       run: |
         KERNEL_DIRNAME="${{ inputs.kernel_dirname }}"
-        if [ -n "${KERNEL_DIRNAME}" ]; then
-            KERNEL_DIRNAME="_${KERNEL_DIRNAME}"
-        fi
         BUILDNAME="${{ inputs.machine }}_${{ inputs.distro_name }}${KERNEL_DIRNAME}"
         FILENAME="build-url_${BUILDNAME}"
         echo "${{ steps.upload_artifacts.outputs.url }}" > "${FILENAME}"
@@ -115,4 +116,3 @@ runs:
         overwrite: true
         name: ${{ steps.print-output.outputs.filename }}
         path: ${{ steps.print-output.outputs.filename }}
-
