@@ -4,10 +4,10 @@ The Qualcomm® Intelligent Robotics(QIR) SDK is a collection of components that 
 
 The QIR SDK provides the following:
 - Reference code in Robot Operating System (ROS) packages to develop robotic applications.
-- E2E（end-to-end）scenario samples to evaluate robotic platforms.
+- E2E(end-to-end) scenario samples to evaluate robotic platforms.
 - Integrated cross-compile toolchain, which includes common build tools, such as aarch64-oe-linux-gcc, make, cmake, and ROS core.
 - Tools and scripts to speed up the development.
-- Provide some basic ROS nodes to help you build your ros application, such as qrb_ros_camera, qrb_ros_nn_inference,etc.
+- Provide some basic ROS nodes to help you build your ros application, such as qrb_ros_camera, qrb_ros_nn_inference, etc.
 
 This will guide you through developing your first sample application. It explains how to:
 - Flash the prebuilt Qualcomm linux image and configure the environment.
@@ -22,8 +22,48 @@ This will guide you through developing your first sample application. It explain
 
 ## Usage
 
-As part of QIR, this project requires ​​collaborative usage with other components​​. Detailed instructions are provided in:
-- [QIR SDK User Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-265/qir-sdk-landing-page.html?vproduct=1601111740013072&version=1.6&facet=Intelligent_Robotics_Product.SDK.2.0)
+As part of QIR, this project requires collaborative usage with other components. Detailed sample content will be provided in the future.
+
+Here, we provide some compile or develop commands to help develop more efficiently.
+
+After following this guide, you will compile an image that includes meta-qcom and ros-core content.
+And you can flash the image to the following devices to start your work.
+
+| Hardware                                               | Document                                                     | Access level |
+| ------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
+| Qualcomm DragonwingTM RB3 Gen 2 Vision Development Kit | [Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-253) | Public       |
+| Qualcomm DragonwingTM IQ-9075 Evaluation Kit           | [Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-263) | Public       |
+| Qualcomm® IQ-8 Beta Evaluation Kit                     | [Quick Start Guide](https://docs.qualcomm.com/bundle/80-70017-263/resource/80-70017-263.pdf) | Authorized   |
+
+Here are the detailed steps:
+
+1. Please refer to the [Yocto Project Reference Manual](https://docs.yoctoproject.org/ref-manual/system-requirements.html) to set up your Yocto Project build environment.
+
+2. Please follow the instructions below for a KAS-based build. The KAS tool offers an easy way to setup bitbake based projects. For more details, visit the [KAS documentation](https://kas.readthedocs.io/en/latest/index.html).
+
+3. Install kas tool
+
+   ```
+   sudo pip3 install kas
+   ```
+
+4. Clone meta-qcom-robotics-sdk layer
+
+   ```
+   git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git -b main
+   ```
+
+5. Build using the KAS configuration for one of the supported boards
+
+   ```
+   kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>-ros-jazzy-base-image.yml
+   ```
+
+6. The output image will be located in the follow path:
+
+   ```
+   build/tmp/deploy/images/<YOUR MACHINE NAME>
+   ```
 
 ## Development
 
@@ -31,12 +71,12 @@ How to develop new features/fixes for the software. Maybe different than "usage"
 
 ## Getting in Contact
 
-How to contact maintainers. E.g. GitHub Issues, GitHub Discussions could be indicated for many cases. However a mail list or list of Maintainer e-mails could be shared for other types of discussions.
+How to contact maintainers. E.g. GitHub Issues, GitHub Discussions could be indicated for many cases. However, a mail list or list of Maintainer e-mails could be shared for other types of discussions.
 
 * [Report an Issue on GitHub](../../issues)
 * E-mail
     * dapeyuan@qti.qualcomm.com
-    * jialchen@qti.qualcomm.com
+    * fulaliu@qti.qualcomm.com
     * huiyqiu@qti.qualcomm.com
 
 ## License
