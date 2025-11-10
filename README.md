@@ -1,47 +1,84 @@
-**After repository creation:**
-- [ ] Update this `README.md`. Update the Project Name, description, and all sections. Remove this checklist.
-- [ ] If required, update `LICENSE.txt` and the License section with your project's approved license
-- [ ] Search this repo for "REPLACE-ME" and update all instances accordingly
-- [ ] Update `CONTRIBUTING.md` as needed
-- [ ] Review the workflows in `.github/workflows`, updating as needed. See https://docs.github.com/en/actions for information on what these files do and how they work.
-- [ ] Review and update the suggested Issue and PR templates as needed in `.github/ISSUE_TEMPLATE` and `.github/PULL_REQUEST_TEMPLATE`
+# Welcome to the Qualcomm Intelligent Robotics SDK (QIR SDK)
 
-# Project Name
+The Qualcomm® Intelligent Robotics(QIR) SDK is a collection of components that enable you to develop robotic features on Qualcomm platforms. This SDK is applicable to the Qualcomm Linux releases.
 
-*\<update with your project name and a short description\>*
+The QIR SDK provides the following:
+- Reference code in Robot Operating System (ROS) packages to develop robotic applications.
+- E2E(end-to-end) scenario samples to evaluate robotic platforms.
+- Integrated cross-compile toolchain, which includes common build tools, such as aarch64-oe-linux-gcc, make, cmake, and ROS core.
+- Tools and scripts to speed up the development.
+- Provide some basic ROS nodes to help you build your ros application, such as qrb_ros_camera, qrb_ros_nn_inference, etc.
 
-Project that does ... implemented in ... runs on Qualcomm® *\<processor\>*
+This will guide you through developing your first sample application. It explains how to:
+- Flash the prebuilt Qualcomm linux image and configure the environment.
+- Run sample applications.
+- Develop sample applications using the prebuilt image and QIR SDK.
+- Generate customized images and QIR SDK.
+- Provide a Gazebo simulation environment for testing and debugging robotic applications.
 
 ## Branches
 
 **main**: Primary development branch. Contributors should develop submissions based on this branch, and submit pull requests to this branch.
 
-## Requirements
-
-List requirements to run the project, how to install them, instructions to use docker container, etc...
-
-## Installation Instructions
-
-How to install the software itself.
-
 ## Usage
 
-Describe how to use the project.
+As part of QIR, this project requires collaborative usage with other components. Detailed sample content will be provided in the future.
+
+Here, we provide some compile or develop commands to help develop more efficiently.
+
+After following this guide, you will compile an image that includes meta-qcom and ros-core content.
+And you can flash the image to the following devices to start your work.
+
+| Hardware                                               | Document                                                     | Access level |
+| ------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
+| Qualcomm DragonwingTM RB3 Gen 2 Vision Development Kit | [Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-253) | Public       |
+| Qualcomm DragonwingTM IQ-9075 Evaluation Kit           | [Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-263) | Public       |
+| Qualcomm® IQ-8 Beta Evaluation Kit                     | [Quick Start Guide](https://docs.qualcomm.com/bundle/80-70017-263/resource/80-70017-263.pdf) | Authorized   |
+
+Here are the detailed steps:
+
+1. Please refer to the [Yocto Project Reference Manual](https://docs.yoctoproject.org/ref-manual/system-requirements.html) to set up your Yocto Project build environment.
+
+2. Please follow the instructions below for a KAS-based build. The KAS tool offers an easy way to setup bitbake based projects. For more details, visit the [KAS documentation](https://kas.readthedocs.io/en/latest/index.html).
+
+3. Install kas tool
+
+   ```
+   sudo pip3 install kas
+   ```
+
+4. Clone meta-qcom-robotics-sdk layer
+
+   ```
+   git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git -b main
+   ```
+
+5. Build using the KAS configuration for one of the supported boards
+
+   ```
+   kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>-ros-jazzy-base-image.yml
+   ```
+
+6. The output image will be located in the follow path:
+
+   ```
+   build/tmp/deploy/images/<YOUR MACHINE NAME>
+   ```
 
 ## Development
 
-How to develop new features/fixes for the software. Maybe different than "usage". Also provide details on how to contribute via a [CONTRIBUTING.md file](CONTRIBUTING.md).
+How to develop new features/fixes for the software. Maybe different than "usage". Also provide details on how to contribute via a [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Getting in Contact
 
-How to contact maintainers. E.g. GitHub Issues, GitHub Discussions could be indicated for many cases. However a mail list or list of Maintainer e-mails could be shared for other types of discussions. E.g.
+How to contact maintainers. E.g. GitHub Issues, GitHub Discussions could be indicated for many cases. However, a mail list or list of Maintainer e-mails could be shared for other types of discussions.
 
 * [Report an Issue on GitHub](../../issues)
-* [Open a Discussion on GitHub](../../discussions)
-* [E-mail us](mailto:REPLACE-ME@qti.qualcomm.com) for general questions
+* E-mail
+    * dapeyuan@qti.qualcomm.com
+    * fulaliu@qti.qualcomm.com
+    * huiyqiu@qti.qualcomm.com
 
 ## License
 
-*\<update with your project name and license\>*
-
-*\<REPLACE-ME\>* is licensed under the [BSD-3-clause License](https://spdx.org/licenses/BSD-3-Clause.html). See [LICENSE.txt](LICENSE.txt) for the full license text.
+**meta-qcom-robotics-sdk** is licensed under the [BSD-3-clause License](https://spdx.org/licenses/BSD-3-Clause.html). See [LICENSE.txt](LICENSE.txt) for the full license text.
