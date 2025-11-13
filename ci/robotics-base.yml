@@ -34,7 +34,26 @@ repos:
       meta-multimedia:
 
 local_conf_header:
+  base: |
+    CONF_VERSION = "2"
+    INHERIT += "buildstats-summary"
+    INHERIT += "buildhistory"
+    INHERIT += "rm_work"
+  cmdline: |
+    KERNEL_CMDLINE_EXTRA:append = " qcom_scm.download_mode=1"
+  qcomflash: |
+    IMAGE_CLASSES += "image_types_qcom"
+    IMAGE_FSTYPES += "qcomflash"
+  extra: |
+    DISTRO_FEATURES:append = " efi pni-names"
+    EXTRA_IMAGE_FEATURES = "allow-empty-password empty-root-password allow-root-login"
+    IMAGE_ROOTFS_EXTRA_SPACE = "307200"
+    WATCHDOG_RUNTIME_SEC:pn-systemd = "30"
+  virtualization:
+    SKIP_META_VIRT_SANITY_CHECK = "1"
   robotics_base: |
     PATCHRESOLVE = "noop"
+
+machine: unset
 
 target: qcom-robotics-base-image

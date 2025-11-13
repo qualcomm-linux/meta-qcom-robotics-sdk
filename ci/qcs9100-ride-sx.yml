@@ -5,4 +5,8 @@ header:
   includes:
   - ci/base.yml
 
+local_conf_header:
+  soc: |
+    SOC_ARCH = "qcs9100_ride_sx"
+
 machine: qcs9100-ride-sx
