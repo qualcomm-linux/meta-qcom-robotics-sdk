@@ -7,8 +7,4 @@ header:
 
 distro: qcom-robotics-ros2-jazzy
 
-local_conf_header:
-  soc: |
-    SOC_ARCH = "qcs8300_ride_sx"
-
-machine: qcs8300-ride-sx
+target: qcom-robotics-base-image
