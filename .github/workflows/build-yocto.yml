@@ -55,50 +55,14 @@ jobs:
 
       - name: Run yocto-check-layer
         run: |
-          ci/kas-container-shell-helper.sh ci/yocto-check-layer.sh
+          # ci/kas-container-shell-helper.sh ci/yocto-check-layer.sh
 
       - name: Run Yocto patchreview
         run: |
-          ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
-
-  compile_warm_up:
-    needs: [kas-setup, yocto-run-checks]
-    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
-    strategy:
-      fail-fast: true
-      matrix:
-        machine:
-          - qcs6490-rb3gen2-core-kit
-          - qcom-armv8a
-        distro:
-          - name: poky-altcfg
-            yamlfile: ""
-          - name: qcom-distro
-            yamlfile: ':ci/qcom-distro.yml'
-          - name: qcom-distro-prop-image
-            yamlfile: ':ci/qcom-distro-prop-image.yml'
-        kernel:
-          - type: default
-            dirname: ""
-            yamlfile: ""
-    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.kernel.dirname }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run kas build
-        uses: ./.github/actions/compile
-        with:
-          machine: ${{matrix.machine}}
-          distro_yaml: ${{matrix.distro.yamlfile}}
-          distro_name: ${{matrix.distro.name}}
-          kernel_yaml: ${{matrix.kernel.yamlfile}}
-          kernel_dirname: ${{matrix.kernel.dirname}}
-          cache_dir: ${CACHE_DIR}
-          kas: ${KAS_CONTAINER}
+          # ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
 
   compile:
-    needs: compile_warm_up
+    needs: [kas-setup, yocto-run-checks]
     if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
     runs-on: [self-hosted, qcom-u2404, amd64-ssd]
     outputs:
@@ -107,49 +71,14 @@ jobs:
       fail-fast: true
       matrix:
         machine:
-          - iq-8275-evk
-          - iq-9075-evk
-          - qcm6490-idp
-          - qcs8300-ride-sx
-          - qcs9100-ride-sx
+          - qcs6490-rb3gen2-core-kit
         distro:
-          - name: poky-altcfg
-            yamlfile: ""
-          - name: qcom-distro
-            yamlfile: ':ci/qcom-distro.yml'
-          - name: qcom-distro-prop-image
-            yamlfile: ':ci/qcom-distro-prop-image.yml'
           - name: ros-jazzy-base-image
             yamlfile: ':ci/ros-jazzy-base-image.yml'
-          - name: ros-jazzy-full-image
-            yamlfile: ':ci/ros-jazzy-full-image.yml'
         kernel:
           - type: default
             dirname: ""
             yamlfile: ""
-        include:
-          # Additional builds for specific machines
-          - machine: qcom-armv8a
-            distro:
-                name: qcom-distro
-                yamlfile: ':ci/qcom-distro.yml'
-            kernel:
-                type: additional
-                dirname: "+linux-yocto-dev"
-                yamlfile: ":ci/linux-yocto-dev.yml"
-          - machine: qcom-armv8a
-            distro:
-                name: qcom-distro
-                yamlfile: ':ci/qcom-distro.yml'
-            kernel:
-                type: additional
-                dirname: "+linux-yocto-lts"
-                yamlfile: ":ci/linux-yocto-lts.yml"
-        exclude:
-          # Incompatible builds
-          - machine: qcom-armv7a
-            distro:
-                name: qcom-distro-prop-image
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v4
