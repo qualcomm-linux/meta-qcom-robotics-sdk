@@ -10,6 +10,9 @@ defaults:
     branch: master
 
 repos:
+  meta-qcom:
+    url: "https://github.com/qualcomm-linux/meta-qcom.git"
+    branch: master
 
   oe-core:
     url: https://github.com/openembedded/openembedded-core
