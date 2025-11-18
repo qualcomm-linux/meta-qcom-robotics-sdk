@@ -7,6 +7,6 @@ header:
 
 local_conf_header:
   soc: |
-    SOC_ARCH = "qcs6490_rb3gen2_core_kit"
+    SOC_ARCH = "qcs6490-rb3gen2-core-kit"
 
 machine: qcs6490-rb3gen2-core-kit

@@ -26,8 +26,12 @@ repos:
     branch: master
 
   meta-audioreach:
-    url: https://github.com/Audioreach/meta-ar
-    branch: main
+    url: https://github.com/AudioReach/meta-audioreach
+    branch: master
+
+  meta-selinux:
+    branch: master
+    url: https://git.yoctoproject.org/meta-selinux
 
 local_conf_header:
   virtualization:
