@@ -1,0 +1,19 @@
+name: Test Self-Hosted Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Hello
+        run: |
+            echo "Runner is working! Host: $(hostname)"
+
+      - name: Show Environment
+        run: |
+          echo "Current user: $(whoami)"
+          echo "Working directory: $(pwd)"
+          echo "Disk usage:"
+          df -h
