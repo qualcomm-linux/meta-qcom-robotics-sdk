@@ -1,28 +1,24 @@
-ROS_BUILD_TYPE = "ament_python"
+ROS_BUILD_TYPE = "ament_cmake"
 
-ROS_CN = "sample_object_detction"
-ROS_BPN = "sample_object_detction"
+ROS_CN = "sample_apriltag"
+ROS_BPN = "sample_apriltag"
 
-S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
+S = "${WORKDIR}/git/robotics/${ROS_CN}"
 
 ROS_BUILD_DEPENDS = " \
 "
 
 ROS_BUILDTOOL_DEPENDS = " \
-    ament-cmake-python \
-    ament-index-python \
+    ament-cmake-auto-native \
 "
 
 ROS_EXPORT_DEPENDS = " \
 "
 
 ROS_EXEC_DEPENDS = " \
-    std-msgs \
-    sensor-msgs \
-    geometry-msgs \
-    python3 \
-    python3-numpy \
-    python3-pybind11 \
+    image-proc \
+    rclcpp-components \
+    apriltag-ros \
 "
 
 ROS_TEST_DEPENDS = " \
@@ -34,6 +30,3 @@ DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS} ${ROS_EXPORT_DEPENDS} $
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
 require include/qrb-ros-samples.inc
-
-
-

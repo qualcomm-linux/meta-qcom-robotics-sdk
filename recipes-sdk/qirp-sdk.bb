@@ -12,7 +12,6 @@ SRC_URI =+ "file://qirp-upgrade.sh"
 SRC_URI =+ "file://samples.json"
 SRC_URI =+ "file://qrb_ros_samples_scripts/"
 
-
 # The path infos of qirp content
 OSS_CHANNEL_FLAG = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-robotics-extras', 'false', 'true', d)}"
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
@@ -20,7 +19,7 @@ SETUP_PATH = "${FILE_DIRNAME}/files/setup.sh"
 
 # The name and version of qirp SDK artifact
 SDK_PN = "qirp-sdk"
-PV = "2.2.0"
+PV = "2.3.0"
 FILES:${PN} = "/usr/share/qirp-setup.sh"
 
 # The functionality of qirp SDK

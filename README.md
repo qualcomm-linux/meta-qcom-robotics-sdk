@@ -1,8 +1,8 @@
-# Welcome to the Qualcomm Intelligent Robotics Product SDK (QIRP SDK)
+# Welcome to the Qualcomm Intelligent Robotics SDK (QIR SDK)
 
-The Qualcomm® Intelligent Robotics Product (QIRP) SDK is a collection of components that enable you to develop robotic features on Qualcomm platforms. This SDK is applicable to the Qualcomm Linux releases.
+The Qualcomm® Intelligent Robotics(QIR) SDK is a collection of components that enable you to develop robotic features on Qualcomm platforms. This SDK is applicable to the Qualcomm Linux releases.
 
-The QIRP SDK provides the following:
+The QIR SDK provides the following:
 - Reference code in Robot Operating System (ROS) packages to develop robotic applications.
 - E2E(end-to-end) scenario samples to evaluate robotic platforms.
 - Integrated cross-compile toolchain, which includes common build tools, such as aarch64-oe-linux-gcc, make, cmake, and ROS core.
@@ -12,15 +12,15 @@ The QIRP SDK provides the following:
 This will guide you through developing your first sample application. It explains how to:
 - Flash the prebuilt Qualcomm linux image and configure the environment.
 - Run sample applications.
-- Develop sample applications using the prebuilt image and QIRP SDK.
-- Generate customized images and QIRP SDK.
+- Develop sample applications using the prebuilt image and QIR SDK.
+- Generate customized images and QIR SDK.
 - Provides a Gazebo simulation environment for testing and debugging robotic applications.
 
-This repository serves as a ​​layer in the QIRP SDK build system​​, working in conjunction with other layers such as:
+This repository serves as a ​​layer in the QIR SDK build system​​, working in conjunction with other layers such as:
 - [meta-qcom-robotics-distro](https://github.com/qualcomm-linux/meta-qcom-robotics-distro.git) 
 - [meta-qcom-robotics](https://github.com/qualcomm-linux/meta-qcom-robotics.git) 
 
-to collectively build the **QIRP SDK**.
+to collectively build the **QIR SDK**.
 
 ## Branches
 
@@ -28,8 +28,8 @@ to collectively build the **QIRP SDK**.
 
 ## Usage
 
-As part of QIRP, this project requires ​​collaborative usage with other components​​. Detailed instructions are provided in:
-- [QIRP SDK User Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70018-265/introduction_1.html?vproduct=1601111740013072&version=1.4&facet=Qualcomm%20Intelligent%20Robotics%20Product%20(QIRP)%20SDK)
+As part of QIR, this project requires ​​collaborative usage with other components​​. Detailed instructions are provided in:
+- [QIR SDK User Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70020-265/?vproduct=1601111740013072&latest=true&facet=Intelligent_Robotics_Product.SDK.2.0)
 
 ## Development
 
