@@ -16,8 +16,6 @@ jobs:
           - iq-8275-evk
           - iq-9075-evk
           - qcs6490-rb3gen2-core-kit
-          - qcom-armv8a
-          - qcom-armv7a
         distro:
           - name: poky-altcfg
           - name: qcom-distro

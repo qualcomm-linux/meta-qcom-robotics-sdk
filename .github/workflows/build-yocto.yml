@@ -55,7 +55,7 @@ jobs:
 
       - name: Run yocto-check-layer
         run: |
-          # ci/kas-container-shell-helper.sh ci/yocto-check-layer.sh
+          ci/kas-container-shell-helper.sh ci/yocto-check-layer.sh
 
       - name: Run Yocto patchreview
         run: |
