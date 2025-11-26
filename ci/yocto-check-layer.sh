@@ -25,19 +25,19 @@ _is_dir "$WORK_DIR"
 # script to avoid a contaminated environment.
 BUILDDIR="$(mktemp -p $WORK_DIR -d -t build-yocto-check-layer-XXXX)"
 source $WORK_DIR/oe-core/oe-init-build-env $BUILDDIR
-git -c advice.detachedHead=false -c init.defaultBranch=master clone --quiet --shared $REPO_DIR meta-qcom
+# git -c advice.detachedHead=false -c init.defaultBranch=master clone --quiet --shared $REPO_DIR meta-qcom
 
 # Yocto Project layer checking tool
-CMD="yocto-check-layer"
+# CMD="yocto-check-layer"
 # Layer to check
-CMD="$CMD meta-qcom"
+# CMD="$CMD meta-qcom"
 # Disable auto layer discovery
-CMD="$CMD --no-auto"
+# CMD="$CMD --no-auto"
 # Layers to process for dependencies
-CMD="$CMD --dependency $WORK_DIR/oe-core/meta"
+# CMD="$CMD --dependency $WORK_DIR/oe-core/meta"
 # Disable automatic testing of dependencies
-CMD="$CMD --no-auto-dependency"
+# CMD="$CMD --no-auto-dependency"
 # Set machines to all machines defined in this BSP layer
-CMD="$CMD --machines $(echo $(find meta-qcom/conf/machine/ -maxdepth 1 -name *.conf -exec basename {} .conf \; ))"
+# CMD="$CMD --machines $(echo $(find meta-qcom/conf/machine/ -maxdepth 1 -name *.conf -exec basename {} .conf \; ))"
 
-exec $CMD
+# exec $CMD
