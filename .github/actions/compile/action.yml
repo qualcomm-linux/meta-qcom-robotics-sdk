@@ -79,7 +79,7 @@ runs:
         # expects file to be relative to our PWD. deploy_dir is outside
         # that, so we move things around:
         echo "Current workdir: $(pwd)"
-        echo "Image path: \n"
+        echo "Image path: "
         ls ../kas/build/tmp/deploy
         deploy_dir=../kas/build/tmp/deploy/images/${{inputs.machine}}
         uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
