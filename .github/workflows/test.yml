@@ -13,12 +13,9 @@ jobs:
     strategy:
       matrix:
         machine:
-          - iq-8275-evk
-          - iq-9075-evk
           - qcs6490-rb3gen2-core-kit
         distro:
-          - name: poky-altcfg
-          - name: qcom-distro
+          - name: ros-jazzy-base-image
     steps:
       - uses: actions/checkout@v4
         with:

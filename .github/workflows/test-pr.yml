@@ -22,18 +22,23 @@ jobs:
     with:
       build_id: ${{ github.event.workflow_run.id }}
 
-  publish-test-results:
-    name: "Publish Tests Results"
+  comment-on-pr:
+    name: "Comment on PR"
     needs: test
     runs-on: ubuntu-latest
     steps:
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
 
       - name: Download event file
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
             run-id: ${{ github.event.workflow_run.id }}
             path: artifacts
@@ -43,14 +48,6 @@ jobs:
         run: |
           echo $GITHUB_WORKSPACE
           ls -R $GITHUB_WORKSPACE
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          commit: ${{ github.event.workflow_run.head_sha }}
-          event_file: artifacts/Event File/event.json
-          event_name: ${{ github.event.workflow_run.event }}
-          files: "${{ github.workspace }}/artifacts/**/*.xml"
 
       - name: Prepare PR comment
         id: pr_comment_prep
@@ -62,8 +59,9 @@ jobs:
               DEVICE_TYPE=$(cat "$json_file" | jq -r ".requested_device_type")
               URL=$(cat "$json_file" | jq -r ".url")
               JOB_ID=$(cat "$json_file" | jq -r ".id")
-              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL)"
-              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL)" >> pr-comment.txt
+              JOB_TITLE=$(cat "$json_file"| jq -r ".description")
+              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL) - ${JOB_TITLE}"
+              echo " * [Job $JOB_ID on $DEVICE_TYPE]($URL) - ${JOB_TITLE}" >> pr-comment.txt
           done
           PR_NUMBER=$(cat "artifacts/Event File/event.json" | jq -r ".number")
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
@@ -73,3 +71,13 @@ jobs:
         with:
           file-path: pr-comment.txt
           pr-number: ${{ steps.pr_comment_prep.outputs.pr_number }}
+
+  publish-test-results:
+    uses: ./.github/workflows/publish-results.yml
+    secrets: inherit
+    needs: [test]
+    with:
+      commit: ${{ github.event.workflow_run.sha }}
+      event_file: artifacts/Event File/event.json
+      event_name: ${{ github.event.workflow_run.event }}
+      workflow_id: ${{ github.event.workflow_run.id }}
