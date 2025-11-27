@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 include recipes-products/images/qcom-multimedia-image.bb
+inherit core-image
 
 SUMMARY = "multimedia image with ROS core"
 

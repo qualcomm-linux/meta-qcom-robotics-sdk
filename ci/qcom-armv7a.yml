@@ -3,12 +3,9 @@
 header:
   version: 14
   includes:
-  - ci/robotics-base.yml
-
-distro: qcom-robotics-ros2-jazzy
+  - ci/base.yml
 
 local_conf_header:
-  soc: |
-    SOC_ARCH = "qcs6490_rb3gen2_core_kit"
+  qcomflash: |
 
-machine: qcs6490-rb3gen2-core-kit
+machine: qcom-armv7a
