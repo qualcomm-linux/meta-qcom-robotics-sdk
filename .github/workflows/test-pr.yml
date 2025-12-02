@@ -21,6 +21,7 @@ jobs:
     secrets: inherit
     with:
       build_id: ${{ github.event.workflow_run.id }}
+      head_sha: ${{ github.event.workflow_run.head_sha }}
 
   comment-on-pr:
     name: "Comment on PR"
