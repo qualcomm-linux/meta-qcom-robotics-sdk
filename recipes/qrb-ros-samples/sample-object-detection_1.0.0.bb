@@ -1,9 +1,9 @@
 ROS_BUILD_TYPE = "ament_python"
 
-ROS_CN = "simulation_remote_assistant"
-ROS_BPN = "simulation_remote_assistant"
+ROS_CN = "sample_object_detection"
+ROS_BPN = "sample_object_detection"
 
-S = "${WORKDIR}/git/robotics/${ROS_CN}"
+S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
 
 ROS_BUILD_DEPENDS = " \
 "
@@ -20,11 +20,7 @@ ROS_EXEC_DEPENDS = " \
     std-msgs \
     sensor-msgs \
     geometry-msgs \
-    vision-msgs \
-    qrb-ros-slam-msgs \
-    nav2-msgs \
     python3 \
-    python3-pyyaml \
     python3-numpy \
     python3-pybind11 \
 "
@@ -38,3 +34,6 @@ DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS} ${ROS_EXPORT_DEPENDS} $
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
 require include/qrb-ros-samples.inc
+
+
+
