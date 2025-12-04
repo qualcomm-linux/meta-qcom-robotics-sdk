@@ -19,7 +19,7 @@ SETUP_PATH = "${FILE_DIRNAME}/files/setup.sh"
 
 # The name and version of qirp SDK artifact
 SDK_PN = "qirp-sdk"
-PV = "2.3.0"
+PV = "2.4.0"
 FILES:${PN} = "/usr/share/qirp-setup.sh"
 
 # The functionality of qirp SDK
