@@ -74,6 +74,24 @@
             "to": "qirp-samples/platform/"
         },
         {
+            "name": "qrb_ros_nn_inference",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_nn_inference.git",
+            "branch":"main",
+            "src_rev":"29268979a3a7209956f16c28821ca5b79be7e7fa",
+            "individual_prj": "true",
+            "to": "qirp-samples/platform/"
+        },
+        {
+            "name": "qrb_ros_benchmark",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_benchmark.git",
+            "branch":"main",
+            "src_rev":"c8ce1b1f5a202fddef40c54063f2f1134b40863d",
+            "individual_prj": "true",
+            "to": "qirp-samples/platform/"
+        },
+        {
             "name": "ocr_service",
             "oss_channel": "true",
             "individual_prj": "false",
