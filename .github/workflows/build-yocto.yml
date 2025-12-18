@@ -8,9 +8,9 @@ on:
         value: ${{ jobs.create-output.outputs.url }}
 
 env:
-  CACHE_DIR: /efs/qli/meta-qcom
-  KAS_REPO_REF_DIR: /efs/qli/meta-qcom/kas-mirrors
-  KAS_CONTAINER: /efs/qli/meta-qcom/kas-mirrors/kas-container
+  CACHE_DIR: /efs/qli/meta-qcom-robotics-sdk
+  KAS_REPO_REF_DIR: /efs/qli/meta-qcom-robotics-sdk/kas-mirrors
+  KAS_CONTAINER: /efs/qli/meta-qcom-robotics-sdk/kas-mirrors/kas-container
 
 jobs:
   kas-setup:

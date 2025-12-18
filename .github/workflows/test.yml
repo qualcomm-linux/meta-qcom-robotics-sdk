@@ -6,6 +6,9 @@ on:
       build_id:
         required: true
         type: string
+      head_sha:
+        required: false
+        type: string
 
 jobs:
   prepare-jobs:
@@ -15,11 +18,11 @@ jobs:
         machine:
           - qcs6490-rb3gen2-core-kit
         distro:
-          - name: qcom-robotics-ros2-jazzy
-          - name: qcom-distro
+          - name: ros-jazzy-base-image
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.head_sha }}
           fetch-depth: 0
 
       - name: 'Download build URLs'
