@@ -10,6 +10,8 @@ PV = "2.0.0"
 
 S = "${UNPACKDIR}"
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 # ROBOTICS_ARCH default with PACKAGE_ARCH, debain : aarch64 -> arm64
 # IMAGE_PKGTYPE : debian : deb , yocto default : ipk
 # Add the packages into robotics sdk
@@ -107,4 +109,5 @@ BASIC_DEPENDENCY:append:qcom-custom-bsp:qcm6490 = " camxapi-kt-dev "
 RDEPENDS:${PN} = "${FUNCTION} ${BASIC_DEPENDENCY}"
 
 do_package_qa[noexec] = "1"
+do_create_package_spdx[noexec] = "1"
 

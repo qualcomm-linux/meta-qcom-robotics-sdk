@@ -7,6 +7,6 @@ header:
 
 local_conf_header:
   soc: |
-    SOC_ARCH = "iq-8275-evk"
+    SOC_ARCH = "iq_8275_evk"
 
 machine: iq-8275-evk
