@@ -10,6 +10,7 @@ repos:
   meta-qcom:
     url: "https://github.com/qualcomm-linux/meta-qcom.git"
     branch: master
+    commit: 8b60a7140148552286c467d74a37f57e54c04907
 
   meta-ros:
     url: https://github.com/ros/meta-ros.git
@@ -18,17 +19,38 @@ repos:
       meta-ros2:
       meta-ros2-jazzy:
 
+  meta-qcom-distro:
+    url: https://github.com/qualcomm-linux/meta-qcom-distro
+    branch: main
+    commit: f2fdda6f382cc6d8deadbc847524eb02846ff3be
+
   meta-openembedded:
-    url: https://github.com/openembedded/meta-openembedded.git
+    url: https://github.com/openembedded/meta-openembedded
+    commit: b3de57b3391af2224ce328a99574a8b0b76ac45e
     layers:
-      meta-networking:
-      meta-python:
-      meta-oe:
       meta-filesystems:
-      meta-perl:
       meta-gnome:
-      meta-webserver:
       meta-multimedia:
+      meta-networking:
+      meta-oe:
+      meta-python:
+      meta-xfce:
+
+  meta-virtualization:
+    url: https://git.yoctoproject.org/git/meta-virtualization
+    branch: master
+
+  meta-audioreach:
+    url: https://github.com/AudioReach/meta-audioreach
+    branch: master
+
+  meta-selinux:
+    branch: master
+    url: https://git.yoctoproject.org/meta-selinux
+
+  meta-updater:
+    branch: master
+    url: https://github.com/uptane/meta-updater
 
 local_conf_header:
   base: |
@@ -36,6 +58,10 @@ local_conf_header:
     INHERIT += "buildstats-summary"
     INHERIT += "buildhistory"
     INHERIT += "rm_work"
+    # Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro libcamera recipe
+    BBMASK .= "|^${TOPDIR}/meta-ros/meta-ros-common/recipes-multimedia/libcamera/.*"
+    PREFERRED_VERSION_libcamera = "1:0.6.0"
+
   cmdline: |
     KERNEL_CMDLINE_EXTRA:append = " qcom_scm.download_mode=1"
   qcomflash: |
