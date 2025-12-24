@@ -10,7 +10,6 @@ repos:
   meta-qcom:
     url: "https://github.com/qualcomm-linux/meta-qcom.git"
     branch: master
-    commit: 8b60a7140148552286c467d74a37f57e54c04907
 
   meta-ros:
     url: https://github.com/ros/meta-ros.git
@@ -22,11 +21,9 @@ repos:
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: f2fdda6f382cc6d8deadbc847524eb02846ff3be
 
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
-    commit: b3de57b3391af2224ce328a99574a8b0b76ac45e
     layers:
       meta-filesystems:
       meta-gnome:
