@@ -55,9 +55,34 @@ local_conf_header:
     INHERIT += "buildstats-summary"
     INHERIT += "buildhistory"
     INHERIT += "rm_work"
+    
     # Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro libcamera recipe
     BBMASK .= "|^${TOPDIR}/meta-ros/meta-ros-common/recipes-multimedia/libcamera/.*"
     PREFERRED_VERSION_libcamera = "1:0.6.0"
+    
+    # Capture the count of cpu cores available from the host.
+    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2)}"
+
+    # Number of parallel threads make can run based on cpu cores with a max cap at 20.
+    THREAD_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=12)}"
+
+    # Determines how many tasks bitbake should run in parallel.
+    BB_NUMBER_THREADS ?= "${CPU_COUNT}"
+
+    # Determines how many tasks bitbake should run in parallel during parsing.
+    BB_NUMBER_PARSE_THREADS ?= "${CPU_COUNT}"
+
+    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new tasks.
+    BB_PRESSURE_MAX_CPU = "900000"
+
+    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new tasks.
+    BB_PRESSURE_MAX_IO = "900000"
+
+    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
+    BB_PRESSURE_MAX_MEMORY = "900000"
+
+    # Determines how many processes make should run in parallel when running compile tasks.
+    PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
 
   cmdline: |
     KERNEL_CMDLINE_EXTRA:append = " qcom_scm.download_mode=1"
