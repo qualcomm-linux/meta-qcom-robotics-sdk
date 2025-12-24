@@ -6,7 +6,10 @@ LICENSE = "BSD-3-Clause"
 
 inherit packagegroup
 
-PACKAGE_ARCH = "${SOC_ARCH}"
+# Using MACHINE_ARCH to specify the architecture of the target system.
+# This is used to select the correct packages for the target system.
+
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 PACKAGES = "\
     ${PN} \
