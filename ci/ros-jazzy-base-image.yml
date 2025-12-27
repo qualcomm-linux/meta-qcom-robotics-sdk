@@ -18,17 +18,36 @@ repos:
       meta-ros2:
       meta-ros2-jazzy:
 
+  meta-qcom-distro:
+    url: https://github.com/qualcomm-linux/meta-qcom-distro
+    branch: main
+
   meta-openembedded:
-    url: https://github.com/openembedded/meta-openembedded.git
+    url: https://github.com/openembedded/meta-openembedded
     layers:
-      meta-networking:
-      meta-python:
-      meta-oe:
       meta-filesystems:
-      meta-perl:
       meta-gnome:
-      meta-webserver:
       meta-multimedia:
+      meta-networking:
+      meta-oe:
+      meta-python:
+      meta-xfce:
+
+  meta-virtualization:
+    url: https://git.yoctoproject.org/git/meta-virtualization
+    branch: master
+
+  meta-audioreach:
+    url: https://github.com/AudioReach/meta-audioreach
+    branch: master
+
+  meta-selinux:
+    branch: master
+    url: https://git.yoctoproject.org/meta-selinux
+
+  meta-updater:
+    branch: master
+    url: https://github.com/uptane/meta-updater
 
 local_conf_header:
   base: |
@@ -36,6 +55,35 @@ local_conf_header:
     INHERIT += "buildstats-summary"
     INHERIT += "buildhistory"
     INHERIT += "rm_work"
+    
+    # Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro libcamera recipe
+    BBMASK .= "|^${TOPDIR}/meta-ros/meta-ros-common/recipes-multimedia/libcamera/.*"
+    PREFERRED_VERSION_libcamera = "1:0.6.0"
+    
+    # Capture the count of cpu cores available from the host.
+    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2)}"
+
+    # Number of parallel threads make can run based on cpu cores with a max cap at 20.
+    THREAD_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=12)}"
+
+    # Determines how many tasks bitbake should run in parallel.
+    BB_NUMBER_THREADS ?= "${CPU_COUNT}"
+
+    # Determines how many tasks bitbake should run in parallel during parsing.
+    BB_NUMBER_PARSE_THREADS ?= "${CPU_COUNT}"
+
+    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new tasks.
+    BB_PRESSURE_MAX_CPU = "900000"
+
+    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new tasks.
+    BB_PRESSURE_MAX_IO = "900000"
+
+    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
+    BB_PRESSURE_MAX_MEMORY = "900000"
+
+    # Determines how many processes make should run in parallel when running compile tasks.
+    PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
+
   cmdline: |
     KERNEL_CMDLINE_EXTRA:append = " qcom_scm.download_mode=1"
   qcomflash: |

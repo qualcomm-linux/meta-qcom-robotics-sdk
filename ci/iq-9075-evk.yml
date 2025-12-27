@@ -5,4 +5,8 @@ header:
   includes:
   - ci/base.yml
 
+local_conf_header:
+  soc: |
+    SOC_ARCH = "iq_9075_evk"
+
 machine: iq-9075-evk
