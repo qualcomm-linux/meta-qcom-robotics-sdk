@@ -56,14 +56,25 @@ Here are the detailed steps:
 5. Build using the KAS configuration for one of the supported boards
 
    ```
-   kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>-ros-jazzy-base-image.yml
+   kas build meta-qcom-robotics-sdk/ci/mirror.yml:meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>.yml:meta-qcom-robotics-sdk/ci/<DISTRO NAME>.yml
+
+   # For example, to build for DragonwingTM RB3 Gen 2 Core Kit using ROS Jazzy Full Image
+   kas build meta-qcom-robotics-sdk/ci/mirror.yml:meta-qcom-robotics-sdk/ci/qcs6490-rb3gen2-core-kit.yml:meta-qcom-robotics-sdk/ci/ros-jazzy-full-image.yml
    ```
+   Supported machines and distributions are listed below:
+   | Machine Names | Distro Names |
+   | ------------ | ------------ |
+   | qcs6490-rb3gen2-core-kit | ros-jazzy-base-image, ros-jazzy-full-image |
+   | iq-8075-evk | ros-jazzy-base-image, ros-jazzy-full-image |
+   | iq-9075-evk | ros-jazzy-base-image, ros-jazzy-full-image |
 
 6. The output image will be located in the follow path:
 
    ```
-   build/tmp/deploy/images/<YOUR MACHINE NAME>
+   build/tmp/deploy/images/<YOUR MACHINE NAME>/*.rootfs.qcomflash
    ```
+
+7. Please refer to the [Flash steps](https://github.com/qualcomm-linux/meta-qcom) to flash the image to the target device using the QDL tools.
 
 ## Development
 
