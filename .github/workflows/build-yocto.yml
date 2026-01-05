@@ -75,6 +75,8 @@ jobs:
         distro:
           - name: ros-jazzy-base-image
             yamlfile: ':ci/ros-jazzy-base-image.yml'
+          - name: ros-jazzy-full-image
+            yamlfile: ':ci/ros-jazzy-full-image.yml'
         kernel:
           - type: default
             dirname: ""
