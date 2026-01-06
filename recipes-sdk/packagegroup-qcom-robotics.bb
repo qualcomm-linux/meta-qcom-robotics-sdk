@@ -109,5 +109,4 @@ BASIC_DEPENDENCY:append:qcom-custom-bsp:qcm6490 = " camxapi-kt-dev "
 RDEPENDS:${PN} = "${FUNCTION} ${BASIC_DEPENDENCY}"
 
 do_package_qa[noexec] = "1"
-do_create_package_spdx[noexec] = "1"
 
