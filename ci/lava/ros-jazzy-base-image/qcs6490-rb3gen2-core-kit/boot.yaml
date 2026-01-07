@@ -4,7 +4,7 @@ actions:
       image:
         headers:
           Authentication: Q_GITHUB_TOKEN
-        url: "{{BUILD_DOWNLOAD_URL}}/ros-jazzy-base-image/{{DEVICE_TYPE}}/qcom-robotics-base-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz"
+        url: "{{BUILD_DOWNLOAD_URL}}/ros-jazzy-base-image+linux-qcom-6.18/{{DEVICE_TYPE}}/qcom-robotics-base-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz"
     postprocess:
       docker:
         image: ghcr.io/foundriesio/lava-lmp-sign:main

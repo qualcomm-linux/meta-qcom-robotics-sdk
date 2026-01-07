@@ -2,6 +2,8 @@
 
 header:
   version: 14
+  includes:
+    - ci/qcom-distro.yml
 
 repos:
   meta-qcom-robotics-sdk:
@@ -17,37 +19,6 @@ repos:
       meta-ros-common:
       meta-ros2:
       meta-ros2-jazzy:
-
-  meta-qcom-distro:
-    url: https://github.com/qualcomm-linux/meta-qcom-distro
-    branch: main
-
-  meta-openembedded:
-    url: https://github.com/openembedded/meta-openembedded
-    layers:
-      meta-filesystems:
-      meta-gnome:
-      meta-multimedia:
-      meta-networking:
-      meta-oe:
-      meta-python:
-      meta-xfce:
-
-  meta-virtualization:
-    url: https://git.yoctoproject.org/git/meta-virtualization
-    branch: master
-
-  meta-audioreach:
-    url: https://github.com/AudioReach/meta-audioreach
-    branch: master
-
-  meta-selinux:
-    branch: master
-    url: https://git.yoctoproject.org/meta-selinux
-
-  meta-updater:
-    branch: master
-    url: https://github.com/uptane/meta-updater
 
 local_conf_header:
   base: |
@@ -94,8 +65,6 @@ local_conf_header:
     EXTRA_IMAGE_FEATURES = "allow-empty-password empty-root-password allow-root-login"
     IMAGE_ROOTFS_EXTRA_SPACE = "307200"
     WATCHDOG_RUNTIME_SEC:pn-systemd = "30"
-  virtualization:
-    SKIP_META_VIRT_SANITY_CHECK = "1"
   robotics_base: |
     PATCHRESOLVE = "noop"
 
