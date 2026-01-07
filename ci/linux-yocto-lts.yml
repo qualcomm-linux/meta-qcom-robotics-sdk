@@ -1,7 +1,0 @@
-header:
-  version: 14
-
-local_conf_header:
-  kernelprovider: |
-    PREFERRED_PROVIDER_virtual/kernel = "linux-yocto"
-    PREFERRED_VERSION_virtual/kernel = "6.12%"
