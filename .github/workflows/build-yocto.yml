@@ -78,9 +78,9 @@ jobs:
           - name: ros-jazzy-full-image
             yamlfile: ':ci/ros-jazzy-full-image.yml'
         kernel:
-          - type: default
-            dirname: ""
-            yamlfile: ""
+          - type: 6.18
+            dirname: "+linux-qcom-6.18"
+            yamlfile: ":ci/linux-qcom-6.18.yml"
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v4
