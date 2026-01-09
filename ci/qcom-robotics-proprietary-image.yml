@@ -3,6 +3,6 @@
 header:
   version: 14
   includes:
-  - ci/ros-jazzy-base-image.yml
+  - ci/qcom-robotics-image.yml
 
-target: qcom-robotics-full-image
+target: qcom-robotics-proprietary-image

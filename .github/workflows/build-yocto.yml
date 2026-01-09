@@ -72,11 +72,13 @@ jobs:
       matrix:
         machine:
           - qcs6490-rb3gen2-core-kit
+          - iq-8275-evk
+          - iq-9075-evk
         distro:
-          - name: ros-jazzy-base-image
-            yamlfile: ':ci/ros-jazzy-base-image.yml'
-          - name: ros-jazzy-full-image
-            yamlfile: ':ci/ros-jazzy-full-image.yml'
+          - name: qcom-robotics-image
+            yamlfile: ':ci/qcom-robotics-image.yml'
+          - name: qcom-robotics-proprietary-image
+            yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
         kernel:
           - type: 6.18
             dirname: "+linux-qcom-6.18"
