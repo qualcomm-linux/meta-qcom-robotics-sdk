@@ -42,13 +42,6 @@ runs:
           ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} > kas-build.yml
         cat kas-build.yml
 
-    - name: Kas qcom world build
-      shell: bash
-      run: |
-        ${{inputs.kas}} build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}
-        ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
-        mv $KAS_WORK_DIR/build/buildchart.svg buildchart-world.svg
-
     - name: Kas build images
       shell: bash
       run: |
@@ -56,8 +49,9 @@ runs:
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
         mv $KAS_WORK_DIR/build/buildchart.svg .
 
-        if [ "${{ inputs.machine }}" = "qcom-armv8a" ]; then
-          ${{inputs.kas}} build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}:ci/initramfs-test.yml
+        if [ "${{ inputs.distro_yaml }}" = "qcom-robotics-proprietary-image" ]; then
+          # Build qirp-sdk
+          ${{inputs.kas}} build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} -c "bitbake qcom-robotics-proprietary-image -c do_generate_qirp_sdk"
         fi
 
     - uses: actions/upload-artifact@v4
@@ -79,14 +73,33 @@ runs:
         # expects file to be relative to our PWD. deploy_dir is outside
         # that, so we move things around:
         echo "Current workdir: $(pwd)"
-        echo "Image path: "
-        ls ../kas/build/tmp/deploy
-        deploy_dir=../kas/build/tmp/deploy/images/${{inputs.machine}}
-        uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
-        mkdir -p $uploads_dir
-        find $deploy_dir/ -maxdepth 1 -type f -exec cp {} $uploads_dir/ \;
-        find $deploy_dir/ -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} $uploads_dir/ \;
-        cp buildchart.svg kas-build.yml $uploads_dir/
+        if [ -d ../kas/build/tmp/deploy/images/${{inputs.machine}} ]; then
+          echo "Build image files: "
+          ls ../kas/build/tmp/deploy/images/${{inputs.machine}}
+          deploy_dir=../kas/build/tmp/deploy/images/${{inputs.machine}}
+          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
+          mkdir -p $uploads_dir
+          find $deploy_dir/ -maxdepth 1 -type f -exec cp {} $uploads_dir/ \;
+          find $deploy_dir/ -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} $uploads_dir/ \;
+          cp buildchart.svg kas-build.yml $uploads_dir/
+        else
+          echo "WARNING: No build image files found!"
+        fi
+    
+    - name: Stage qirp-sdk artifacts for publishing
+      shell: bash
+      run: |
+        echo "Current workdir: $(pwd)"
+        if [ -d ../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }} ]; then
+          echo "QIRP-SDK files: "
+          ls ../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
+          sdk_dir=../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
+          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
+          mkdir -p $uploads_dir
+          find $sdk_dir/ -maxdepth 1 -type f -name "qirp-sdk_*.tar.gz" -exec cp {} $uploads_dir/ \;
+        else
+          echo "WARNING: No QIRP-SDK files found!"
+        fi
 
     - name: Upload private artifacts
       uses: qualcomm-linux/upload-private-artifact-action@v1
