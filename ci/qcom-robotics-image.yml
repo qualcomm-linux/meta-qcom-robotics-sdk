@@ -69,4 +69,4 @@ local_conf_header:
     PATCHRESOLVE = "noop"
 
 distro: qcom-robotics-ros2-jazzy
-target: qcom-robotics-base-image
+target: qcom-robotics-image
