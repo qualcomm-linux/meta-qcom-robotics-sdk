@@ -75,10 +75,10 @@ jobs:
           - iq-8275-evk
           - iq-9075-evk
         distro:
-          - name: qcom-robotics-image
-            yamlfile: ':ci/qcom-robotics-image.yml'
-          - name: qcom-robotics-proprietary-image
-            yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
+          - name: qcom-robotics-distro
+            yamlfile: ':ci/qcom-robotics-distro.yml'
+          - name: qcom-robotics-distro-prop-image
+            yamlfile: ':ci/qcom-robotics-distro-prop-image.yml'
         kernel:
           - type: 6.18
             dirname: "+linux-qcom-6.18"

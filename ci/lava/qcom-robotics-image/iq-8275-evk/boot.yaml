@@ -13,7 +13,7 @@ actions:
         - cp overlay*.tar.gz overlay.tar.gz
         - echo "OVERLAY=overlay.tar.gz" >> $IMAGE_PATH/flash.settings
         - echo "OVERLAY_PATH=/home/" >> $IMAGE_PATH/flash.settings
-        - echo "DEVICE_TYPE=qcs6490-rb3gen2-core-kit" >> $IMAGE_PATH/flash.settings
+        - echo "DEVICE_TYPE=iq-8275-evk" >> $IMAGE_PATH/flash.settings
         - cat $IMAGE_PATH/flash.settings
     timeout:
       minutes: 5
