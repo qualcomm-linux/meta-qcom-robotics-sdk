@@ -25,22 +25,15 @@ SETUP_PATH = "${FILE_DIRNAME}/files/setup.sh"
 # The name and version of qirp SDK artifact
 SDK_PN = "qirp-sdk"
 PV = "2.4.0"
+
 FILES:${PN} = "/usr/share/qirp-setup.sh"
 FILES:${PN} += "/usr"
 FILES:${PN} += "/usr/share"
-# ALLOW_EMPTY:${PN} = "1"
-
-# The functionality of qirp SDK
-RDEPENDS:${PN}:append = " qti-robotics "
-RDEPENDS:${PN}:append:qcom-custom-bsp = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-qim-product-sdk', '', ' qti-qim-product-sdk ', d)}"
 
 DEPENDS:append = " \
     jq-native \
     git-native \
-    qti-robotics \
 "
-
-DEPENDS:append:qcom-custom-bsp = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-qim-product-sdk', '', ' qti-qim-product-sdk ', d)}"
 
 do_lic_install() {
     install -d ${LICENSE_DIRECTORY}/${SSTATE_PKGARCH}/${PN}
