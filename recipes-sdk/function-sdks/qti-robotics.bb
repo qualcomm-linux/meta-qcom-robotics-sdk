@@ -16,9 +16,9 @@ SDKSPATH = "${DEPLOY_DIR}/${TARGET_SDK_PREFIX}sdk_artifacts/${TARGET_SDK_PREFIX}
 FILES_SKIP = "${D}/${PN}/packages_oss \
               ${D}/${PN}/pathplan \
               "
-do_fetch_extra[depends] += "packagegroup-qcom-robotics:do_generate_robotics_sdk"
+do_fetch_extra[depends] += "packagegroup-robotics-opensource:do_generate_robotics_sdk"
 
-RDEPENDS:${PN} = "packagegroup-qcom-robotics"
+RDEPENDS:${PN} = "packagegroup-robotics-opensource"
 
 FILES:${PN} = " "
 ALLOW_EMPTY:${PN} = "1"
