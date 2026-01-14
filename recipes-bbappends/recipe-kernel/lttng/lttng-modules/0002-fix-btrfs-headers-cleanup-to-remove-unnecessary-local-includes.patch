@@ -1,0 +1,77 @@
+From 3cd9bc9d29cc56526ac4c64b8f4b992d4dd7521d Mon Sep 17 00:00:00 2001
+From: Michael Jeanson <mjeanson@efficios.com>
+Date: Mon, 15 Dec 2025 14:03:36 -0500
+Subject: [PATCH] fix: btrfs: headers cleanup to remove unnecessary local
+ includes (v6.19)
+
+See upstream commit:
+
+  commit c5667f9c8eb90293dfa4e52c65eb89fe39f5652d
+  Author: Qu Wenruo <wqu@suse.com>
+  Date:   Tue Oct 28 10:06:36 2025 +1030
+
+    btrfs: headers cleanup to remove unnecessary local includes
+
+    [BUG]
+    When I tried to remove btrfs_bio::fs_info and use btrfs_bio::inode to
+    grab the fs_info, the header "btrfs_inode.h" is needed to access the
+    full btrfs_inode structure.
+
+    Then btrfs will fail to compile.
+
+    [CAUSE]
+    There is a recursive including chain:
+
+      "bio.h" -> "btrfs_inode.h" -> "extent_map.h" -> "compression.h" ->
+      "bio.h"
+
+    That recursive including is causing problems for btrfs.
+
+    [ENHANCEMENT]
+    To reduce the risk of recursive including:
+
+    - Remove unnecessary local includes from btrfs headers
+      Either the included header is pulled in by other headers, or is
+      completely unnecessary.
+
+    - Remove btrfs local includes if the header only requires a pointer
+      In that case let the implementing C file to pull the required header.
+
+      This is especially important for headers like "btrfs_inode.h" which
+      pulls in a lot of other btrfs headers, thus it's a mine field of
+      recursive including.
+
+    - Remove unnecessary temporary structure definition
+      Either if we have included the header defining the structure, or
+      completely unused.
+
+    Now including "btrfs_inode.h" inside "bio.h" is completely fine,
+    although "btrfs_inode.h" still includes "extent_map.h", but that header
+    only includes "fs.h", no more chain back to "bio.h".
+
+Upstream-Status: Inappropriate [local distro/workaround]
+Change-Id: Ieb767491e973858cadbbbfc094f063eaef03d81d
+Signed-off-by: Michael Jeanson <mjeanson@efficios.com>
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+---
+ include/instrumentation/events/btrfs.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/instrumentation/events/btrfs.h b/include/instrumentation/events/btrfs.h
+index 8f417021..feb4f40b 100644
+--- a/include/instrumentation/events/btrfs.h
++++ b/include/instrumentation/events/btrfs.h
+@@ -12,6 +12,10 @@
+ #include <linux/writeback.h>
+ #include <lttng/kernel-version.h>
+ 
++#if (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(6,19,0))
++#include <../fs/btrfs/ordered-data.h>
++#endif
++
+ #if (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(6,2,0))
+ #include <../fs/btrfs/accessors.h>
+ #endif
+-- 
+2.43.0
+

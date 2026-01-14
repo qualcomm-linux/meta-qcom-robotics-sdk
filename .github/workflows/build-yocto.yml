@@ -80,6 +80,9 @@ jobs:
           - name: qcom-robotics-distro-prop-image
             yamlfile: ':ci/qcom-robotics-distro-prop-image.yml'
         kernel:
+          - type: default
+            dirname: ""
+            yamlfile: ""
           - type: 6.18
             dirname: "+linux-qcom-6.18"
             yamlfile: ":ci/linux-qcom-6.18.yml"
