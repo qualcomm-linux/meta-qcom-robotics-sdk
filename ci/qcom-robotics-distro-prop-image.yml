@@ -3,9 +3,6 @@
 header:
   version: 14
   includes:
-  - ci/base.yml
+  - ci/qcom-robotics-distro.yml
 
-local_conf_header:
-  qcomflash: |
-
-machine: qcom-armv8a
+target: qcom-robotics-proprietary-image

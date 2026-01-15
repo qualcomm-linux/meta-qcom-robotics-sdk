@@ -3,6 +3,6 @@
 header:
   version: 14
   includes:
-  - ci/ros-jazzy-base-image.yml
+  - ci/qcom-robotics-distro-prop-image.yml
 
-target: qcom-robotics-full-image
+distro: qcom-robotics-ros2-jazzy-sota
