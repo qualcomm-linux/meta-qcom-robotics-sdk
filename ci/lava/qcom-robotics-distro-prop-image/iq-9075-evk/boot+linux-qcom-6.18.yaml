@@ -4,7 +4,7 @@ actions:
       image:
         headers:
           Authentication: Q_GITHUB_TOKEN
-        url: "{{BUILD_DOWNLOAD_URL}}/qcom-robotics-image+linux-qcom-6.18/{{DEVICE_TYPE}}/qcom-robotics-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz"
+        url: "{{BUILD_DOWNLOAD_URL}}/qcom-robotics-distro-prop-image+linux-qcom-6.18/{{DEVICE_TYPE}}/qcom-robotics-proprietary-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz"
     postprocess:
       docker:
         image: ghcr.io/foundriesio/lava-lmp-sign:main
@@ -13,7 +13,7 @@ actions:
         - cp overlay*.tar.gz overlay.tar.gz
         - echo "OVERLAY=overlay.tar.gz" >> $IMAGE_PATH/flash.settings
         - echo "OVERLAY_PATH=/home/" >> $IMAGE_PATH/flash.settings
-        - echo "DEVICE_TYPE=iq-9075-evk" >> $IMAGE_PATH/flash.settings
+        - echo "DEVICE_TYPE=qcs9100-rb8" >> $IMAGE_PATH/flash.settings
         - cat $IMAGE_PATH/flash.settings
     timeout:
       minutes: 5
@@ -21,7 +21,7 @@ actions:
 - deploy:
     images:
       image:
-        url: downloads://qcom-robotics-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz
+        url: downloads://qcom-robotics-proprietary-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz
       settings:
         url: downloads://flash.settings
       overlay:
