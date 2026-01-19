@@ -1,15 +1,12 @@
 # Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
-DESCRIPTION = "ROS 2 package group"
+DESCRIPTION = "ROS2 (Robot Operating System 2) framework packages and components. Includes core ROS2 libraries, tools, and sample applications. All packages are open-source and community-maintained."
+SUMMARY = "ROS2 framework packages for robotics development"
 LICENSE = "BSD-3-Clause"
 
-inherit packagegroup
-
-# Using MACHINE_ARCH to specify the architecture of the target system.
-# This is used to select the correct packages for the target system.
-
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+inherit packagegroup
 
 PACKAGES = "\
     ${PN} \
