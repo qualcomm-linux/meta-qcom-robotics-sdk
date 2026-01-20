@@ -16,11 +16,8 @@ jobs:
     strategy:
       matrix:
         machine:
-          - qcs6490-rb3gen2-core-kit
-          - iq-8275-evk
           - iq-9075-evk
         distro:
-          - name: qcom-robotics-distro
           - name: qcom-robotics-distro-prop-image
     steps:
       - uses: actions/checkout@v4
