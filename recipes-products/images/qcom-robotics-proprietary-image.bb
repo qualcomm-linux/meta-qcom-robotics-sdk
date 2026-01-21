@@ -5,6 +5,7 @@ require recipes-products/images/qcom-multimedia-proprietary-image.bb
 require qcom-robotics-image.bb
 
 inherit psdk-image
+inherit rootfs-symlink
 
 DESCRIPTION = "Robotics image extending the open-source robotics image with \
 Qualcomm multimedia proprietary features, Qualcomm-optimized robotics components, \
@@ -19,6 +20,10 @@ Adds: \
 SUMMARY = "Robotics image with Qualcomm proprietary optimizations"
 
 LICENSE = "BSD-3-Clause-Clear"
+
+ROOTFS_SYMLINK_PAIRS = "\
+    /usr/ros:/var/rootdirs/opt/ros \
+"
 
 CORE_IMAGE_BASE_INSTALL += " \
     packagegroup-oss-with-prop-deps \
