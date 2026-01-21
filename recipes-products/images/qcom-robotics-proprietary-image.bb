@@ -24,3 +24,5 @@ CORE_IMAGE_BASE_INSTALL += " \
     packagegroup-oss-with-prop-deps \
     packagegroup-robotics-proprietary \
 "
+
+INSANE_SKIP:${PN} += "license-file-missing"

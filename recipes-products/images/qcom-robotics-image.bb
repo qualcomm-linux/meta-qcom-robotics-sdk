@@ -19,3 +19,5 @@ CORE_IMAGE_BASE_INSTALL += " \
     packagegroup-robotics-opensource \
     qirp-sdk \
 "
+
+INSANE_SKIP:${PN} += "license-file-missing"
