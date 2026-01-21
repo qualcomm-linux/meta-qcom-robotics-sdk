@@ -12,3 +12,7 @@
 ROS_BUILDTOOL_DEPENDS = " \
     rosidl-default-generators-native \
 "
+
+# Fix C++17 deprecated std::wstring_convert warning treated as error
+# rosidl_runtime_cpp/traits.hpp uses deprecated std::wstring_convert
+CXXFLAGS:append = " -Wno-error=deprecated-declarations"
