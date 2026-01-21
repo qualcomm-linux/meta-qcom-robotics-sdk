@@ -1,0 +1,30 @@
+From 6677a1bc115832e13b3df97c12fb8b1ac3b77a0f Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+Date: Wed, 21 Jan 2026 10:09:10 +0800
+Subject: [PATCH] fix: set cmake minimum version to 3.5
+
+Error log:
+CMake Error at CMakeLists.txt:2 (cmake_minimum_required):
+|   Compatibility with CMake < 3.5 has been removed from CMake.
+
+Upstream-Status: Pending
+
+Signed-off-by: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 06c3d9c..7fe2b64 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ # Minimum version required
+-cmake_minimum_required (VERSION 3.2)
++cmake_minimum_required (VERSION 3.5)
+ 
+ # Project name
+ project (qdldl)
+-- 
+2.34.1
+
