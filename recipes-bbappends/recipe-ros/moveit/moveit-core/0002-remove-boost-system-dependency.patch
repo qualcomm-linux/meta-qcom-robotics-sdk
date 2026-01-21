@@ -1,0 +1,25 @@
+From eace258d75712d4f6b8c8128a1e9100c38587fce Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+Date: Wed, 21 Jan 2026 14:52:30 +0800
+Subject: [PATCH] fix: remove boost system component for Boost 1.90.0+
+
+In Boost 1.90.0+, boost::system is header-only and no longer provides
+a separate library. Remove it from the COMPONENTS list as it's
+automatically included with Boost headers.
+
+Upstream-Status: Pending
+Signed-off-by: Jiaxin Shi <jiaxshi@qti.qualcomm.com>
+---
+ ConfigExtras.cmake | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/ConfigExtras.cmake b/ConfigExtras.cmake
+index abc123..def456 100644
+--- a/ConfigExtras.cmake
++++ b/ConfigExtras.cmake
+@@ -10,5 +10,4 @@ find_package(
+   program_options
+   regex
+   serialization
+-  system
+   thread)
