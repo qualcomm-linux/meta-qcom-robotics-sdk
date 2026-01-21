@@ -1,50 +1,4 @@
 {
-    "function_sdks": [
-        {
-            "name": "qti-robotics",
-            "description":"QIRF SDK",
-            "version": "latest",
-            "hashsum": "latest",
-            "pickup_files": [
-                {
-                    "to": "/opt/qcom/qirp-sdk/",
-                    "from": [
-                        "opt/qcom/qcom-robotics-sdk/"
-                    ],
-                    "tag": "all files"
-                }
-            ]
-        },
-        {
-            "name": "qti-qim-product-sdk",
-            "description":"QIM Product SDK",
-            "version": "latest",
-            "hashsum": "latest",
-            "pickup_files": [
-                {
-                    "to": "/usr/lib/qim/",
-                    "from": [
-                        "usr/lib/*"
-                    ],
-                    "tag": "library"
-                },
-                {
-                    "to": "/usr/bin/qim/",
-                    "from": [
-                        "usr/bin/*"
-                    ],
-                    "tag": "QIM Binary"
-                },
-                {
-                    "to": "/usr/libexec/qim/",
-                    "from": [
-                        "usr/libexec/*"
-                    ],
-                    "tag": "QIM Binary exec"
-                }
-            ]
-        }
-    ],
     "samples": [
         {
             "name": "qrb_ros_imu",
@@ -61,7 +15,7 @@
             "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_system_monitor.git",
             "branch":"main",
             "src_rev":"8680cbe57fc62a68f3e2d98f4e9b726bb8bce726",
-            "individual_prj": "ture",
+            "individual_prj": "true",
             "to": "qirp-samples/platform/"
         },
         {
@@ -76,7 +30,7 @@
         {
             "name": "ocr_service",
             "oss_channel": "true",
-            "individual_prj": "false",
+            "individual_prj": "true",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
             "branch":"robotics-sdk.qclinux.1.0.r1-rel",
             "src_rev":"1a5a68c7208bcb64b9c9998426600c6da6ce068d",

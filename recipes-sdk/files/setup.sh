@@ -73,60 +73,7 @@ fi
 
 DOCKER_IMAGE_NAME=qirp-docker
 ROS_DISTRO=jazzy
-CONTAINER_NAME=qirp_docker_container_host
-#CONTAINER_NAME=qirp_docker_container
 
-function build_docker_image(){
-    #check depends
-    if ! command -v docker &> /dev/null
-    then
-        echo "docker command not found ! please install it first"
-        return 1
-    fi
-    # Check if Docker image exists
-    if ! docker images --format "{{.Repository}}" | grep -w ^$DOCKER_IMAGE_NAME$;then
-        echo "Docker image $DOCKER_IMAGE_NAME not found, loading..."
-        docker pull --platform linux/arm64/v8 docker-registry.qualcomm.com/fulaliu/arm64v8/ros:jazzy-ros-base
-        #docker pull --platform linux/arm64/v8 arm64v8/ros:$ROS_DISTRO-ros-base
-        if [ $? -eq 0 ]; then
-            echo "Docker image successfully loaded."
-        else
-            echo "Error loading Docker image."
-            return 1
-        fi
-        docker tag docker-registry.qualcomm.com/fulaliu/arm64v8/ros:jazzy-ros-base $DOCKER_IMAGE_NAME:latest
-    else
-        echo "Docker image $DOCKER_IMAGE_NAME already exists."
-    fi
-
-
-    # Check if Docker container exists
-    if !  docker ps -a --format "{{.Names}}" | grep -w ^$CONTAINER_NAME$; then
-        echo "Docker container $CONTAINER_NAME not found, starting..."
-        docker run -d -it \
-            -e LOCAL_USER_NAME=$(whoami) \
-            -e LOCAL_USER_ID=$(id | awk -F "(" '{print $1}' | sed 's/uid=//') \
-            -e LOCAL_GROUP_ID=$(id | awk -F "(" '{print $2}' | awk -F " " '{print $NF}' | sed 's/gid=//') \
-            --name=$CONTAINER_NAME \
-            --security-opt seccomp=unconfined \
-            $DOCKER_IMAGE_NAME:latest /bin/bash
-        if [ $? -eq 0 ]; then
-            echo "Docker container successfully started."
-        else
-            echo "Error starting Docker container."
-            return 1
-        fi
-    else
-        echo "Docker container $CONTAINER_NAME already exists."
-    fi
-    DOCKER_SCRIPTS=$(find $SDK_TOP_DIR/runtime/qirp-sdk/install-dir -name "qirp-setup.sh")
-
-    docker cp $DOCKER_SCRIPTS $CONTAINER_NAME:/home
-    #docker exec $CONTAINER_NAME /bin/bash -c "sed -i '/curl -sSL/,+8d' /home/qirp-setup.sh "
-    docker exec $CONTAINER_NAME /bin/bash /home/qirp-setup.sh
-    docker commit $CONTAINER_NAME $DOCKER_IMAGE_NAME
-    docker save $DOCKER_IMAGE_NAME | gzip > $SDK_TOP_DIR/runtime/$DOCKER_IMAGE_NAME.tar.gz
-}
 DIR=$SDK_TOP_DIR/qirp-samples
 config_file="config.yaml"
 try_times=5
@@ -178,8 +125,8 @@ function download_model_label(){
             fi
         done
     fi
-
 }
+
 function download_ai_model(){
     #check if install yq tool
 
@@ -250,16 +197,4 @@ else
         return 1
     fi
 
-fi
-
-if [ "$1" == "docker" ];then
-    echo "building docker image..."
-    build_docker_image
-    if [[ $? -eq 0 ]]; then
-        echo " "
-        echo "building docker image Successfully"
-    else
-        echo "something error. please fix it first"
-        return 1
-    fi
 fi

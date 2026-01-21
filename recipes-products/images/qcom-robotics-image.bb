@@ -17,5 +17,4 @@ LICENSE = "BSD-3-Clause-Clear"
 CORE_IMAGE_BASE_INSTALL += " \
     packagegroup-qcom-ros2 \
     packagegroup-robotics-opensource \
-    qirp-sdk \
 "
