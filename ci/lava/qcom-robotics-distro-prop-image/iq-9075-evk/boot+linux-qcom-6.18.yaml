@@ -4,7 +4,7 @@ actions:
       image:
         headers:
           Authentication: Q_GITHUB_TOKEN
-        url: "{{BUILD_DOWNLOAD_URL}}/poky-altcfg/{{DEVICE_TYPE}}/core-image-base-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz"
+        url: "{{BUILD_DOWNLOAD_URL}}/qcom-robotics-distro-prop-image+linux-qcom-6.18/{{DEVICE_TYPE}}/qcom-robotics-proprietary-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz"
     postprocess:
       docker:
         image: ghcr.io/foundriesio/lava-lmp-sign:main
@@ -21,7 +21,7 @@ actions:
 - deploy:
     images:
       image:
-        url: downloads://core-image-base-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz
+        url: downloads://qcom-robotics-proprietary-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz
       settings:
         url: downloads://flash.settings
       overlay:
@@ -33,6 +33,8 @@ actions:
     auto_login:
       login_prompt: 'login:'
       username: root
+      password_prompt: 'Password'
+      password: oelinux123
     method: minimal
     prompts:
     - root@{{DEVICE_TYPE}}

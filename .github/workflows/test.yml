@@ -16,10 +16,9 @@ jobs:
     strategy:
       matrix:
         machine:
-          - qcs6490-rb3gen2-core-kit
+          - iq-9075-evk
         distro:
-          - name: ros-jazzy-base-image
-          - name: ros-jazzy-full-image
+          - name: qcom-robotics-distro-prop-image
     steps:
       - uses: actions/checkout@v4
         with:

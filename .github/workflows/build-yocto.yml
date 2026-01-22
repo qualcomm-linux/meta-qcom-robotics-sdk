@@ -2,6 +2,12 @@ name: Build Yocto
 
 on:
   workflow_call:
+    inputs:
+      use_sstate:
+        description: "Use SSTATE cache"
+        required: false
+        default: "true"
+        type: string
     outputs:
       artifacts_url:
         description: "URL to retrieve build artifacts"
@@ -15,7 +21,7 @@ env:
 jobs:
   kas-setup:
     if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: Update kas-container
         run: |
@@ -44,7 +50,7 @@ jobs:
   yocto-run-checks:
     needs: kas-setup
     if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - uses: actions/checkout@v4
 
@@ -64,7 +70,7 @@ jobs:
   compile:
     needs: [kas-setup, yocto-run-checks]
     if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: [self-hosted, qcom-u2404, amd64]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
     strategy:
@@ -72,12 +78,17 @@ jobs:
       matrix:
         machine:
           - qcs6490-rb3gen2-core-kit
+          - iq-8275-evk
+          - iq-9075-evk
         distro:
-          - name: ros-jazzy-base-image
-            yamlfile: ':ci/ros-jazzy-base-image.yml'
-          - name: ros-jazzy-full-image
-            yamlfile: ':ci/ros-jazzy-full-image.yml'
+          - name: qcom-robotics-distro
+            yamlfile: ':ci/qcom-robotics-distro.yml'
+          - name: qcom-robotics-distro-prop-image
+            yamlfile: ':ci/qcom-robotics-distro-prop-image.yml'
         kernel:
+          - type: default
+            dirname: ""
+            yamlfile: ""
           - type: 6.18
             dirname: "+linux-qcom-6.18"
             yamlfile: ":ci/linux-qcom-6.18.yml"
@@ -96,10 +107,11 @@ jobs:
           kernel_dirname: ${{matrix.kernel.dirname}}
           cache_dir: ${CACHE_DIR}
           kas: ${KAS_CONTAINER}
+          use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
     needs: compile
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: 'Download build URLs'
         uses: actions/download-artifact@v6

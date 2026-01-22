@@ -15,6 +15,7 @@ repos:
 
   meta-ros:
     url: https://github.com/ros/meta-ros.git
+    branch: master
     layers:
       meta-ros-common:
       meta-ros2:
@@ -69,4 +70,4 @@ local_conf_header:
     PATCHRESOLVE = "noop"
 
 distro: qcom-robotics-ros2-jazzy
-target: qcom-robotics-base-image
+target: qcom-robotics-image
