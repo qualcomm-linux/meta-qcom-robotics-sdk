@@ -1,0 +1,46 @@
+#This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+#
+#Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+From d99764017b52f0640a18d122c1dd6ef4c01ddcad Mon Sep 17 00:00:00 2001
+From: weijshen <quic_weijshen@quicinc.com>
+Date: Wed, 23 Apr 2025 09:43:43 +0800
+Subject: [PATCH] remove libs depending on opengl from moveit perception
+
+Upstream-Status: Pending
+
+Signed-off-by: weijshen <quic_weijshen@quicinc.com>
+---
+ CMakeLists.txt | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0452e0485..cb1ac0624 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -69,15 +69,19 @@ set(THIS_PACKAGE_INCLUDE_DIRS
+     ${PERCEPTION_GL_INCLUDE_DIRS})
+ 
+ set(THIS_PACKAGE_LIBRARIES
+-    moveit_depth_image_octomap_updater
+-    moveit_depth_image_octomap_updater_core
+     moveit_lazy_free_space_updater
+-    moveit_mesh_filter
+     moveit_point_containment_filter
+     moveit_pointcloud_octomap_updater
+     moveit_pointcloud_octomap_updater_core
+     moveit_semantic_world)
+ 
++if(WITH_OPENGL)
++  list(APPEND THIS_PACKAGE_LIBRARIES
++      moveit_depth_image_octomap_updater
++    	moveit_depth_image_octomap_updater_core
++      moveit_mesh_filter)
++endif()
++
+ set(THIS_PACKAGE_INCLUDE_DEPENDS
+     image_transport
+     moveit_core
+-- 
+2.34.1
+
