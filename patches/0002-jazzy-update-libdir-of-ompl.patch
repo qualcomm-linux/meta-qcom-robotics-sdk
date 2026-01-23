@@ -1,0 +1,31 @@
+From 50642c18a96c7f718fe1df70b32cdbba0639415d Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+Date: Fri, 23 Jan 2026 18:48:39 +0800
+Subject: [PATCH 2/3] {jazzy}: update libdir of ompl
+
+Signed-off-by: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+---
+ meta-ros2-jazzy/recipes-bbappends/ompl/ompl_%.bbappend | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/meta-ros2-jazzy/recipes-bbappends/ompl/ompl_%.bbappend b/meta-ros2-jazzy/recipes-bbappends/ompl/ompl_%.bbappend
+index a387a3db0..f6554b56e 100644
+--- a/meta-ros2-jazzy/recipes-bbappends/ompl/ompl_%.bbappend
++++ b/meta-ros2-jazzy/recipes-bbappends/ompl/ompl_%.bbappend
+@@ -24,7 +24,12 @@ inherit ros_insane_dev_so
+ # ERROR: ompl-1.5.2-1-r0 do_package_qa: QA Issue: ompl: /usr/lib/libompl.so.1.5.2 contains probably-redundant RPATH /usr/lib [useless-rpaths]
+ DEPENDS:append:class-target = " chrpath-replacement-native"
+ do_install:append() {
+-    chrpath --delete ${D}${libdir}/*${SOLIBS}
++    # Fix: use ros_libdir instead of libdir, and handle wildcards properly
++    for lib in ${D}${ros_libdir}/*${SOLIBS}; do
++        if [ -f "$lib" ]; then
++            chrpath --delete "$lib" 2>/dev/null || true
++        fi
++    done
+ }
+ 
+ FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
+-- 
+2.34.1
+
