@@ -2,12 +2,6 @@ name: Build Yocto
 
 on:
   workflow_call:
-    inputs:
-      use_sstate:
-        description: "Use SSTATE cache"
-        required: false
-        default: "true"
-        type: string
     outputs:
       artifacts_url:
         description: "URL to retrieve build artifacts"
@@ -46,6 +40,19 @@ jobs:
         with:
           name: kas-lock
           path: ci/*.lock.yml
+      
+      - name: Delete sstate-cache
+        run: |
+          export SSTATE_DIR=/efs/qli/meta-qcom-robotics-sdk/sstate-cache-2026-01
+          if [ -d "$SSTATE_DIR" ]; then
+            echo "SSTATE directory exists: $SSTATE_DIR"
+            cd /efs/qli/meta-qcom-robotics-sdk
+            rm -rf sstate-cache-2026-01
+            echo "SSTATE directory removed: $SSTATE_DIR"
+          else
+            echo "SSTATE directory does not exist: $SSTATE_DIR"
+          fi
+          ls -al /efs/qli/meta-qcom-robotics-sdk
 
   yocto-run-checks:
     needs: kas-setup
@@ -107,7 +114,6 @@ jobs:
           kernel_dirname: ${{matrix.kernel.dirname}}
           cache_dir: ${CACHE_DIR}
           kas: ${KAS_CONTAINER}
-          use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
     needs: compile

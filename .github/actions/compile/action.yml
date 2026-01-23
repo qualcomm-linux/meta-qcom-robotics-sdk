@@ -14,9 +14,6 @@ inputs:
     required: true
   kas:
     required: true
-  use_sstate:
-    required: false
-    default: "true"
 outputs:
   url:
     description: Location of the published binaries
@@ -34,14 +31,7 @@ runs:
       run: |
         # use a monthly sstate cache folder
         echo "DL_DIR=${{inputs.cache_dir}}/downloads" >> $GITHUB_ENV
-
-        if [ "${{ inputs.use_sstate }}" = "false" ]; then
-          echo "Not using SSTATE cache (full rebuild)."
-        else
-          echo "Using SSTATE cache..."
-          echo "SSTATE_DIR=${{inputs.cache_dir}}/sstate-cache-$(date '+%Y-%m')" >> $GITHUB_ENV
-        fi
-
+        echo "SSTATE_DIR=${{inputs.cache_dir}}/sstate-cache-$(date '+%Y-%m')" >> $GITHUB_ENV
         echo "KAS_WORK_DIR=$PWD/../kas" >> $GITHUB_ENV
         echo "SSTATE_DIR PATH: "
         ls -al /efs/qli/meta-qcom-robotics-sdk
@@ -62,8 +52,14 @@ runs:
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
         mv $KAS_WORK_DIR/build/buildchart.svg .
 
-        # Build qirp-sdk
-        ${{inputs.kas}} shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} -c "bitbake qcom-robotics-proprietary-image -c do_generate_qirp_sdk"
+        # Build qir-sdk
+        if [ "${{ inputs.distro_name }}" = "qcom-robotics-distro" ]; then
+          echo "Building qcom-robotics-image QIR-SDK"
+          ${{inputs.kas}} shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} -c "bitbake qcom-robotics-image -c do_generate_qirp_sdk"
+        else if [ "${{ inputs.distro_name }}" = "qcom-robotics-distro-prop-image" ]; then
+          echo "Build qcom-robotics-distro-prop-image QIR-SDK"
+          ${{inputs.kas}} shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} -c "bitbake qcom-robotics-distro-prop-image -c do_generate_qirp_sdk"
+        fi
 
     - uses: actions/upload-artifact@v4
       with:

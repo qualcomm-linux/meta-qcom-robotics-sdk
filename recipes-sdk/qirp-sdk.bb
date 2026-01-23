@@ -2,7 +2,7 @@
 LICENSE = "BSD-3-Clause-Clear"
 
 LIC_FILES_CHKSUM = " \
-    file://${LAYERDIR}/files/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a \
+    file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a \
 "
 S = "${UNPACKDIR}"
 
@@ -34,10 +34,4 @@ DEPENDS:append = " \
     jq-native \
     git-native \
 "
-
-do_lic_install() {
-    install -d ${LICENSE_DIRECTORY}/${SSTATE_PKGARCH}/${PN}
-    install -m 0644 ${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear \
-        ${LICENSE_DIRECTORY}/${SSTATE_PKGARCH}/${PN}/generic_BSD-3-Clause-Clear
-}
-addtask lic_install after do_install before do_package
+do_populate_lic[noexec] = "0"
