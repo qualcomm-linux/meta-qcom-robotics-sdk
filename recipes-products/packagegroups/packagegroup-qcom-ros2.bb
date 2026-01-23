@@ -22,31 +22,31 @@ RDEPENDS:${PN} = "\
     ${PN}-plugins \
 "
 
-# RDEPENDS:${PN}-extend = "\
-#     rosidl-default-generators \
-#     launch-ros \
-#     joint-state-publisher \
-#     ament-lint-auto \
-#     ament-lint-common \
-#     ament-cmake-auto \
-#     ament-cmake-ros \
-#     rcl-logging-noop \
-#     image-transport \
-#     domain-bridge \
-#     navigation2 \
-#     nav2-common \
-#     nav2-msgs \
-#     image-transport-plugins \
-#     cv-bridge \
-#     vision-msgs \
-#     foxglove-bridge \
-#     foxglove-msgs \
-#     moveit-runtime \
-#     moveit-configs-utils \
-#     moveit-planners-chomp \
-#     moveit-ros-perception-dev \
-#     moveit-planners-ompl-dev \
-# "
+RDEPENDS:${PN}-extend = "\
+    rosidl-default-generators \
+    launch-ros \
+    joint-state-publisher \
+    ament-lint-auto \
+    ament-lint-common \
+    ament-cmake-auto \
+    ament-cmake-ros \
+    rcl-logging-noop \
+    image-transport \
+    domain-bridge \
+    navigation2 \
+    nav2-common \
+    nav2-msgs \
+    image-transport-plugins \
+    cv-bridge \
+    vision-msgs \
+    foxglove-bridge \
+    foxglove-msgs \
+    moveit-runtime \
+    moveit-configs-utils \
+    moveit-planners-chomp \
+    moveit-ros-perception-dev \
+    moveit-planners-ompl-dev \
+"
 
 RDEPENDS:${PN}-samples = "\
     demo-nodes-cpp \
