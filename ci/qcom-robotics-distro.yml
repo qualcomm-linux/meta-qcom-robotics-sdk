@@ -12,6 +12,12 @@ repos:
   meta-qcom:
     url: "https://github.com/qualcomm-linux/meta-qcom.git"
     branch: master
+    commit: 18c6e3f42ddb07f4b4a87f44324b3fb60e6c3a2e
+
+  meta-qcom-distro:
+    url: https://github.com/qualcomm-linux/meta-qcom-distro
+    branch: main
+    commit: 549a6ebc1615d82f2b4f185e174b9b76161ba936
 
   meta-ros:
     url: https://github.com/ros/meta-ros.git

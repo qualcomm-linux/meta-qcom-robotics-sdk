@@ -3,7 +3,7 @@
 
 DESCRIPTION = "ROS2 (Robot Operating System 2) framework packages and components. Includes core ROS2 libraries, tools, and sample applications. All packages are open-source and community-maintained."
 SUMMARY = "ROS2 framework packages for robotics development"
-LICENSE = "BSD-3-Clause"
+LICENSE = "BSD-3-Clause-Clear"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 inherit packagegroup
