@@ -28,4 +28,4 @@ jobs:
   build-pr:
     uses: ./.github/workflows/build-yocto.yml
     with:
-      use_sstate: ${{ inputs.use_sstate || 'true' }}
+      use_sstate: ${{ inputs.use_sstate || 'false' }}
