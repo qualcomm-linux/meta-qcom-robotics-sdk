@@ -1,12 +1,14 @@
 #License applicable to the recipe file only,  not to the packages installed by this recipe.
 LICENSE = "BSD-3-Clause-Clear"
 
-LIC_FILES_CHKSUM = " \
-    file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a \
-"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a"
+
 S = "${UNPACKDIR}"
 
 inherit psdk-base psdk-package psdk-pickup
+
+# Override psdk-base to enable license population for QA checks
+do_populate_lic[noexec] = "0"
 
 CONFIGFILE = "${@d.getVar('CONFIG_SELECT')}"
 SRC_URI = "file://${@d.getVar('CONFIG_SELECT')}"
@@ -34,10 +36,3 @@ DEPENDS:append = " \
     jq-native \
     git-native \
 "
-
-do_lic_install() {
-    install -d ${LICENSE_DIRECTORY}/${SSTATE_PKGARCH}/${PN}
-    install -m 0644 ${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear \
-        ${LICENSE_DIRECTORY}/${SSTATE_PKGARCH}/${PN}/generic_BSD-3-Clause-Clear
-}
-addtask lic_install after do_install before do_package
