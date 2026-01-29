@@ -4,7 +4,14 @@ on:
   schedule:
   # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
   # so that build notification emails will be sent out properly.
-  - cron: "00 18 * * *"   # daily job - pick a random "minute"  - top of hour can be busy in github
+  - cron: "00 10 * * *"   # daily job - pick a random "minute"  - top of hour can be busy in github
+
+  workflow_dispatch:
+    inputs:
+      use_sstate:
+        description: "Use SSTATE cache"
+        required: false
+        default: "false"
 
 permissions:
   checks: write
@@ -15,6 +22,8 @@ permissions:
 jobs:
   build-nightly:
     uses: ./.github/workflows/build-yocto.yml
+    with:
+      use_sstate: ${{ inputs.use_sstate || 'false' }}
   test-nightly:
     uses: ./.github/workflows/test.yml
     needs: build-nightly

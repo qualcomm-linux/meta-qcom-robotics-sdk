@@ -2,6 +2,12 @@ name: Build Yocto
 
 on:
   workflow_call:
+    inputs:
+      use_sstate:
+        description: "Use SSTATE cache"
+        required: false
+        default: "true"
+        type: string
     outputs:
       artifacts_url:
         description: "URL to retrieve build artifacts"
@@ -101,6 +107,7 @@ jobs:
           kernel_dirname: ${{matrix.kernel.dirname}}
           cache_dir: ${CACHE_DIR}
           kas: ${KAS_CONTAINER}
+          use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
     needs: compile

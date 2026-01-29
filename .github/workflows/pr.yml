@@ -2,6 +2,12 @@ name: Build on PR
 
 on:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      use_sstate:
+        description: "Use SSTATE cache"
+        required: false
+        default: "false"
 
 permissions:
   checks: write
@@ -21,4 +27,5 @@ jobs:
         path: ${{ github.event_path }}
   build-pr:
     uses: ./.github/workflows/build-yocto.yml
-
+    with:
+      use_sstate: ${{ inputs.use_sstate || 'false' }}
