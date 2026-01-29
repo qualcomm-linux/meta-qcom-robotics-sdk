@@ -1,0 +1,35 @@
+From f5d703b57b3cdcf72ae192bf1e4f633cdb922c81 Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+Date: Wed, 21 Jan 2026 14:06:59 +0800
+Subject: [PATCH] fix: set octomap maximum version to 1.11.0
+
+Fix version error causes by octomap is 1.10.0-4.
+
+Error log:
+CMake Error at CMakeLists.txt:23 (find_package):
+  Could not find a configuration file for package "octomap" that is
+  compatible with requested version range "1.9.7...<1.10.0".
+
+Upstream-Status: Pending
+
+Signed-off-by: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ca30488f7..22ac38cd1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -20,7 +20,7 @@ find_package(kdl_parser REQUIRED)
+ find_package(moveit_msgs REQUIRED)
+ # Enforce system version liboctomap-dev
+ # https://github.com/moveit/moveit2/issues/2862
+-find_package(octomap 1.9.7...<1.10.0 REQUIRED)
++find_package(octomap 1.9.7...<1.11.0 REQUIRED)
+ find_package(octomap_msgs REQUIRED)
+ find_package(osqp REQUIRED)
+ find_package(pluginlib REQUIRED)
+-- 
+2.34.1
+

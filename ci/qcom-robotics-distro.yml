@@ -26,6 +26,22 @@ repos:
       meta-ros-common:
       meta-ros2:
       meta-ros2-jazzy:
+    patches:
+      qcom-fixes1:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
+      qcom-fixes2:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0002-jazzy-update-libdir-of-ompl.patch
+      qcom-fixes3:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
+
+  oe-core:
+    patches:
+      fix-BSD-license-missing:
+        repo: meta-qcom-robotics-sdk
+        path: patches/Initial-commit-of-license.patch
 
 local_conf_header:
   base: |
