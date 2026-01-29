@@ -4,6 +4,7 @@
 require recipes-products/images/qcom-multimedia-image.bb
 
 inherit psdk-image
+inherit rootfs-symlink
 
 DESCRIPTION = "Robotics image built on top of the Qualcomm multimedia image (qcom-multimedia-image.bb), \
 extending it with open-source robotics capabilities. Adds ROS2 framework, robotics applications, \
@@ -18,4 +19,11 @@ CORE_IMAGE_BASE_INSTALL += " \
     packagegroup-qcom-ros2 \
     packagegroup-robotics-opensource \
     qirp-sdk \
+"
+
+
+ROOTFS_SYMLINK_PAIRS = "\
+    ${@bb.utils.contains('DISTRO_FEATURES', 'sota', \
+        '/usr/ros:/var/rootdirs/opt/ros', \
+        '/usr/ros:/opt/ros', d)} \
 "
