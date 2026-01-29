@@ -23,7 +23,7 @@ jobs:
   build-nightly:
     uses: ./.github/workflows/build-yocto.yml
     with:
-      use_sstate: ${{ inputs.use_sstate || 'false' }}
+      use_sstate: ${{ inputs.use_sstate || 'true' }}
   test-nightly:
     uses: ./.github/workflows/test.yml
     needs: build-nightly
