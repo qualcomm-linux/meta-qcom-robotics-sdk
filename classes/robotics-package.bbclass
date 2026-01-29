@@ -68,6 +68,7 @@ INSANE_SKIP:${PN} += "installed-vs-shipped"
 INSANE_SKIP:${PN} += "${@skip_ros_dev_so_check(d)}"
 
 # while enable ubuntu target compilation ,stop the shlibs
+
 PACKAGEFUNCS:remove = "${@packages_funcs(d)}"
 
 def skip_ros_dev_so_check(d):
