@@ -73,6 +73,7 @@ jobs:
     runs-on: [self-hosted, qcom-u2404, amd64]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
+    timeout-minutes: 720 # 12 hours
     strategy:
       fail-fast: true
       matrix:
@@ -85,6 +86,8 @@ jobs:
             yamlfile: ':ci/qcom-robotics-distro.yml'
           - name: qcom-robotics-distro-prop-image
             yamlfile: ':ci/qcom-robotics-distro-prop-image.yml'
+          - name: qcom-robotics-distro-sota
+            yamlfile: ':ci/qcom-robotics-distro-sota.yml'
         kernel:
           - type: default
             dirname: ""
