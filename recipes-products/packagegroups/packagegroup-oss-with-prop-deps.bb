@@ -20,6 +20,7 @@ QUALCOMM_QRB_ROS = " \
 # If it is qrb ros sample, Please place all of them under this variable.
 # About qrb ros sample introduction, Please refer to https://github.com/qualcomm-qrb-ros/qrb_ros_samples.
 QRB_ROS_SAMPLE = " \
+    sample-hrnet-pose-estimation \
 "
 
 # If you do not work within the above two organizations and are preparing to merge your code into the Qualcomm Linux Intelligence Robotics Image, 
