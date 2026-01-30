@@ -12,6 +12,7 @@ LICENSE = "BSD-3-Clause-Clear"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 inherit packagegroup
+inherit rdepends-collector
 
 # Qualcomm proprietary robotics binaries
 QUALCOMM_ROBOTICS_PROPRIETARY = " \

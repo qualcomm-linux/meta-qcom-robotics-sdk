@@ -177,11 +177,87 @@ process_runtime() {
         fi
     done
 
-    if ls ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/${PN}_*.${IMAGE_PKGTYPE} >/dev/null 2>&1; then
-        cp ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/${PN}_*.${IMAGE_PKGTYPE} ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/runtime/packages/
+    # Determine which packagegroup list files to read
+    PACKAGEGROUP_LIST_DIR="${DEPLOY_DIR}/packagegroup-lists"
+    
+    if echo "${PN}" | grep -q proprietary; then
+        # Proprietary image: three packagegroups
+        LIST_FILES=" \
+            ${PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-opensource.list \
+            ${PACKAGEGROUP_LIST_DIR}/packagegroup-oss-with-prop-deps.list \
+            ${PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-proprietary.list \
+        "
+        bbnote "Processing proprietary image with 3 packagegroup lists"
     else
-        bbwarn "no ${PN} package generated at ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}, please double check"
+        # Open-source image: one packagegroup
+        LIST_FILES="${PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-opensource.list"
+        bbnote "Processing open-source image with 1 packagegroup list"
     fi
+    
+    # Check if list files exist - exit with error if any are missing
+    missing_files=""
+    for list_file in ${LIST_FILES}; do
+        if [ ! -f "${list_file}" ]; then
+            missing_files="${missing_files} $(basename ${list_file})"
+        fi
+    done
+    
+    if [ -n "${missing_files}" ]; then
+        bbfatal "Missing packagegroup list files:${missing_files}. Make sure packagegroups have been built with do_collect_rdepends task before generating SDK."
+    fi
+    
+    # Read package list from files and copy packages
+    PACKAGE_SRC_DIR="${DEPLOY_DIR}/${IMAGE_PKGTYPE}/${PACKAGE_ARCH}/"
+    
+    if [ ! -d "${PACKAGE_SRC_DIR}" ]; then
+        bbfatal "Package source directory ${PACKAGE_SRC_DIR} does not exist. Make sure packages have been built."
+    fi
+    
+    # Collect all package names (deduplicate)
+    ALL_PACKAGES=""
+    for list_file in ${LIST_FILES}; do
+        if [ -f "${list_file}" ]; then
+            bbnote "Reading package list from: ${list_file}"
+            while read pkg; do
+                pkg=$(echo $pkg | xargs)  # Remove whitespace
+                # Skip empty lines and comments - use grep instead of [[ ]]
+                if [ -n "${pkg}" ] && ! echo "${pkg}" | grep -q '^#'; then
+                    ALL_PACKAGES="${ALL_PACKAGES} ${pkg}"
+                fi
+            done < "${list_file}"
+        fi
+    done
+    
+    # Deduplicate
+    UNIQUE_PACKAGES=$(echo "${ALL_PACKAGES}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+    package_count=$(echo "${UNIQUE_PACKAGES}" | wc -w)
+    bbnote "Found ${package_count} unique packages to copy"
+    
+    # Copy package files
+    copied_count=0
+    for pkg in ${UNIQUE_PACKAGES}; do
+        # Recursively search for package files in ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/ directory tree
+        bbnote "Searching for package: ${pkg}_*.${IMAGE_PKGTYPE}"
+        found_files=$(find ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/ -name "${pkg}*.${IMAGE_PKGTYPE}" -type f 2>/dev/null || true)
+        
+        if [ -n "${found_files}" ]; then
+            bbnote "Found package files for ${pkg}:"
+            for file in ${found_files}; do
+                bbnote "  - ${file}"
+            done
+            
+            bbnote "Copying ${pkg} packages"
+            # Use cp -f to force overwrite if duplicate files exist
+            cp -f ${found_files} ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/runtime/packages/
+            # Count the number of copied files
+            file_count=$(echo "${found_files}" | wc -w)
+            copied_count=$(expr $copied_count + $file_count)
+        else
+            bbwarn "Package ${pkg} not found in ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/ directory tree"
+        fi
+    done
+    
+    bbnote "Successfully copied ${copied_count} packages"
 }
 
 # Main function: do_generate_qirp_sdk
@@ -212,6 +288,30 @@ do_generate_qirp_sdk(){
     rm -rf ${QIRP_SSTATE_IN_DIR}/${SDK_PN}
     
     bbnote "QIRP SDK generation completed: ${QIRP_SSTATE_IN_DIR}/${SDK_PN}_${SDK_VERSION}.tar.gz"
+}
+
+# Add dependency on packagegroup RDEPENDS collection tasks
+python () {
+    pn = d.getVar("PN")
+    
+    # Check if this is a robotics image
+    if pn in ["qcom-robotics-image", "qcom-robotics-proprietary-image"]:
+        # Determine which packagegroups to depend on
+        if "proprietary" in pn:
+            pkg_groups = [
+                "packagegroup-robotics-opensource",
+                "packagegroup-oss-with-prop-deps",
+                "packagegroup-robotics-proprietary"
+            ]
+        else:
+            pkg_groups = ["packagegroup-robotics-opensource"]
+        
+        # Add dependencies
+        for pkg_group in pkg_groups:
+            d.appendVarFlag('do_generate_qirp_sdk', 'depends', 
+                           ' {}:do_collect_rdepends'.format(pkg_group))
+        
+        bb.note("Added dependencies for {}: {}".format(pn, ", ".join(pkg_groups)))
 }
 
 SSTATETASKS += "do_generate_qirp_sdk "
