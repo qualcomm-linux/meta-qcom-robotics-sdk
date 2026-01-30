@@ -12,7 +12,7 @@ actions:
         - export IMAGE_PATH=$PWD
         - cp overlay*.tar.gz overlay.tar.gz
         - echo "OVERLAY=overlay.tar.gz" >> $IMAGE_PATH/flash.settings
-        - echo "OVERLAY_PATH=/home/" >> $IMAGE_PATH/flash.settings
+        - echo "OVERLAY_PATH=/ostree/deploy/poky/var/rootdirs/home/" >> $IMAGE_PATH/flash.settings
         - echo "DEVICE_TYPE=qcs9100-rb8" >> $IMAGE_PATH/flash.settings
         - cat $IMAGE_PATH/flash.settings
     timeout:
