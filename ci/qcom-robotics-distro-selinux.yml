@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+  includes:
+  - ci/qcom-robotics-distro.yml
+
+distro: qcom-robotics-distro-selinux
+target:
+  - qcom-robotics-image
+  - qcom-robotics-proprietary-image
