@@ -1,9 +1,8 @@
 #License applicable to the recipe file only,  not to the packages installed by this recipe.
 LICENSE = "BSD-3-Clause-Clear"
 
-LIC_FILES_CHKSUM = " \
-    file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a \
-"
+LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=2998c54c288b081076c9af987bdf4838"
+
 S = "${UNPACKDIR}"
 
 inherit psdk-base psdk-package psdk-pickup
@@ -13,6 +12,7 @@ SRC_URI = "file://${@d.getVar('CONFIG_SELECT')}"
 SRC_URI =+ "file://install.sh"
 SRC_URI =+ "file://uninstall.sh"
 SRC_URI =+ "file://qirp-setup.sh"
+SRC_URI =+ "file://LICENSE.txt"
 SRC_URI =+ "file://qirp-upgrade.sh"
 SRC_URI =+ "file://samples.json"
 SRC_URI =+ "file://qrb_ros_samples_scripts/"
