@@ -1,0 +1,30 @@
+From 4ce2e3ede6c8eacb5a7a15cc975f59914a3865ac Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+Date: Thu, 22 Jan 2026 18:31:48 +0800
+Subject: [PATCH] fix: set octomap maximum version to 1.11.0
+
+Fix version error causes by octomap is 1.10.0-4.
+
+Upstream-Status: Pending
+
+Signed-off-by: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b8dd549bc..bea7cc505 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -15,7 +15,7 @@ find_package(pluginlib REQUIRED)
+ find_package(Eigen3 REQUIRED)
+ # Enforce system version liboctomap-dev
+ # https://github.com/moveit/moveit2/issues/2862
+-find_package(octomap 1.9.7...<1.10.0 REQUIRED)
++find_package(octomap 1.9.7...<1.11.0 REQUIRED)
+ find_package(geometric_shapes REQUIRED)
+ find_package(tf2_ros REQUIRED)
+ 
+-- 
+2.34.1
+

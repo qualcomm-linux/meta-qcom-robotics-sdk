@@ -1,0 +1,1 @@
+inherit ros_insane_dev_so
