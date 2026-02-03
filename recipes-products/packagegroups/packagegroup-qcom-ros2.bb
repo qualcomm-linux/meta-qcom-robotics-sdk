@@ -12,12 +12,14 @@ PACKAGES = "\
     ${PN} \
     ${PN}-samples \
     ${PN}-extend \
+    ${PN}-plugins \
 "
 
 RDEPENDS:${PN} = "\
     ros-base \
     ${PN}-samples \
     ${PN}-extend \
+    ${PN}-plugins \
 "
 
 # RDEPENDS:${PN}-extend = "\
@@ -61,4 +63,12 @@ RDEPENDS:${PN}-samples = "\
     examples-rclpy-minimal-publisher \
     examples-rclpy-minimal-action-server \
     examples-rclpy-minimal-action-client \
+"
+
+RDEPENDS:${PN}-plugins = "\
+    ros-gst-bridge-audio-msgs \
+    ros-gst-bridge-msgs \
+    ros-gst-bridge \
+    ros-gst-bridge-pipeline \
+    ros-gst-bridge-pipeline-plugins \
 "
