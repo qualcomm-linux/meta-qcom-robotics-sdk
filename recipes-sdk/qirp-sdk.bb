@@ -1,9 +1,10 @@
 LICENSE = "BSD-3-Clause-Clear"
 
 SRC_URI = "file://qirp-setup.sh"
+SRC_URI =+ "file://LICENSE.txt"
 
 LIC_FILES_CHKSUM = " \
-    file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a \
+    file://LICENSE.txt;md5=2998c54c288b081076c9af987bdf4838 \
 "
 
 S = "${UNPACKDIR}"
