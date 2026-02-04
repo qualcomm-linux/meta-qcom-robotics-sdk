@@ -47,9 +47,9 @@ function linux_env_setup(){
     export ADSP_LIBRARY_PATH="/usr/lib/rfsa/adsp:${ADSP_LIBRARY_PATH}"
     export HOME="/opt" # Setting HOME to /opt might have unintended side effects for other tools/scripts.
     
-    log_info "Sourcing /usr/bin/ros_setup.sh..."
-    if ! source "/usr/bin/ros_setup.sh"; then
-        log_error "Failed to source /usr/bin/ros_setup.sh. Please check if the file exists and is executable."
+    log_info "Sourcing /opt/ros/jazzy/setup.sh..."
+    if ! source "/opt/ros/jazzy/setup.sh"; then
+        log_error "Failed to source /opt/ros/jazzy/setup.sh . Please check if the file exists and is executable."
         return 1
     fi
     log_info "Linux environment setup complete."
