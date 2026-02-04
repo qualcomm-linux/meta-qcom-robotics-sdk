@@ -88,6 +88,8 @@ jobs:
             yamlfile: ':ci/qcom-robotics-distro-prop-image.yml'
           - name: qcom-robotics-distro-sota
             yamlfile: ':ci/qcom-robotics-distro-sota.yml'
+          - name: qcom-robotics-distro-selinux
+            yamlfile: ':ci/qcom-robotics-distro-selinux.yml'
         kernel:
           - type: default
             dirname: ""
