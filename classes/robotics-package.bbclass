@@ -33,16 +33,6 @@ FILES:${PN} += " \
 "
 
 PROVIDES += "${PN}"
-do_copy_source() {
-    if [ ! -d "${SAMPLE_SOURCE}/" ]; then
-        mkdir -p "${SAMPLE_SOURCE}/"
-    fi
-
-    if [ -d "${S}" ]; then
-        cp -rf ${S} ${SAMPLE_SOURCE}/${PN}
-    fi
-}
-addtask copy_source before do_configure after do_patch
 
 RPROVIDES:${PN} += "${PN}"
 
@@ -78,6 +68,7 @@ INSANE_SKIP:${PN} += "installed-vs-shipped"
 INSANE_SKIP:${PN} += "${@skip_ros_dev_so_check(d)}"
 
 # while enable ubuntu target compilation ,stop the shlibs
+
 PACKAGEFUNCS:remove = "${@packages_funcs(d)}"
 
 def skip_ros_dev_so_check(d):
@@ -128,7 +119,7 @@ python __anonymous(){
         target_package_name = "{} {}-dbg".format(package_name,package_name)
     d.setVar("PACKAGES",target_package_name)
 
-    soc_arch = d.getVar("SOC_ARCH")
+    soc_arch = d.getVar("MACHINE_ARCH")
     d.setVar('PACKAGE_ARCH',soc_arch)
 
     ubuntu_version = d.getVar("UBUNTU_VERSION") or ""
