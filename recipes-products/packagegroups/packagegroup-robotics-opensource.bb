@@ -29,6 +29,7 @@ QRB_ROS_SAMPLE = " \
 EXTERNAL_OPENSOURCE = " \
     ${ROS_GST_BRIDGE} \
     rplidar-ros2 \
+    orbbec-camera \
 "
 
 ROS_GST_BRIDGE = " \
