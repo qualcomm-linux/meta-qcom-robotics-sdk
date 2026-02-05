@@ -1,0 +1,332 @@
+From 9ff58835ac12d5a0008104dd11f46527f377bbca Mon Sep 17 00:00:00 2001
+From: zhengjia zhu <quic_zhezhu@quicinc.com>
+Date: Tue, 18 Feb 2025 16:50:31 +0800
+Subject: [PATCH] Fix orbbec-camera compilation and runtime issues
+
+Upstream-Status: Inappropriate [platform specific]
+Signed-off-by: zhengjia zhu <quic_zhezhu@quicinc.com>
+---
+ orbbec_camera/CMakeLists.txt                  |  5 +-
+ .../launch/gemini_330_series.launch.py        | 20 +++---
+ orbbec_camera/launch/multi_camera.launch.py   | 32 ++-------
+ orbbec_camera/launch/quater_camera.launch.py  | 70 +++++++++++++++++++
+ orbbec_camera/scripts/dds_config.sh           | 15 ++++
+ orbbec_camera/scripts/shm_fastdds.xml         | 61 ++++++++++++++++
+ 6 files changed, 165 insertions(+), 38 deletions(-)
+ create mode 100644 orbbec_camera/launch/quater_camera.launch.py
+ create mode 100644 orbbec_camera/scripts/dds_config.sh
+ create mode 100644 orbbec_camera/scripts/shm_fastdds.xml
+
+diff --git a/orbbec_camera/CMakeLists.txt b/orbbec_camera/CMakeLists.txt
+index 207d6bb..2fbed21 100644
+--- a/orbbec_camera/CMakeLists.txt
++++ b/orbbec_camera/CMakeLists.txt
+@@ -12,7 +12,7 @@ option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
+ option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
+ 
+ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+-  add_compile_options(-Wall -Wextra -Werror -Wno-pedantic -Wno-array-bounds)
++  add_compile_options(-Wall -Wextra -Wno-error)
+ endif ()
+ # Check if ROS Jazzy or iron is installed
+ if ("$ENV{ROS_DISTRO}" STREQUAL "jazzy")
+@@ -84,6 +84,8 @@ elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "64"))
+   set(HOST_PLATFORM "arm64")
+ endif ()
+ 
++set(HOST_PLATFORM "arm64")
++
+ set(ORBBEC_LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
+ set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
+ 
+@@ -239,6 +241,7 @@ install(TARGETS ${PROJECT_NAME} frame_latency
+ install(DIRECTORY include/ DESTINATION include)
+ install(DIRECTORY launch DESTINATION share/${PROJECT_NAME}/)
+ install(DIRECTORY config DESTINATION share/${PROJECT_NAME}/)
++install(DIRECTORY scripts DESTINATION share/${PROJECT_NAME}/)
+ install(DIRECTORY ${ORBBEC_INCLUDE_DIR} DESTINATION include)
+ install(DIRECTORY ${ORBBEC_LIBS_DIR}/ DESTINATION lib/ FILES_MATCHING PATTERN "*.so*")
+ install(DIRECTORY ${ORBBEC_LIBS_DIR}/extensions DESTINATION lib/)
+diff --git a/orbbec_camera/launch/gemini_330_series.launch.py b/orbbec_camera/launch/gemini_330_series.launch.py
+index 126d526..f2ea19f 100644
+--- a/orbbec_camera/launch/gemini_330_series.launch.py
++++ b/orbbec_camera/launch/gemini_330_series.launch.py
+@@ -52,21 +52,21 @@ def load_parameters(context, args):
+ def generate_launch_description():
+     args = [
+         DeclareLaunchArgument('camera_name', default_value='camera'),
+-        DeclareLaunchArgument('depth_registration', default_value='true'),
++        DeclareLaunchArgument('depth_registration', default_value='false'),
+         DeclareLaunchArgument('serial_number', default_value=''),
+         DeclareLaunchArgument('usb_port', default_value=''),
+         DeclareLaunchArgument('device_num', default_value='1'),
+         DeclareLaunchArgument('point_cloud_qos', default_value='default'),
+-        DeclareLaunchArgument('enable_point_cloud', default_value='true'),
++        DeclareLaunchArgument('enable_point_cloud', default_value='false'),
+         DeclareLaunchArgument('enable_colored_point_cloud', default_value='false'),
+         DeclareLaunchArgument('cloud_frame_id', default_value=''),
+         DeclareLaunchArgument('connection_delay', default_value='10'),
+-        DeclareLaunchArgument('color_width', default_value='0'),
+-        DeclareLaunchArgument('color_height', default_value='0'),
+-        DeclareLaunchArgument('color_fps', default_value='0'),
++        DeclareLaunchArgument('color_width', default_value='1280'),
++        DeclareLaunchArgument('color_height', default_value='720'),
++        DeclareLaunchArgument('color_fps', default_value='10'),
+         DeclareLaunchArgument('color_format', default_value='ANY'),
+         DeclareLaunchArgument('enable_color', default_value='true'),
+-        DeclareLaunchArgument('color_qos', default_value='default'),
++        DeclareLaunchArgument('color_qos', default_value='sensor_data'),
+         DeclareLaunchArgument('color_camera_info_qos', default_value='default'),
+         DeclareLaunchArgument('enable_color_auto_exposure', default_value='true'),
+         DeclareLaunchArgument('color_exposure', default_value='-1'),
+@@ -75,12 +75,12 @@ def generate_launch_description():
+         DeclareLaunchArgument('color_white_balance', default_value='-1'),
+         DeclareLaunchArgument('color_ae_max_exposure', default_value='-1'),
+         DeclareLaunchArgument('color_brightness', default_value='-1'),
+-        DeclareLaunchArgument('depth_width', default_value='0'),
+-        DeclareLaunchArgument('depth_height', default_value='0'),
+-        DeclareLaunchArgument('depth_fps', default_value='0'),
++        DeclareLaunchArgument('depth_width', default_value='640'),
++        DeclareLaunchArgument('depth_height', default_value='480'),
++        DeclareLaunchArgument('depth_fps', default_value='15'),
+         DeclareLaunchArgument('depth_format', default_value='ANY'),
+         DeclareLaunchArgument('enable_depth', default_value='true'),
+-        DeclareLaunchArgument('depth_qos', default_value='default'),
++        DeclareLaunchArgument('depth_qos', default_value='sensor_data'),
+         DeclareLaunchArgument('depth_camera_info_qos', default_value='default'),
+         DeclareLaunchArgument('left_ir_width', default_value='0'),
+         DeclareLaunchArgument('left_ir_height', default_value='0'),
+diff --git a/orbbec_camera/launch/multi_camera.launch.py b/orbbec_camera/launch/multi_camera.launch.py
+index 22a0f07..b35793d 100644
+--- a/orbbec_camera/launch/multi_camera.launch.py
++++ b/orbbec_camera/launch/multi_camera.launch.py
+@@ -5,7 +5,6 @@ from launch_ros.actions import Node
+ from ament_index_python.packages import get_package_share_directory
+ import os
+ 
+-
+ def generate_launch_description():
+     # Include launch files
+     package_dir = get_package_share_directory('orbbec_camera')
+@@ -16,49 +15,28 @@ def generate_launch_description():
+         ),
+         launch_arguments={
+             'camera_name': 'camera_01',
+-            'usb_port': 'gmsl2-1',
++            'usb_port': '2-1.1',
+             'device_num': '2',
+             'sync_mode': 'standalone',
+-            'enable_left_ir': 'true',
+-            'enable_right_ir': 'true',
+         }.items()
+     )
+ 
+-    # launch2_include = IncludeLaunchDescription(
+-    #     PythonLaunchDescriptionSource(
+-    #         os.path.join(launch_file_dir, 'gemini_330_series.launch.py')
+-    #     ),
+-    #     launch_arguments={
+-    #         'camera_name': 'camera_02',
+-    #         'usb_port': 'gmsl2-2',
+-    #         'device_num': '3',
+-    #         'sync_mode': 'standalone',
+-    #         'enable_left_ir': 'false',
+-    #         'enable_right_ir': 'false',
+-    #     }.items()
+-    # )
+-
+-    launch3_include = IncludeLaunchDescription(
++    launch2_include = IncludeLaunchDescription(
+         PythonLaunchDescriptionSource(
+             os.path.join(launch_file_dir, 'gemini_330_series.launch.py')
+         ),
+         launch_arguments={
+-            'camera_name': 'camera_03',
+-            'usb_port': 'gmsl2-3',
++            'camera_name': 'camera_02',
++            'usb_port': '2-1.2',
+             'device_num': '2',
+             'sync_mode': 'standalone',
+-            'enable_left_ir': 'true',
+-            'enable_right_ir': 'true',
+         }.items()
+     )
+ 
+-    # If you need more cameras, just add more launch_include here, and change the usb_port and device_num
+-
+     # Launch description
+     ld = LaunchDescription([
+         GroupAction([launch1_include]),
+-        # GroupAction([launch2_include]),
+-        GroupAction([launch3_include]),
++        GroupAction([launch2_include]),
+     ])
+ 
+     return ld
+diff --git a/orbbec_camera/launch/quater_camera.launch.py b/orbbec_camera/launch/quater_camera.launch.py
+new file mode 100644
+index 0000000..d1d80a3
+--- /dev/null
++++ b/orbbec_camera/launch/quater_camera.launch.py
+@@ -0,0 +1,70 @@
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction, ExecuteProcess
++from launch.launch_description_sources import PythonLaunchDescriptionSource
++from launch_ros.actions import Node
++from ament_index_python.packages import get_package_share_directory
++import os
++
++def generate_launch_description():
++    # Include launch files
++    package_dir = get_package_share_directory('orbbec_camera')
++    launch_file_dir = os.path.join(package_dir, 'launch')
++    launch1_include = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            os.path.join(launch_file_dir, 'gemini_330_series.launch.py')
++        ),
++        launch_arguments={
++            'camera_name': 'camera_01',
++            'usb_port': '2-1.1',
++            'device_num': '4',
++            'sync_mode': 'standalone'
++        }.items()
++    )
++
++    launch2_include = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            os.path.join(launch_file_dir, 'gemini_330_series.launch.py')
++        ),
++        launch_arguments={
++            'camera_name': 'camera_02',
++            'usb_port': '2-1.2',
++            'device_num': '4',
++            'sync_mode': 'standalone'
++        }.items()
++    )
++
++    launch3_include = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            os.path.join(launch_file_dir, 'gemini_330_series.launch.py')
++        ),
++        launch_arguments={
++            'camera_name': 'camera_03',
++            'usb_port': '2-1.3',
++            'device_num': '4',
++            'sync_mode': 'standalone'
++        }.items()
++    )
++
++    launch4_include = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            os.path.join(launch_file_dir, 'gemini_330_series.launch.py')
++        ),
++        launch_arguments={
++            'camera_name': 'camera_04',
++            'usb_port': '2-1.4',
++            'device_num': '4',
++            'sync_mode': 'standalone'
++        }.items()
++    )
++
++    # If you need more cameras, just add more launch_include here, and change the usb_port and device_num
++
++    # Launch description
++    ld = LaunchDescription([
++        GroupAction([launch1_include]),
++        GroupAction([launch2_include]),
++        GroupAction([launch3_include]),
++        GroupAction([launch4_include]),
++    ])
++
++    return ld
+diff --git a/orbbec_camera/scripts/dds_config.sh b/orbbec_camera/scripts/dds_config.sh
+new file mode 100644
+index 0000000..f894a75
+--- /dev/null
++++ b/orbbec_camera/scripts/dds_config.sh
+@@ -0,0 +1,15 @@
++#!/bin/bash
++
++export TERM=xterm-256color
++echo 128 | tee /sys/module/usbcore/parameters/usbfs_memory_mb
++
++sysctl net.ipv4.ipfrag_time=3
++sysctl net.ipv4.ipfrag_high_thresh=134217728
++sysctl -w net.core.rmem_max=2147483647
++sysctl -w net.core.rmem_default=2147483647
++sysctl -w net.core.wmem_max=2147483647
++sysctl -w net.core.wmem_default=2147483647
++
++export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
++export FASTRTPS_DEFAULT_PROFILES_FILE=/usr/share/orbbec_camera/scripts/shm_fastdds.xml
++export RMW_FASTRTPS_USE_QOS_FROM_XML=1
+\ No newline at end of file
+diff --git a/orbbec_camera/scripts/shm_fastdds.xml b/orbbec_camera/scripts/shm_fastdds.xml
+new file mode 100644
+index 0000000..28b4709
+--- /dev/null
++++ b/orbbec_camera/scripts/shm_fastdds.xml
+@@ -0,0 +1,61 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
++    <transport_descriptors>
++        <transport_descriptor>
++            <transport_id>UDP_transport</transport_id>
++            <type>UDPv4</type>
++            <maxInitialPeersRange>10</maxInitialPeersRange>
++            <maxMessageSize>65000</maxMessageSize>
++            <sendBufferSize>1048576</sendBufferSize>
++            <receiveBufferSize>1048576</receiveBufferSize>
++        </transport_descriptor>
++    </transport_descriptors>
++    <participant profile_name="participant_profile_ros2" is_default_profile="true">
++        <rtps>
++            <name>profile_for_ros2_context</name>
++            <userTransports>
++                <transport_id>UDP_transport</transport_id>
++            </userTransports>
++            <useBuiltinTransports>false</useBuiltinTransports>
++            <sendSocketBufferSize>1048576</sendSocketBufferSize>
++            <listenSocketBufferSize>1048576</listenSocketBufferSize>
++            <builtin>
++                <initialPeersList>
++                    <locator>
++                        <udpv4>
++                            <address>127.0.0.1</address>
++                        </udpv4>
++                    </locator>
++                </initialPeersList>
++            </builtin>
++        </rtps>
++    </participant>
++    <data_writer profile_name="default publisher profile" is_default_profile="true">
++        <qos>
++            <publishMode>
++                <kind>ASYNCHRONOUS</kind>
++            </publishMode>
++            <latencyBudget>
++                <duration>
++                    <sec>0</sec>
++                    <nanosec>1000000</nanosec>
++                </duration>
++            </latencyBudget>
++        </qos>
++        <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
++    </data_writer>
++    <data_reader profile_name="default subscription profile" is_default_profile="true">
++        <qos>
++            <data_sharing>
++                <kind>AUTOMATIC</kind>
++            </data_sharing>
++             <latencyBudget>
++                <duration>
++                    <sec>0</sec>
++                    <nanosec>1000000</nanosec>
++                </duration>
++            </latencyBudget>
++        </qos>
++        <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
++    </data_reader>
++</profiles>
+-- 
+2.34.1

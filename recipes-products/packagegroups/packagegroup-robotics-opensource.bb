@@ -27,6 +27,7 @@ QRB_ROS_SAMPLE = " \
 # please place it in the following variable.
 EXTERNAL_OPENSOURCE = " \
     ${ROS_GST_BRIDGE} \
+    rplidar-ros2 \
 "
 
 ROS_GST_BRIDGE = " \
