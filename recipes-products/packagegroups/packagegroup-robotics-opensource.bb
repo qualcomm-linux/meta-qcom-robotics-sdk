@@ -26,6 +26,7 @@ QRB_ROS_SAMPLE = " \
 # If you do not work within the above two organizations and are preparing to merge your code into the Qualcomm Linux Intelligence Robotics Image, 
 # please place it in the following variable.
 EXTERNAL_OPENSOURCE = "   \
+    rplidar-ros2 \
 "
 
 RDEPENDS:${PN} = "${QUALCOMM_QRB_ROS} ${QRB_ROS_SAMPLE} ${EXTERNAL_OPENSOURCE}"
