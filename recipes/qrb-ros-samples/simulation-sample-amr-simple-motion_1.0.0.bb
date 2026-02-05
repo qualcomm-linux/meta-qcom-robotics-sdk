@@ -3,7 +3,7 @@ ROS_BUILD_TYPE = "ament_python"
 ROS_CN = "simulation_sample_amr_simple_motion"
 ROS_BPN = "simulation_sample_amr_simple_motion"
 
-S = "${WORKDIR}/git/robotics/${ROS_CN}"
+S = "${UNPACKDIR}/${PN}-${PV}/robotics/${ROS_CN}"
 
 ROS_BUILD_DEPENDS = " \
 "
