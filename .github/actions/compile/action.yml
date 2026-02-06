@@ -24,10 +24,10 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/download-artifact@v6
-      with:
-        name: kas-lock
-        path: ci/
+    # - uses: actions/download-artifact@v6
+    #   with:
+    #     name: kas-lock
+    #     path: ci/
 
     - name: Setup build variables and sstate-cache
       shell: bash

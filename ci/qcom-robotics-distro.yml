@@ -9,36 +9,78 @@ repos:
   meta-qcom-robotics-sdk:
 
   meta-qcom:
-    url: "https://github.com/qualcomm-linux/meta-qcom.git"
-    branch: master
-
+      url: https://github.com/qualcomm-linux/meta-qcom.git
+      branch: master
+      commit: 5c1e91fcbb9bb2149c89e395acc8e19869d43a8a
+  oe-core:
+      url: https://github.com/openembedded/openembedded-core
+      layers:
+          meta:
+      patches:
+          fix-BSD-license-missing:
+              repo: meta-qcom-robotics-sdk
+              path: patches/Initial-commit-of-license.patch
+      commit: 4c31a7b410fc9c14815c6853431c7bd56c0e173c
+  bitbake:
+      url: https://github.com/openembedded/bitbake
+      layers:
+          .: disabled
+      commit: cdd79c1768ac396a9c6577e38098da4331507f24
+  meta-yocto:
+      url: https://git.yoctoproject.org/meta-yocto
+      layers:
+          meta-poky:
+      commit: de4abc0a175af12eacc761a2e1e60ca7fdfeaa1b
   meta-qcom-distro:
-    url: https://github.com/qualcomm-linux/meta-qcom-distro
-    branch: main
+      url: https://github.com/qualcomm-linux/meta-qcom-distro
+      branch: main
+      commit: 9754815d7eeb95e68db943dbae342496a586f53f
+  meta-openembedded:
+      url: https://github.com/openembedded/meta-openembedded
+      layers:
+          meta-filesystems:
+          meta-gnome:
+          meta-multimedia:
+          meta-networking:
+          meta-oe:
+          meta-python:
+          meta-xfce:
+      commit: dfd6cf901aa530eb924ed62ad2498f8abf43fed2
+  meta-virtualization:
+      url: https://git.yoctoproject.org/git/meta-virtualization
+      branch: master
+      commit: 28d26fd95397bf575e65fcca0cbb302b1e9bc7ff
+  meta-audioreach:
+      url: https://github.com/AudioReach/meta-audioreach
+      branch: master
+      commit: f864c62336a771b05b6d1e03a1092ddd286f4038
+  meta-selinux:
+      branch: master
+      url: https://git.yoctoproject.org/meta-selinux
+      commit: d670531ad7e6cd0dac08010fbd9b604501391245
+  meta-updater:
+      branch: master
+      url: https://github.com/uptane/meta-updater
+      commit: 1e9ec9b9c10bd16c018bf5440ed6ffc56789dab0
 
   meta-ros:
-    url: https://github.com/ros/meta-ros.git
-    branch: master
-    layers:
-      meta-ros-common:
-      meta-ros2:
-      meta-ros2-jazzy:
-    patches:
-      qcom-fixes1:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
-      qcom-fixes2:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0002-jazzy-update-libdir-of-ompl.patch
-      qcom-fixes3:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
-
-  oe-core:
-    patches:
-      fix-BSD-license-missing:
-        repo: meta-qcom-robotics-sdk
-        path: patches/Initial-commit-of-license.patch
+      url: https://github.com/ros/meta-ros.git
+      branch: master
+      layers:
+          meta-ros-common:
+          meta-ros2:
+          meta-ros2-jazzy:
+      patches:
+          qcom-fixes1:
+              repo: meta-qcom-robotics-sdk
+              path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
+          qcom-fixes2:
+              repo: meta-qcom-robotics-sdk
+              path: patches/0002-jazzy-update-libdir-of-ompl.patch
+          qcom-fixes3:
+              repo: meta-qcom-robotics-sdk
+              path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
+      commit: fceba46917fe9473e64534d972d3cf853aa7674d
 
 local_conf_header:
   base: |

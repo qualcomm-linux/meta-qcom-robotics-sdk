@@ -58,13 +58,12 @@ Here are the detailed steps:
    ```
    kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>.yml:meta-qcom-robotics-sdk/ci/<DISTRO NAME>.yml
 
-   # For example, to build for DragonwingTM RB3 Gen 2 Core Kit using robotics distro property image, run the following command:
-   kas build meta-qcom-robotics-sdk/ci/qcs6490-rb3gen2-core-kit.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro-prop-image.yml
+   # For example, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro property image, run the following command:
+   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro-prop-image.yml
    ```
    Supported machines and distributions are listed below:
    | Machine Names | Target Names |
    | ------------ | ------------ |
-   | qcs6490-rb3gen2-core-kit | qcom-robotics-distro, qcom-robotics-distro-prop-image |
    | iq-8275-evk | qcom-robotics-distro, qcom-robotics-distro-prop-image |
    | iq-9075-evk | qcom-robotics-distro, qcom-robotics-distro-prop-image |
 
