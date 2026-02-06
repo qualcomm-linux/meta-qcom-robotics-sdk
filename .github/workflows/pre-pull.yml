@@ -1,0 +1,268 @@
+name: Pre-Pull Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflow_run_id:
+        description: "Specific workflow run ID to check (optional, defaults to latest)"
+        required: false
+        type: string
+        default: "21572367142"
+      job_id:
+        description: "Specific job ID to download artifacts from (optional, downloads from all jobs if not specified)"
+        required: false
+        type: string
+        default: "62186173260"
+  schedule:
+    # Run daily after the nightly build typically completes
+    - cron: "00 18 * * *"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  check-and-download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest nightly build workflow run
+        id: get-workflow-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="qualcomm-linux/meta-qcom"
+          WORKFLOW_FILE="nightly-build.yml"
+          
+          # Use provided run ID or get the latest
+          if [ -n "${{ inputs.workflow_run_id }}" ]; then
+            RUN_ID="${{ inputs.workflow_run_id }}"
+            echo "Using provided workflow run ID: $RUN_ID"
+          else
+            echo "Fetching latest workflow run for $WORKFLOW_FILE..."
+            RUN_ID=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs?status=completed&per_page=1" \
+              --jq '.workflow_runs[0].id')
+            
+            if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
+              echo "Error: No completed workflow runs found"
+              exit 1
+            fi
+            echo "Found latest workflow run ID: $RUN_ID"
+          fi
+          
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          
+          # Get workflow run details
+          WORKFLOW_URL="https://github.com/$REPO/actions/runs/$RUN_ID"
+          echo "workflow_url=$WORKFLOW_URL" >> $GITHUB_OUTPUT
+          echo "Workflow URL: $WORKFLOW_URL"
+
+      - name: Install GitHub CLI
+        run: |
+          if ! command -v gh &> /dev/null; then
+            echo "Installing GitHub CLI..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh -y
+          fi
+
+      - name: Check all jobs status
+        id: check-jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="qualcomm-linux/meta-qcom"
+          RUN_ID="${{ steps.get-workflow-run.outputs.run_id }}"
+          
+          echo "Checking job statuses for run ID: $RUN_ID"
+          
+          # Get all jobs for this workflow run
+          JOBS_JSON=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100")
+          
+          # Save jobs to file for debugging
+          echo "$JOBS_JSON" > jobs.json
+          
+          # Extract job names and conclusions
+          echo "Job Status Summary:"
+          echo "==================="
+          echo "$JOBS_JSON" | jq -r '.jobs[] | "\(.name): \(.conclusion)"'
+          
+          # Check if all jobs succeeded
+          FAILED_JOBS=$(echo "$JOBS_JSON" | jq -r '.jobs[] | select(.conclusion != "success" and .conclusion != "skipped") | .name')
+          
+          if [ -n "$FAILED_JOBS" ]; then
+            echo ""
+            echo "❌ The following jobs did not succeed:"
+            echo "$FAILED_JOBS"
+            echo "all_success=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo ""
+            echo "✅ All jobs completed successfully!"
+            echo "all_success=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find and download kas-build artifacts
+        if: steps.check-jobs.outputs.all_success == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="qualcomm-linux/meta-qcom"
+          RUN_ID="${{ steps.get-workflow-run.outputs.run_id }}"
+          JOB_ID="${{ inputs.job_id }}"
+          
+          echo "Searching for kas-build artifacts..."
+          
+          # Get artifacts for this workflow run
+          ARTIFACTS_JSON=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100")
+          
+          # Save artifacts list
+          echo "$ARTIFACTS_JSON" > artifacts.json
+          
+          # If job_id is specified, filter artifacts by job
+          if [ -n "$JOB_ID" ]; then
+            echo "Filtering artifacts for job ID: $JOB_ID"
+            
+            # Get job details to find artifacts associated with this job
+            JOB_JSON=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$REPO/actions/jobs/$JOB_ID")
+            
+            echo "$JOB_JSON" > job.json
+            JOB_NAME=$(echo "$JOB_JSON" | jq -r '.name')
+            echo "Job name: $JOB_NAME"
+            
+            # Note: GitHub API doesn't directly link artifacts to jobs
+            # We'll download all kas-build artifacts from the run
+            # In practice, artifacts are associated with the entire workflow run, not individual jobs
+            echo "Note: Downloading all kas-build artifacts from workflow run $RUN_ID"
+            echo "GitHub Actions artifacts are associated with workflow runs, not individual jobs"
+          fi
+          
+          # Find all kas-build artifacts
+          KAS_BUILD_ARTIFACTS=$(echo "$ARTIFACTS_JSON" | jq -r '.artifacts[] | select(.name | startswith("kas-build-qcom-distro") and endswith("iq-9075-evk")) | .name')
+          
+          if [ -z "$KAS_BUILD_ARTIFACTS" ]; then
+            echo "❌ Error: No kas-build artifacts found"
+            echo "Available artifacts:"
+            echo "$ARTIFACTS_JSON" | jq -r '.artifacts[] | .name'
+            exit 1
+          fi
+          
+          echo "Found kas-build artifacts:"
+          echo "$KAS_BUILD_ARTIFACTS"
+          echo ""
+          
+          # Create download directory
+          mkdir -p kas-build-artifacts
+          
+          # Download each kas-build artifact
+          ARTIFACT_COUNT=0
+          echo "$ARTIFACTS_JSON" | jq -c '.artifacts[] | select(.name | startswith("kas-build-") and endswith("iq-9075-evk"))' | while read -r artifact; do
+            ARTIFACT_NAME=$(echo "$artifact" | jq -r '.name')
+            ARTIFACT_ID=$(echo "$artifact" | jq -r '.id')
+            ARTIFACT_SIZE=$(echo "$artifact" | jq -r '.size_in_bytes')
+            
+            echo "Downloading: $ARTIFACT_NAME (ID: $ARTIFACT_ID, Size: $ARTIFACT_SIZE bytes)"
+            
+            # Download the artifact
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" > "kas-build-artifacts/${ARTIFACT_NAME}.zip"
+            
+            # Verify download
+            if [ -f "kas-build-artifacts/${ARTIFACT_NAME}.zip" ]; then
+              FILE_SIZE=$(stat -c%s "kas-build-artifacts/${ARTIFACT_NAME}.zip" 2>/dev/null || stat -f%z "kas-build-artifacts/${ARTIFACT_NAME}.zip" 2>/dev/null || echo "0")
+              echo "✅ Downloaded ${ARTIFACT_NAME}.zip (Size: $FILE_SIZE bytes)"
+              
+              # Extract the zip file
+              echo "Extracting ${ARTIFACT_NAME}.zip..."
+              mkdir -p "kas-build-artifacts/${ARTIFACT_NAME}"
+              unzip -q "kas-build-artifacts/${ARTIFACT_NAME}.zip" -d "kas-build-artifacts/${ARTIFACT_NAME}"
+              
+              # Display content
+              echo "Content of ${ARTIFACT_NAME}:"
+              ls -lah "kas-build-artifacts/${ARTIFACT_NAME}/"
+              
+              # Show kas-build.yml content if exists
+              if [ -f "kas-build-artifacts/${ARTIFACT_NAME}/kas-build.yml" ]; then
+                echo "=== kas-build.yml content ==="
+                cat "kas-build-artifacts/${ARTIFACT_NAME}/kas-build.yml"
+              fi
+              echo ""
+              
+              ARTIFACT_COUNT=$((ARTIFACT_COUNT + 1))
+            else
+              echo "❌ Failed to download ${ARTIFACT_NAME}"
+            fi
+          done
+          
+          # Count total artifacts downloaded
+          TOTAL_ARTIFACTS=$(find kas-build-artifacts -name "kas-build.yml" | wc -l)
+          echo ""
+          echo "=========================================="
+          echo "✅ Successfully downloaded $TOTAL_ARTIFACTS kas-build artifacts"
+          echo "=========================================="
+          
+          # List all downloaded artifacts
+          echo ""
+          echo "Downloaded artifacts summary:"
+          find kas-build-artifacts -name "kas-build.yml" -exec dirname {} \; | while read -r dir; do
+            ARTIFACT_NAME=$(basename "$dir")
+            echo "  - $ARTIFACT_NAME"
+          done
+
+      - name: Upload all kas-build artifacts
+        if: steps.check-jobs.outputs.all_success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kas-build-artifacts-from-nightly
+          path: kas-build-artifacts/
+          retention-days: 30
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## Pre-Pull Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run:** ${{ steps.get-workflow-run.outputs.workflow_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ steps.get-workflow-run.outputs.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.check-jobs.outputs.all_success }}" = "true" ]; then
+            echo "**Status:** ✅ All jobs succeeded" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Count and list downloaded artifacts
+            if [ -d "kas-build-artifacts" ]; then
+              ARTIFACT_COUNT=$(find kas-build-artifacts -name "kas-build.yml" 2>/dev/null | wc -l)
+              echo "**Downloaded Artifacts:** $ARTIFACT_COUNT kas-build configurations" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Artifact List:" >> $GITHUB_STEP_SUMMARY
+              
+              find kas-build-artifacts -name "kas-build.yml" -exec dirname {} \; 2>/dev/null | while read -r dir; do
+                ARTIFACT_NAME=$(basename "$dir")
+                echo "- \`$ARTIFACT_NAME\`" >> $GITHUB_STEP_SUMMARY
+              done
+            else
+              echo "**Artifacts:** No artifacts downloaded" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "**Status:** ❌ Some jobs failed or are incomplete" >> $GITHUB_STEP_SUMMARY
+            echo "**Action:** Please check the workflow run for details" >> $GITHUB_STEP_SUMMARY
+          fi

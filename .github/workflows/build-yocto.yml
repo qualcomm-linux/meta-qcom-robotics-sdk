@@ -42,7 +42,7 @@ jobs:
 
       - name: Run kas lock
         run: |
-          ${KAS_CONTAINER} lock --update ci/base.yml:ci/qcom-distro.yml
+          ${KAS_CONTAINER} lock --update ci/qcom-robotics-distro.yml
 
       - name: Upload kas lockfile
         uses: actions/upload-artifact@v6
