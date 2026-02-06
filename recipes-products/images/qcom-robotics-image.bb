@@ -15,12 +15,11 @@ SUMMARY = "Open-source robotics image with ROS2 support"
 
 LICENSE = "BSD-3-Clause-Clear"
 
-CORE_IMAGE_BASE_INSTALL += " \
-    packagegroup-qcom-ros2 \
-    packagegroup-robotics-opensource \
-    qirp-sdk \
+CORE_IMAGE_BASE_INSTALL += "            \
+    packagegroup-qcom-ros2              \
+    packagegroup-robotics-opensource    \
+    qirp-sdk                            \
 "
-
 
 ROOTFS_SYMLINK_PAIRS = "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'sota', \
