@@ -8,6 +8,16 @@ on:
         required: false
         default: "true"
         type: string
+      workflow_run_id:
+        description: "Specific workflow run ID to check (optional, defaults to latest)"
+        required: false
+        type: string
+        default: ""
+      job_id:
+        description: "Specific job ID to download artifacts from (optional, downloads from all jobs if not specified)"
+        required: false
+        type: string
+        default: ""
     outputs:
       artifacts_url:
         description: "URL to retrieve build artifacts"
@@ -23,8 +33,16 @@ env:
   KAS_CLONE_DEPTH: 1
 
 jobs:
+  # Call the reusable workflow to download and merge nightly artifacts
+  download-artifacts:
+    uses: ./.github/workflows/download-nightly-artifacts.yml
+    with:
+      workflow_run_id: ${{ inputs.workflow_run_id }}
+      job_id: ${{ inputs.job_id }}
+    secrets: inherit
+
   kas-setup:
-    
+    needs: download-artifacts
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: Setting up kas-container
@@ -37,15 +55,47 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Run kas lock
-        run: |
-          ${KAS_CONTAINER} lock --update ci/qcom-robotics-distro.yml
-
-      - name: Upload kas lockfile
-        uses: actions/upload-artifact@v6
+      - name: Download merged configuration
+        if: needs.download-artifacts.outputs.success == 'true'
+        uses: actions/download-artifact@v4
         with:
-          name: kas-lockfile
-          path: ci/*.lock.yml
+          name: ${{ needs.download-artifacts.outputs.artifact_name }}
+          path: 'ci/'
+
+      - name: Display and validate
+        if: needs.download-artifacts.outputs.success == 'true'
+        run: |
+          echo "📄 Merged Configuration:"
+          echo "======================="
+          
+          if [ -f ci/qcom-robotics-distro.yml ]; then
+            cat ci/qcom-robotics-distro.yml
+          else
+            echo "❌ File not found: ci/qcom-robotics-distro.yml"
+            echo ""
+            echo "Available files:"
+            find ci/ -type f
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - name: Download merged configuration
+        if: needs.download-artifacts.outputs.success == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.download-artifacts.outputs.artifact_name }}
+          path: 'ci/'
+
+      # - name: Run kas lock
+      #   run: |
+      #     ${KAS_CONTAINER} lock --update ci/qcom-robotics-distro.yml
+
+      # - name: Upload kas lockfile
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: kas-lockfile
+      #     path: ci/*.lock.yml
 
       - name: Upload kas-container
         uses: actions/upload-artifact@v4
@@ -68,7 +118,7 @@ jobs:
       #     path: ci
 
       - name: Download kas-container
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           name: kas-container
           path: ${{ runner.temp }}
@@ -145,7 +195,7 @@ jobs:
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: 'Download build URLs'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: build-url*

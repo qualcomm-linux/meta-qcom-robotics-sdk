@@ -67,6 +67,12 @@ runs:
         echo "SSTATE_DIR PATH: "
         ls -al /efs/qli/meta-qcom-robotics-sdk
 
+    - name: Download merged configuration to compile
+      uses: actions/download-artifact@v4
+      with:
+        name: qcom-robotics-distro-merged-${{ github.run_number }}
+        path: ci/
+
     - name: Dump kas-build yaml
       shell: bash
       run: |

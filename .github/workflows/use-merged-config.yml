@@ -1,0 +1,38 @@
+# .github/workflows/use-merged-config.yml
+name: Use Merged Config
+
+on:
+  workflow_run:
+    workflows: ["Pre-pull Check"]
+    types:
+      - completed
+
+jobs:
+  use-config:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download merged configuration
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          RUN_NUMBER="${{ github.event.workflow_run.run_number }}"
+          
+          echo "Downloading from run: $RUN_ID (run number: $RUN_NUMBER)"
+          
+          # Download artifact
+          gh run download $RUN_ID \
+            --name "qcom-robotics-distro-merged-${RUN_NUMBER}" \
+            --dir ci/
+          
+          echo "✅ Downloaded"
+          ls -la ci/
+
+      - name: Display and validate
+        run: |
+          echo "📄 Configuration:"
+          cat ci/qcom-robotics-distro-merge-commits.yml
