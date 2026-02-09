@@ -6,4 +6,3 @@ header:
   - ci/qcom-robotics-distro.yml
 
 distro: qcom-robotics-distro-sota
-target: qcom-robotics-image

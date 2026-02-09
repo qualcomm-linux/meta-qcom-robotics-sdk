@@ -6,13 +6,20 @@ inputs:
     required: true
   distro_name:
     required: true
+  target_type:
+    description: "Type of the target to build (e.g. base, full)"
+    required: true
+  target_yaml:
+    description: "Path to the target YAML file relative to the distro YAML file"
+    required: true
+  target_name:
+    description: "Name of the target to build"
+    required: true
   kernel_yaml:
     required: true
   kernel_dirname:
     required: true
   cache_dir:
-    required: true
-  kas:
     required: true
   use_sstate:
     required: false
@@ -24,10 +31,24 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # - uses: actions/download-artifact@v6
+    # - name: Download kas lockfile
+    #   uses: actions/download-artifact@v6
     #   with:
-    #     name: kas-lock
+    #     name: kas-lockfile
     #     path: ci/
+
+    - name: Download kas-container
+      uses: actions/download-artifact@v6
+      with:
+         name: kas-container
+         path: ${{runner.temp}}
+
+    - name: Setting up kas-container
+      shell: bash
+      run: |
+        KAS_CONTAINER=$RUNNER_TEMP/kas-container
+        echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
+        chmod +x $KAS_CONTAINER
 
     - name: Setup build variables and sstate-cache
       shell: bash
@@ -50,37 +71,31 @@ runs:
       shell: bash
       run: |
         mkdir $KAS_WORK_DIR
-        ${{inputs.kas}} dump --resolve-env --resolve-local --resolve-refs \
-          ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} > kas-build.yml
-        echo "kas-build.yml contents: "
+        $KAS_CONTAINER dump --resolve-env --resolve-local --resolve-refs \
+          ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} > kas-build.yml
+        echo "==== kas-build.yml contents: ===="
         cat kas-build.yml
 
     - name: Kas build images
       shell: bash
       run: |
-        ${{inputs.kas}} build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }}
+        $KAS_CONTAINER build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }}
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
         mv $KAS_WORK_DIR/build/buildchart.svg .
 
         # Build qir-sdk
-        if [ "${{ inputs.distro_name }}" = "qcom-robotics-distro" ]; then
-          echo "Building qcom-robotics-image QIR-SDK"
-          ${{inputs.kas}} shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} -c "bitbake qcom-robotics-image -c do_generate_qirp_sdk"
-        elif [ "${{ inputs.distro_name }}" = "qcom-robotics-distro-prop-image" ]; then
-          echo "Build qcom-robotics-proprietary-image QIR-SDK"
-          ${{inputs.kas}} shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} -c "bitbake qcom-robotics-proprietary-image -c do_generate_qirp_sdk"
-        fi
+        $KAS_CONTAINER build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} --task generate_qirp_sdk
 
     - uses: actions/upload-artifact@v4
       with:
-        name: buildchart-${{ inputs.distro_name }}${{ inputs.kernel_dirname }}-${{ inputs.machine }}
+        name: buildchart-${{ inputs.distro_name }}-${{ inputs.target_type }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
         path: |
           buildchart.svg
           buildchart-world.svg
 
     - uses: actions/upload-artifact@v4
       with:
-        name: kas-build-${{ inputs.distro_name }}${{ inputs.kernel_dirname }}-${{ inputs.machine }}
+        name: kas-build-${{ inputs.distro_name }}-${{ inputs.target_type }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
         path: kas-build.yml
 
     - name: Stage build artifacts for publishing
@@ -94,7 +109,7 @@ runs:
           echo "Build image files: "
           ls ../kas/build/tmp/deploy/images/${{inputs.machine}}
           deploy_dir=../kas/build/tmp/deploy/images/${{inputs.machine}}
-          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
+          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.target_type }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
           mkdir -p $uploads_dir
           find $deploy_dir/ -maxdepth 1 -type f -exec cp {} $uploads_dir/ \;
           find $deploy_dir/ -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} $uploads_dir/ \;
@@ -111,9 +126,9 @@ runs:
           echo "QIRP-SDK files: "
           ls ../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
           sdk_dir=../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
-          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
+          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.target_type }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
           mkdir -p $uploads_dir
-          find $sdk_dir/ -maxdepth 1 -type f -name "qirp-sdk_*.tar.gz" -exec cp {} $uploads_dir/ \;
+          find $sdk_dir/ -maxdepth 1 -type f -name "qirp-sdk_*.tar.gz" -printf "%f\n" | xargs tar -czf $uploads_dir/qirp_sdk.tar.gz -C $sdk_dir
         else
           echo "WARNING: No QIRP-SDK files found!"
         fi
@@ -136,7 +151,7 @@ runs:
       id: print-output
       run: |
         KERNEL_DIRNAME="${{ inputs.kernel_dirname }}"
-        BUILDNAME="${{ inputs.machine }}_${{ inputs.distro_name }}${KERNEL_DIRNAME}"
+        BUILDNAME="${{ inputs.machine }}_${{ inputs.distro_name }}${{ inputs.target_type }}${KERNEL_DIRNAME}"
         FILENAME="build-url_${BUILDNAME}"
         echo "${{ steps.upload_artifacts.outputs.url }}" > "${FILENAME}"
         echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
