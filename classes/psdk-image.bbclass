@@ -224,7 +224,10 @@ do_generate_qirp_sdk[dirs] = "${QIRP_SSTATE_IN_DIR} ${QIRP_SSTATE_OUT_DIR}"
 do_generate_qirp_sdk[cleandirs] = "${QIRP_SSTATE_OUT_DIR}"
 do_generate_qirp_sdk[stamp-extra-info] = "${MACHINE_ARCH}"
 
-do_generate_qirp_sdk[depends] += "jq-native:do_populate_sysroot git-native:do_populate_sysroot"
-
+python do_generate_qirp_sdk_setscene () {
+    sstate_setscene(d)
+}
 addtask do_generate_qirp_sdk_setscene
+
+do_generate_qirp_sdk[depends] += "jq-native:do_populate_sysroot git-native:do_populate_sysroot"
 addtask do_generate_qirp_sdk after do_populate_sdk
