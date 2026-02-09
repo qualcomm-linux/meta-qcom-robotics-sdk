@@ -74,12 +74,30 @@
             "to": "qirp-samples/platform/"
         },
         {
+            "name": "qrb_ros_nn_inference",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_nn_inference.git",
+            "branch":"main",
+            "src_rev":"29268979a3a7209956f16c28821ca5b79be7e7fa",
+            "individual_prj": "true",
+            "to": "qirp-samples/platform/"
+        },
+        {
+            "name": "qrb_ros_benchmark",
+            "oss_channel": "true",
+            "from_uri":"https://github.com/qualcomm-qrb-ros/qrb_ros_benchmark.git",
+            "branch":"main",
+            "src_rev":"c8ce1b1f5a202fddef40c54063f2f1134b40863d",
+            "individual_prj": "true",
+            "to": "qirp-samples/platform/"
+        },
+        {
             "name": "ocr_service",
             "oss_channel": "true",
             "individual_prj": "false",
             "from_uri": "https://git.codelinaro.org/clo/le/qirp-oss.git",
             "branch":"robotics-sdk.qclinux.1.0.r1-rel",
-            "src_rev":"f09dc67edf91484b6223ca90307cf4a88ab02276",
+            "src_rev":"1a5a68c7208bcb64b9c9998426600c6da6ce068d",
             "from_local": "robotics/qirp-oss/samples/ai_nodes/",
             "to": "qirp-samples/platform/"
         },
