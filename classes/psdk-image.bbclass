@@ -290,6 +290,15 @@ do_generate_qirp_sdk(){
     bbnote "QIRP SDK generation completed: ${QIRP_SSTATE_IN_DIR}/${SDK_PN}_${SDK_VERSION}.tar.gz"
 }
 
+do_generate_qirp_sdk[file-checksums] = " \
+    ${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/install.sh:True \
+    ${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/uninstall.sh:True \
+    ${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/qirp-upgrade.sh:True \
+    ${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/setup.sh:True \
+    ${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/content_config.json:True \
+    ${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/samples.json:True \
+"
+
 # Add dependency on packagegroup RDEPENDS collection tasks
 python () {
     pn = d.getVar("PN")
