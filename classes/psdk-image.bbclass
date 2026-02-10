@@ -237,8 +237,8 @@ process_runtime() {
     copied_count=0
     for pkg in ${UNIQUE_PACKAGES}; do
         # Recursively search for package files in ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/ directory tree
-        bbnote "Searching for package: ${pkg}_*.${IMAGE_PKGTYPE}"
-        found_files=$(find ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/ -name "${pkg}*.${IMAGE_PKGTYPE}" -type f 2>/dev/null || true)
+        bbnote "Searching for package: ${pkg}*.${IMAGE_PKGTYPE}"
+        found_files=$(find ${DEPLOY_DIR}/${IMAGE_PKGTYPE}/ -name "${pkg}*.${IMAGE_PKGTYPE}" -type f 2>/dev/null | grep -v -E "(src|dev|dbg)-" || true)
         
         if [ -n "${found_files}" ]; then
             bbnote "Found package files for ${pkg}:"
