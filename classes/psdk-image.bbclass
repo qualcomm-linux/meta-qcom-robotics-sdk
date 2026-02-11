@@ -258,6 +258,12 @@ process_runtime() {
     done
     
     bbnote "Successfully copied ${copied_count} packages"
+
+    tar -zcf ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/runtime/${SDK_PN}.tar.gz -C ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/runtime packages scripts
+
+    rm -rf ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/runtime/packages
+    rm -rf ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/runtime/scripts
+
 }
 
 # Main function: do_generate_qirp_sdk
