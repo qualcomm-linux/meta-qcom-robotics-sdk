@@ -7,6 +7,7 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE.txt;md5=2998c54c288b081076c9af987bdf4838 \
 "
 
+PV = "2.4.0"
 S = "${UNPACKDIR}"
 # Run-time dependent scripts are used to configure the system runtime environment.
 FILES:${PN} = "/usr/share/qirp-setup.sh"
