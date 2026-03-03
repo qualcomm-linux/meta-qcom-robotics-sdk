@@ -36,7 +36,6 @@ ROS_SDK_TARGET_PACKAGES:append = "${@bb.utils.contains('DISTRO_FEATURES', 'ros2-
 
 
 TOOLCHAIN_TARGET_TASK:remove = "qirp-sdk"
-TOOLCHAIN_TARGET_TASK:remove = "qirf-sdk"
 
 # Add default packages from meta-ros ros-sdk.inc
 TOOLCHAIN_HOST_TASK:append = " ${ROS_SDK_HOST_PACKAGES}"
