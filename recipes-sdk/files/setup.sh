@@ -10,9 +10,16 @@ cd $SDK_TOP_DIR
 #create toolchain dir
 if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     #check dependencys
-    if ! command -v zstd &> /dev/null
-    then
-        echo "zstd command not found ! please install it first"
+    missing_tools=""
+    for tool in zstd rpm2cpio cpio; do
+        if ! command -v $tool &> /dev/null; then
+            missing_tools="$missing_tools $tool"
+        fi
+    done
+
+    if [ -n "$missing_tools" ]; then
+        echo "The following required tools are missing:$missing_tools"
+        echo "Please install them first."
         return
     fi
     #Install toolchain
@@ -42,20 +49,32 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     done
 
     #install runtime/packages qirp packages
-    pkgs=$(ls $SDK_TOP_DIR/runtime/qirp-sdk/packages/*ipk)
+    ipk_pkgs=$(ls $SDK_TOP_DIR/runtime/qirp-sdk/packages/*.ipk 2>/dev/null)
+    rpm_pkgs=$(ls $SDK_TOP_DIR/runtime/qirp-sdk/packages/*.rpm 2>/dev/null)
+
     if [ ! -d "$SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir" ]; then
         mkdir $SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir
     fi
     if [ ! -d "$SDK_TOP_DIR/runtime/qirp-sdk/install-dir" ]; then
         mkdir $SDK_TOP_DIR/runtime/qirp-sdk/install-dir
     fi
+
     cd $SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir
-    for pkg in $pkgs; do
-        echo "install pkg $pkg ...   "
+
+    # install ipk packages
+    for pkg in $ipk_pkgs; do
+        echo "install ipk pkg $pkg ...   "
         ar -x $pkg
         tar -I zstd -xvf data.tar.zst -C $SDK_TOP_DIR/runtime/qirp-sdk/install-dir
         rm -rf $SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir/*
     done
+
+   # install rpm packages
+    for pkg in $rpm_pkgs; do
+        echo "install rpm pkg $pkg ...   "
+        rpm2cpio $pkg | cpio -idmv -D $SDK_TOP_DIR/runtime/qirp-sdk/install-dir
+    done
+
 
     rsync -av $SDK_TOP_DIR/runtime/qirp-sdk/install-dir/ $SDK_TOP_DIR/toolchain/install_dir/sysroots/armv8-2a-qcom-linux/
     # comment this line due to qirp-sdk install path change from opt/qcom/qirp-sdk to /
@@ -231,7 +250,7 @@ else
     for file in $search_dir;do
         . "$file"
     done
-    export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
+    export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr/ros/jazzy:${OECORE_TARGET_SYSROOT}/usr/ros/jazzy:${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
     export PYTHONPATH=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/
     export CMAKE_ARGS="-DPYTHON_EXECUTABLE=${OECORE_NATIVE_SYSROOT}/usr/bin/python3 \
        -DPython3_NumPy_INCLUDE_DIR=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/numpy/core/include \
