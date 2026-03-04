@@ -80,6 +80,9 @@ repos:
           qcom-fixes3:
               repo: meta-qcom-robotics-sdk
               path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
+          ament_cmake_py_fix:
+              repo:  meta-qcom-robotics-sdk
+              path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
       commit: fceba46917fe9473e64534d972d3cf853aa7674d
 
 local_conf_header:
