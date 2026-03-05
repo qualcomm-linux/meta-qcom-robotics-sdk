@@ -18,7 +18,11 @@ jobs:
         machine:
           - iq-9075-evk
         distro:
-          - name: qcom-robotics-distro-prop-image
+          - name: qcom-robotics-distro
+        target:
+          - type: '+full'
+        kernel:
+          - dirname: '+linux-qcom-next'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,7 +38,7 @@ jobs:
 
       - name: "Generate testjobs"
         run: |
-          export BUILD_URL_FILE="$GITHUB_WORKSPACE/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}"
+          export BUILD_URL_FILE="$GITHUB_WORKSPACE/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}"
           echo "${BUILD_URL_FILE}"
           if [ -f "$BUILD_URL_FILE" ]; then
               # install dependencies

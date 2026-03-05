@@ -13,14 +13,18 @@ on:
         description: "URL to retrieve build artifacts"
         value: ${{ jobs.create-output.outputs.url }}
 
+# Concurrency is used to prevent multiple workflows from running for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('push-{0}', github.sha) }}
+  cancel-in-progress: true
+
 env:
   CACHE_DIR: /efs/qli/meta-qcom-robotics-sdk
-  KAS_REPO_REF_DIR: /efs/qli/meta-qcom-robotics-sdk/kas-mirrors
-  KAS_CONTAINER: /efs/qli/meta-qcom-robotics-sdk/kas-mirrors/kas-container
+  KAS_CLONE_DEPTH: 1
 
 jobs:
   kas-setup:
-    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
+    
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: Setting up kas-container
@@ -31,18 +35,11 @@ jobs:
           wget -qO ${KAS_CONTAINER} https://raw.githubusercontent.com/siemens/kas/refs/tags/$LATEST/kas-container
           chmod +x ${KAS_CONTAINER}
 
-      - name: Update kas mirrors
-        run: |
-          for r in $(find ${KAS_REPO_REF_DIR}/* -maxdepth 0 -type d); do
-            echo "pre-fetch: $r"
-            git -C $r fetch --prune origin '+refs/*:refs/*'
-          done
-
       - uses: actions/checkout@v4
 
       - name: Run kas lock
         run: |
-          ${KAS_CONTAINER} lock --update ci/base.yml:ci/qcom-distro.yml
+          ${KAS_CONTAINER} lock --update ci/qcom-robotics-distro.yml
 
       - name: Upload kas lockfile
         uses: actions/upload-artifact@v6
@@ -58,16 +55,17 @@ jobs:
 
   yocto-run-checks:
     needs: kas-setup
-    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
+    
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download kas lockfile
-        uses: actions/download-artifact@v6
-        with:
-          name: kas-lockfile
-          path: ci
+      # qcom-robotics-distro.yml used special commit id, so we need to fetch it again
+      # - name: Download kas lockfile
+      #   uses: actions/download-artifact@v6
+      #   with:
+      #     name: kas-lockfile
+      #     path: ci
 
       - name: Download kas-container
         uses: actions/download-artifact@v6
@@ -91,7 +89,7 @@ jobs:
 
   compile:
     needs: [kas-setup, yocto-run-checks]
-    if: github.repository == 'qualcomm-linux/meta-qcom-robotics-sdk'
+    
     runs-on: [self-hosted, qcom-u2404, amd64]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
@@ -105,20 +103,25 @@ jobs:
         distro:
           - name: qcom-robotics-distro
             yamlfile: ':ci/qcom-robotics-distro.yml'
-          - name: qcom-robotics-distro-prop-image
-            yamlfile: ':ci/qcom-robotics-distro-prop-image.yml'
           - name: qcom-robotics-distro-sota
             yamlfile: ':ci/qcom-robotics-distro-sota.yml'
           - name: qcom-robotics-distro-selinux
             yamlfile: ':ci/qcom-robotics-distro-selinux.yml'
+        target:
+          - type: '+base'
+            name: qcom-robotics-image
+            yamlfile: ':ci/qcom-robotics-image.yml'
+          - type: '+full'
+            name: qcom-robotics-proprietary-image
+            yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
         kernel:
           - type: default
-            dirname: ""
-            yamlfile: ""
+            dirname: '+linux-qcom-next'
+            yamlfile: ''
           - type: 6.18
-            dirname: "+linux-qcom-6.18"
-            yamlfile: ":ci/linux-qcom-6.18.yml"
-    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.kernel.dirname }}
+            dirname: '+linux-qcom-lts'
+            yamlfile: ':ci/linux-qcom-6.18.yml'
+    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v4
 
@@ -129,10 +132,12 @@ jobs:
           machine: ${{matrix.machine}}
           distro_yaml: ${{matrix.distro.yamlfile}}
           distro_name: ${{matrix.distro.name}}
+          target_type: ${{matrix.target.type}}
+          target_yaml: ${{matrix.target.yamlfile}}
+          target_name: ${{matrix.target.name}}
           kernel_yaml: ${{matrix.kernel.yamlfile}}
           kernel_dirname: ${{matrix.kernel.dirname}}
           cache_dir: ${CACHE_DIR}
-          kas: ${KAS_CONTAINER}
           use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:

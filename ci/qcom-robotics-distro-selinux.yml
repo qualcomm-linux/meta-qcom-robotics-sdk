@@ -6,6 +6,3 @@ header:
   - ci/qcom-robotics-distro.yml
 
 distro: qcom-robotics-distro-selinux
-target:
-  - qcom-robotics-image
-  - qcom-robotics-proprietary-image

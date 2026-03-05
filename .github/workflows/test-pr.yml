@@ -3,6 +3,7 @@ name: Test PR build
 run-name: "Tests triggered by PR: ${{ github.event.workflow_run.display_title }}"
 
 on:
+  pull_request:
   workflow_run:
     workflows: ["Build on PR"]
     types:

@@ -31,7 +31,6 @@ And you can flash the image to the following devices to start your work.
 
 | Hardware                                               | Document                                                     | Access level |
 | ------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
-| Qualcomm DragonwingTM RB3 Gen 2 Vision Development Kit | [Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-253) | Public       |
 | Qualcomm DragonwingTM IQ-9075 Evaluation Kit           | [Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-263) | Public       |
 | Qualcomm® IQ-8 Beta Evaluation Kit                     | [Quick Start Guide](https://docs.qualcomm.com/bundle/80-70017-263/resource/80-70017-263.pdf) | Authorized   |
 
@@ -56,16 +55,19 @@ Here are the detailed steps:
 5. Build using the KAS configuration for one of the supported boards
 
    ```
-   kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>.yml:meta-qcom-robotics-sdk/ci/<DISTRO NAME>.yml
+   kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>.yml:meta-qcom-robotics-sdk/ci/<TARGET NAME>.yml
 
-   # For example, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro property image, run the following command:
-   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro-prop-image.yml
+   # For example, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro image, run the following command:
+   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml
+
+   # For authorized registrants, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro property image, run the following command: 
+   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
    ```
    Supported machines and distributions are listed below:
    | Machine Names | Target Names |
    | ------------ | ------------ |
-   | iq-8275-evk | qcom-robotics-distro, qcom-robotics-distro-prop-image |
-   | iq-9075-evk | qcom-robotics-distro, qcom-robotics-distro-prop-image |
+   | iq-8275-evk | qcom-robotics-image, qcom-robotics-proprietary-image |
+   | iq-9075-evk | qcom-robotics-image, qcom-robotics-proprietary-image |
 
 6. The output image will be located in the follow path:
 

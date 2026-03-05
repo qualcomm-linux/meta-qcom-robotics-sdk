@@ -2,7 +2,5 @@
 
 header:
   version: 14
-  includes:
-   - ci/qcom-distro.yml
 
-target: qcom-multimedia-proprietary-image
+target: qcom-robotics-image
