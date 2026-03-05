@@ -12,6 +12,16 @@ on:
         description: "Use SSTATE cache"
         required: false
         default: "false"
+      workflow_run_id:
+        description: "Specific workflow run ID to check (optional, defaults to latest)"
+        required: false
+        type: string
+        default: ""
+      job_id:
+        description: "Specific job ID to download artifacts from (optional, downloads from all jobs if not specified)"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   checks: write
