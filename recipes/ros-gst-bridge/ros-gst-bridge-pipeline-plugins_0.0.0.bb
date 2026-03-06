@@ -32,6 +32,7 @@ ROS_BUILD_DEPENDS = " \
     ros-gst-bridge-msgs \
     ros-gst-bridge \
     ros-gst-bridge-pipeline \
+    gstreamer1.0 \
     gstreamer1.0-plugins-base \
     image-transport \
     cv-bridge \
@@ -62,10 +63,11 @@ ROS_TEST_DEPENDS = " \
 "
 
 DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS}"
-DEPENDS += "pkgconfig-native"
+DEPENDS += "pkgconfig-native gstreamer1.0"
 
-EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
-EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
+# EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
+# EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
+
 # Disable format-security for error: "format not a string literal and no format arguments"
 EXTRA_OECMAKE:append = " -DCMAKE_CXX_FLAGS='-Wno-error=format-security'"
 
