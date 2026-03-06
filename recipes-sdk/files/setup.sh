@@ -82,12 +82,16 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     cd $SDK_TOP_DIR
 
     if [ -d "$SDKTARGETSYSROOT" ]; then
-        QIRP_TEMP_LN_PATH=$(find $SDKTARGETSYSROOT -type f -name "camera_metadata.h" -exec dirname {} \;)
-        if [ -n "$QIRP_TEMP_LN_PATH" ]; then
-            ln -sf $QIRP_TEMP_LN_PATH $SDKTARGETSYSROOT/usr/include/system
-        fi
-    fi
-    echo "setup qirp sysroot done!"
+        camera_metadata_file=$(find "$SDKTARGETSYSROOT" -type f -name "camera_metadata.h" -print -quit)
+        if [ -n "$camera_metadata_file" ]; then
+            QIRP_TEMP_LN_PATH=$(dirname "$camera_metadata_file")
+            mkdir -p "$SDKTARGETSYSROOT/usr/include"
+            ln -sf "$QIRP_TEMP_LN_PATH" "$SDKTARGETSYSROOT/usr/include/system"
+         fi
+     fi
+
+     echo "setup qirp sysroot done!"
+
 fi
 
 DOCKER_IMAGE_NAME=qirp-docker
@@ -237,6 +241,83 @@ function download_ai_model(){
     done
 }
 
+setup_qirp_ros_env() {
+  # Select the Python interpreter used to detect the version.
+  # Prefer the SDK native Python if available; otherwise fall back to system python3.
+  local PY="${OECORE_NATIVE_SYSROOT}/usr/bin/python3"
+  if [ ! -x "${PY}" ]; then
+    PY="$(command -v python3)"
+  fi
+
+  # Extract major.minor version (e.g., "3.14" or "3.12").
+  local PY_VER
+  PY_VER="$("${PY}" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)" || {
+    echo "[ERROR] Failed to run python to detect version: ${PY}"
+    return 1
+  }
+
+  case "${PY_VER}" in
+    3.14)
+      # Set up AMENT prefix paths for both native and target sysroots.
+      export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr/ros/jazzy:${OECORE_TARGET_SYSROOT}/usr/ros/jazzy:${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
+
+      # Set PYTHONPATH for both native and target site-packages and ROS Jazzy python packages.
+      # Note: Avoid empty path entries (e.g., double colons "::") to prevent accidental imports.
+      export PYTHONPATH="${OECORE_TARGET_SYSROOT}/usr/ros/jazzy/lib/python3.14/site-packages:${OECORE_NATIVE_SYSROOT}/usr/ros/jazzy/lib/python3.14/site-packages"
+
+      # Prefer NumPy 2.x layout: numpy/_core/include. Fall back to numpy/core/include if needed.
+      local NUMPY_INC_314="${OECORE_NATIVE_SYSROOT}/usr/lib/python3.14/site-packages/numpy/_core/include"
+      if [ ! -d "${NUMPY_INC_314}" ]; then
+        NUMPY_INC_314="${OECORE_NATIVE_SYSROOT}/usr/lib/python3.14/site-packages/numpy/core/include"
+      fi
+
+      # CMake arguments used by colcon build.
+      export CMAKE_ARGS="-DPYTHON_EXECUTABLE=${OECORE_NATIVE_SYSROOT}/usr/bin/python3 \
+       -DPython3_NumPy_INCLUDE_DIR=${NUMPY_INC_314} \
+       -DCMAKE_MAKE_PROGRAM=/usr/bin/make \
+       -DSYSROOT_LIBDIR=${OECORE_TARGET_SYSROOT}/usr/lib \
+       -DSYSROOT_INCDIR=${OECORE_TARGET_SYSROOT}/usr/include \
+       -DPYTHON_SOABI=cpython-312-aarch64-linux-gnu \
+       -DBUILD_TESTING=OFF"
+      ;;
+
+    3.12)
+      # Set up AMENT prefix paths for ROS Jazzy in native and target sysroots.
+      export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr/ros/jazzy:${OECORE_TARGET_SYSROOT}/usr/ros/jazzy"
+
+      # Set PYTHONPATH for both native and target site-packages.
+      export PYTHONPATH="${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/"
+
+      # Prefer traditional NumPy layout: numpy/core/include. Fall back to numpy/_core/include if needed.
+      local NUMPY_INC_312="${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/numpy/core/include"
+      if [ ! -d "${NUMPY_INC_312}" ]; then
+        NUMPY_INC_312="${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/numpy/_core/include"
+      fi
+
+      # CMake arguments used by colcon build.
+      export CMAKE_ARGS="-DPYTHON_EXECUTABLE=${OECORE_NATIVE_SYSROOT}/usr/bin/python3 \
+       -DPython3_NumPy_INCLUDE_DIR=${NUMPY_INC_312} \
+       -DCMAKE_MAKE_PROGRAM=/usr/bin/make \
+       -DSYSROOT_LIBDIR=${OECORE_TARGET_SYSROOT}/usr/lib \
+       -DSYSROOT_INCDIR=${OECORE_TARGET_SYSROOT}/usr/include \
+       -DPYTHON_SOABI=cpython-312-aarch64-linux-gnu \
+       -DBUILD_TESTING=OFF"
+      ;;
+
+    *)
+      # Unsupported Python version.
+      echo "[ERROR] Unsupported Python version: ${PY_VER}. Only 3.14 and 3.12 are supported."
+      return 1
+      ;;
+  esac
+
+  # Optional: Print key environment variables for quick verification.
+  echo "[INFO] Python version = ${PY_VER}"
+  echo "[INFO] AMENT_PREFIX_PATH = ${AMENT_PREFIX_PATH}"
+  echo "[INFO] PYTHONPATH = ${PYTHONPATH}"
+  echo "[INFO] CMAKE_ARGS = ${CMAKE_ARGS}"
+  return 0
+}
 #install or uninstall qirp
 if [ "$1" == "uninstall" ]; then
     if [ -d "toolchain/install_dir" ]; then
@@ -250,16 +331,9 @@ else
     for file in $search_dir;do
         . "$file"
     done
-    export AMENT_PREFIX_PATH="${OECORE_NATIVE_SYSROOT}/usr/ros/jazzy:${OECORE_TARGET_SYSROOT}/usr/ros/jazzy:${OECORE_NATIVE_SYSROOT}/usr:${OECORE_TARGET_SYSROOT}/usr"
-    export PYTHONPATH=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/
-    export CMAKE_ARGS="-DPYTHON_EXECUTABLE=${OECORE_NATIVE_SYSROOT}/usr/bin/python3 \
-       -DPython3_NumPy_INCLUDE_DIR=${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/numpy/core/include \
-       -DCMAKE_MAKE_PROGRAM=/usr/bin/make \
-       -DSYSROOT_LIBDIR=${OECORE_TARGET_SYSROOT}/usr/lib \
-       -DSYSROOT_INCDIR=${OECORE_TARGET_SYSROOT}/usr/include \
-       -DPYTHON_SOABI=cpython-312-aarch64-linux-gnu \
-       -DBUILD_TESTING=OFF"
-
+  # Select the Python interpreter used to detect the version.
+  # Prefer the SDK native Python if available; otherwise fall back to system python3.
+    setup_qirp_ros_env
     download_ai_model
     if [[ $? -eq 0 ]]; then
         echo " "
