@@ -25,9 +25,10 @@ ROS_BUILDTOOL_DEPENDS = " \
 
 ROS_BUILD_DEPENDS = " \
     rclcpp \
-    gstreamer1.0-plugins-base \
     std-msgs \
     sensor-msgs \
+    gstreamer1.0 \
+    gstreamer1.0-plugins-base \
     ros-gst-bridge-audio-msgs \
 "
 
@@ -46,12 +47,21 @@ ROS_TEST_DEPENDS = " \
 "
 
 DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS}"
-DEPENDS += "pkgconfig-native"
+DEPENDS += "pkgconfig-native gstreamer1.0"
 
 GST_PLUGIN_INSTALL_DIR ?= "${libdir}/gstreamer-1.0"
 
-EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
-EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
+inherit pkgconfig
+
+do_configure:prepend() {
+    export PKG_CONFIG_SYSROOT_DIR="${RECIPE_SYSROOT}"
+    export PKG_CONFIG_PATH="${RECIPE_SYSROOT}${libdir}/pkgconfig:${RECIPE_SYSROOT}${datadir}/pkgconfig"
+    export PKG_CONFIG_LIBDIR="${RECIPE_SYSROOT}${libdir}/pkgconfig:${RECIPE_SYSROOT}${datadir}/pkgconfig"
+}
+EXTRA_OECMAKE:append = " -DCMAKE_SYSROOT=${RECIPE_SYSROOT} -DPKG_CONFIG_SYSROOT_DIR=${RECIPE_SYSROOT}"
+
+# EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
+# EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
 
 do_install:append() {
     install -d -m 0755 ${D}${GST_PLUGIN_INSTALL_DIR}

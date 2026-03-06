@@ -61,10 +61,11 @@ ROS_TEST_DEPENDS = " \
 "
 
 DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS}"
-DEPENDS += "pkgconfig-native"
+DEPENDS += "pkgconfig-native gstreamer1.0"
 
-EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
-EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
+# EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
+# EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
+
 # Disable format-security for error: "format not a string literal and no format arguments"
 EXTRA_OECMAKE:append = " -DCMAKE_CXX_FLAGS='-Wno-error=format-security'"
 # Skip build of tests for QA issues
