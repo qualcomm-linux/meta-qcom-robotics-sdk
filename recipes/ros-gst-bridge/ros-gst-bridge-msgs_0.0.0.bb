@@ -1,5 +1,6 @@
 inherit ros_distro_${ROS_DISTRO}
 inherit ros_component
+inherit robotics-package
 
 DESCRIPTION = "gst_msgs: subpackage of ros-gst-bridge."
 LICENSE = "Apache-2.0"
@@ -12,8 +13,6 @@ ROS_CN = "gst_msgs"
 ROS_BPN = "gst_msgs"
 
 S = "${UNPACKDIR}/${PN}-${PV}/${ROS_CN}"
-
-inherit robotics-package
 
 ROS_BUILD_TYPE = "ament_cmake"
 inherit ros_${ROS_BUILD_TYPE}
@@ -40,8 +39,8 @@ ROS_TEST_DEPENDS = " \
 
 DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS}"
 
-EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
-EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
+# EXTRA_OECMAKE += "-DSYSROOT_LIBDIR=${STAGING_LIBDIR}"
+# EXTRA_OECMAKE += "-DGST_PLUGINS_QTI_OSS_INSTALL_LIBDIR=${libdir}"
 
 FILES:${PN} += "${libdir}"
 
