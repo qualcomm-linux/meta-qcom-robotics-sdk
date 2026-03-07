@@ -1,0 +1,832 @@
+name: Download Nightly Artifacts
+
+on:
+  # schedule:
+  # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
+  # so that build notification emails will be sent out properly.
+  # At 12:22 & 00:22 UTC everyday - picked a random "minute" as top of hour can be busy in github
+  # - cron: "22 12,00 * * *"
+
+  workflow_dispatch:
+    inputs:
+      workflow_run_id:
+        description: "Specific workflow run ID to check (optional, defaults to latest)"
+        required: false
+        type: string
+      job_id:
+        description: "Specific job ID to download artifacts from (optional, downloads from all jobs if not specified)"
+        required: false
+        type: string
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+  packages: read
+
+jobs:
+  check-and-download:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.set-output.outputs.artifact_name }}
+      success: ${{ steps.set-output.outputs.success }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest successful nightly build workflow run
+        id: get-workflow-run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="qualcomm-linux/meta-qcom"
+          WORKFLOW_FILE="nightly-build.yml"
+          
+          # Use provided run ID or get the latest successful one
+          if [ -n "${{ inputs.workflow_run_id }}" ]; then
+            RUN_ID="${{ inputs.workflow_run_id }}"
+            echo "✅ Using provided workflow run ID: $RUN_ID"
+            echo ""
+          else
+            echo "🔍 Fetching latest successful workflow run for $WORKFLOW_FILE..."
+            echo "   Repository: $REPO"
+            echo ""
+            
+            MAX_RETRIES=3
+            MAX_RUNS_TO_CHECK=10  # Check up to 10 recent runs
+            
+            for attempt in $(seq 1 $MAX_RETRIES); do
+              echo "📡 Attempt $attempt of $MAX_RETRIES..."
+              
+              # Fetch recent completed workflow runs
+              # Note: We fetch more than needed because API filtering may not be reliable
+              RUNS_JSON=$(gh api \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "/repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs?status=completed&per_page=$MAX_RUNS_TO_CHECK" 2>&1)
+              
+              API_EXIT_CODE=$?
+              
+              # Check if the API call was successful and returned valid JSON
+              if [ $API_EXIT_CODE -eq 0 ]; then
+                # Validate JSON before processing
+                if echo "$RUNS_JSON" | jq -e '.workflow_runs' > /dev/null 2>&1; then
+                  echo "✅ Successfully retrieved workflow runs"
+                  echo ""
+                  
+                  # Display all recent runs for debugging
+                  echo "📋 Recent workflow runs:"
+                  echo "$RUNS_JSON" | jq -r '.workflow_runs[] | "   #\(.run_number) (ID: \(.id)) - \(.conclusion // "unknown") - \(.created_at)"'
+                  echo ""
+                  
+                  # Find the first successful run by checking conclusion field
+                  FOUND_SUCCESS=false
+                  RUN_ID=""
+                  RUN_NUMBER=""
+                  RUN_CREATED=""
+                  RUN_CONCLUSION=""
+                  
+                  # Iterate through runs to find first successful one
+                  for i in $(seq 0 $((MAX_RUNS_TO_CHECK - 1))); do
+                    CURRENT_RUN_ID=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].id")
+                    CURRENT_CONCLUSION=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].conclusion")
+                    
+                    # Break if no more runs
+                    if [ "$CURRENT_RUN_ID" = "null" ] || [ -z "$CURRENT_RUN_ID" ]; then
+                      break
+                    fi
+                    
+                    echo "🔎 Checking Run ID: $CURRENT_RUN_ID (Conclusion: $CURRENT_CONCLUSION)"
+                    
+                    # Check if this run is successful
+                    if [ "$CURRENT_CONCLUSION" = "success" ]; then
+                      RUN_ID="$CURRENT_RUN_ID"
+                      RUN_NUMBER=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].run_number")
+                      RUN_CREATED=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].created_at")
+                      RUN_CONCLUSION="$CURRENT_CONCLUSION"
+                      FOUND_SUCCESS=true
+                      echo "   ✅ Found successful run!"
+                      break
+                    else
+                      echo "   ⏭️  Skipping (conclusion: $CURRENT_CONCLUSION)"
+                    fi
+                  done
+                  
+                  echo ""
+                  
+                  if [ "$FOUND_SUCCESS" = true ]; then
+                    echo "🎉 Found successful workflow run"
+                    echo ""
+                    echo "📋 Selected Workflow Run Details:"
+                    echo "   Run Number: #$RUN_NUMBER"
+                    echo "   Run ID: $RUN_ID"
+                    echo "   Created: $RUN_CREATED"
+                    echo "   Conclusion: ✅ $RUN_CONCLUSION"
+                    break
+                  else
+                    echo "⚠️  No successful runs found in the last $MAX_RUNS_TO_CHECK completed runs"
+                    echo ""
+                    echo "❌ FAIL LOG:"
+                    echo "   Repository: $REPO"
+                    echo "   Workflow: $WORKFLOW_FILE"
+                    echo "   Checked: $MAX_RUNS_TO_CHECK most recent completed runs"
+                    echo "   Result: All runs failed or were cancelled"
+                    echo ""
+                    echo "📊 Run conclusions:"
+                    echo "$RUNS_JSON" | jq -r '.workflow_runs[] | "   Run #\(.run_number): \(.conclusion)"'
+                    echo ""
+                    
+                    if [ $attempt -lt $MAX_RETRIES ]; then
+                      echo "⏳ Retrying in 10s..."
+                      sleep 10
+                    else
+                      echo "💡 Troubleshooting tips:"
+                      echo "   1. Check workflow runs manually:"
+                      echo "      https://github.com/$REPO/actions/workflows/$WORKFLOW_FILE"
+                      echo "   2. Verify the workflow is running successfully"
+                      echo "   3. Check if there are any infrastructure issues"
+                      echo ""
+                      exit 1
+                    fi
+                  fi
+                else
+                  echo "⚠️  Invalid JSON response from API"
+                  echo "Response preview:"
+                  echo "$RUNS_JSON" | head -n 10
+                  
+                  if [ $attempt -lt $MAX_RETRIES ]; then
+                    echo "⏳ Retrying in 10s..."
+                    sleep 10
+                  else
+                    echo ""
+                    echo "❌ FAIL LOG:"
+                    echo "   Error: Could not retrieve valid workflow runs after $MAX_RETRIES attempts"
+                    echo "   API Response: Invalid JSON"
+                    echo "   This may indicate a GitHub API issue"
+                    exit 1
+                  fi
+                fi
+              else
+                echo "⚠️  API call failed with exit code: $API_EXIT_CODE"
+                echo "Response preview:"
+                echo "$RUNS_JSON" | head -n 10
+                
+                # Check for specific error types
+                if echo "$RUNS_JSON" | grep -q "HTTP 403"; then
+                  echo ""
+                  echo "❌ FAIL LOG:"
+                  echo "   Error: Authentication failed (HTTP 403)"
+                  echo "   Possible causes:"
+                  echo "   - GITHUB_TOKEN lacks required permissions"
+                  echo "   - Token needs: repo, actions:read"
+                  echo "   - Rate limit exceeded"
+                  exit 1
+                elif echo "$RUNS_JSON" | grep -q "HTTP 404"; then
+                  echo ""
+                  echo "❌ FAIL LOG:"
+                  echo "   Error: Workflow not found (HTTP 404)"
+                  echo "   Repository: $REPO"
+                  echo "   Workflow: $WORKFLOW_FILE"
+                  echo "   Verify the workflow file exists"
+                  exit 1
+                fi
+                
+                if [ $attempt -lt $MAX_RETRIES ]; then
+                  echo "⏳ Retrying in 10s..."
+                  sleep 10
+                else
+                  echo ""
+                  echo "❌ FAIL LOG:"
+                  echo "   Error: Could not retrieve workflow runs after $MAX_RETRIES attempts"
+                  echo "   Last exit code: $API_EXIT_CODE"
+                  echo "   This may indicate a GitHub API issue or network problem"
+                  exit 1
+                fi
+              fi
+            done
+          fi
+          
+          # Validate that we have a run ID
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
+            echo ""
+            echo "❌ FAIL LOG:"
+            echo "   Error: No valid run ID found"
+            echo "   This should not happen - please report this issue"
+            exit 1
+          fi
+          
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          
+          # Get workflow run details
+          WORKFLOW_URL="https://github.com/$REPO/actions/runs/$RUN_ID"
+          echo "workflow_url=$WORKFLOW_URL" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Successfully selected workflow run"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "   ID: $RUN_ID"
+          echo "   URL: $WORKFLOW_URL"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Install GitHub CLI
+        run: |
+          if ! command -v gh &> /dev/null; then
+            echo "Installing GitHub CLI..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh -y
+          fi
+
+      - name: Get artifacts list
+        id: get-artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="qualcomm-linux/meta-qcom"
+          RUN_ID="${{ steps.get-workflow-run.outputs.run_id }}"
+          MAX_RETRIES=3
+          
+          echo "📦 Fetching artifacts for run ID: $RUN_ID"
+          echo "🔗 Workflow URL: https://github.com/$REPO/actions/runs/$RUN_ID"
+          echo ""
+          
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "🔄 Attempt $attempt of $MAX_RETRIES..."
+            
+            # Fetch ALL artifacts using --paginate (handles 500+ artifacts automatically)
+            # Note: We capture both stdout and stderr for better error reporting
+            ARTIFACTS_JSON=$(gh api --paginate \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100" \
+              --jq '[.artifacts[]]' 2>&1)
+            
+            EXIT_CODE=$?
+            
+            echo "🔍 Debug: API call exit code: $EXIT_CODE"
+            
+            if [ $EXIT_CODE -eq 0 ]; then
+              # Validate JSON - check if it's an array
+              if echo "$ARTIFACTS_JSON" | jq -e 'type == "array"' > /dev/null 2>&1; then
+                TOTAL_COUNT=$(echo "$ARTIFACTS_JSON" | jq 'length')
+                
+                echo "✅ Successfully retrieved all artifacts"
+                echo "📊 Total artifacts: $TOTAL_COUNT"
+                echo ""
+                
+                # Wrap in object for consistency with rest of script
+                ARTIFACTS_JSON=$(echo "$ARTIFACTS_JSON" | jq '{artifacts: .}')
+                
+                # Extract artifact names
+                ALL_ARTIFACTS=$(echo "$ARTIFACTS_JSON" | jq -r '.artifacts[].name')
+                
+                # Save all artifacts to file
+                echo "$ALL_ARTIFACTS" > all_artifacts.txt
+                
+                # Also save JSON for compatibility
+                echo "$ARTIFACTS_JSON" > artifacts.json
+                
+                # Show sample of artifacts (first 50)
+                SAMPLE_COUNT=$(echo "$ALL_ARTIFACTS" | wc -l)
+                if [ $SAMPLE_COUNT -gt 50 ]; then
+                  echo "📋 Sample artifacts (showing first 50 of $SAMPLE_COUNT):"
+                  echo "$ALL_ARTIFACTS" | head -50 | sed 's/^/  - /'
+                  echo "  ... and $((SAMPLE_COUNT - 50)) more"
+                else
+                  echo "📋 All artifacts ($SAMPLE_COUNT total):"
+                  echo "$ALL_ARTIFACTS" | sed 's/^/  - /'
+                fi
+                echo ""
+                
+                # Filter kas-build artifacts
+                KAS_BUILD_ARTIFACTS=$(echo "$ALL_ARTIFACTS" | grep -E "^kas-build-qcom-distro.*iq-[0-9]{4}-evk$")
+                
+                if [ -z "$KAS_BUILD_ARTIFACTS" ]; then
+                  echo "⚠️  No kas-build artifacts found matching pattern: ^kas-build-qcom-distro.*iq-[0-9]{4}-evk$"
+                  echo ""
+                  echo "ℹ️  Searching for alternative patterns..."
+                  
+                  # Try alternative patterns
+                  ALT_ARTIFACTS=$(echo "$ALL_ARTIFACTS" | grep -iE "(kas-build|qcom-distro.*iq-)")
+                  
+                  if [ -n "$ALT_ARTIFACTS" ]; then
+                    ALT_COUNT=$(echo "$ALT_ARTIFACTS" | wc -l)
+                    echo "Found $ALT_COUNT artifacts with alternative patterns:"
+                    echo "$ALT_ARTIFACTS" | head -20 | sed 's/^/  - /'
+                    if [ $ALT_COUNT -gt 20 ]; then
+                      echo "  ... and $((ALT_COUNT - 20)) more"
+                    fi
+                  else
+                    echo "No artifacts found with kas-build or qcom-distro patterns"
+                  fi
+                else
+                  ARTIFACT_COUNT=$(echo "$KAS_BUILD_ARTIFACTS" | wc -l)
+                  echo "✅ Found $ARTIFACT_COUNT kas-build artifacts matching pattern:"
+                  echo "$KAS_BUILD_ARTIFACTS" | sed 's/^/  - /'
+                  echo ""
+                  echo "📊 Total kas-build artifacts: $ARTIFACT_COUNT"
+                fi
+                break
+              else
+                echo "⚠️  Invalid JSON response"
+                echo "Response preview:"
+                echo "$ARTIFACTS_JSON" | head -n 10
+              fi
+            else
+              echo "⚠️  API call failed with exit code: $EXIT_CODE"
+              echo "Response preview:"
+              echo "$ARTIFACTS_JSON" | head -n 10
+            fi
+            
+            if [ $attempt -lt $MAX_RETRIES ]; then
+              echo "⏳ Retrying in 10s..."
+              sleep 10
+            else
+              echo "❌ Failed to retrieve artifacts after $MAX_RETRIES attempts"
+              exit 1
+            fi
+          done
+
+      - name: Download kas-build artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="qualcomm-linux/meta-qcom"
+          RUN_ID="${{ steps.get-workflow-run.outputs.run_id }}"
+          
+          echo "📥 Preparing to download kas-build artifacts..."
+          echo "🔗 Workflow URL: https://github.com/$REPO/actions/runs/$RUN_ID"
+          echo ""
+          
+          # Fetch ALL artifacts using pagination (handles 5000+ artifacts)
+          echo "🔄 Fetching all artifacts with pagination..."
+          
+          # Use simpler jq expression that works with --paginate
+          ARTIFACTS_ARRAY=$(gh api --paginate \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[]]' 2>&1)
+          
+          EXIT_CODE=$?
+          
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Failed to fetch artifacts"
+            echo "Error output:"
+            echo "$ARTIFACTS_ARRAY"
+            exit 1
+          fi
+          
+          # Validate it's a valid JSON array
+          if ! echo "$ARTIFACTS_ARRAY" | jq -e 'type == "array"' > /dev/null 2>&1; then
+            echo "❌ Invalid JSON response (not an array)"
+            echo "Response preview:"
+            echo "$ARTIFACTS_ARRAY" | head -20
+            exit 1
+          fi
+          
+          # Wrap in object for easier processing
+          ARTIFACTS_JSON=$(echo "$ARTIFACTS_ARRAY" | jq '{artifacts: .}')
+          
+          # Show total count
+          TOTAL_COUNT=$(echo "$ARTIFACTS_JSON" | jq '.artifacts | length')
+          echo "✅ Successfully fetched $TOTAL_COUNT total artifacts"
+          echo ""
+          
+          # Filter kas-build artifacts matching the pattern
+          echo "🔍 Filtering for kas-build-qcom-distro artifacts..."
+          ARTIFACTS=$(echo "$ARTIFACTS_JSON" | jq -r '.artifacts[] | 
+            select(.name | test("^kas-build-qcom-distro.*iq-[0-9]{4}-evk$")) | 
+            "\(.id):\(.name)"')
+          
+          if [ -z "$ARTIFACTS" ]; then
+            echo "⚠️  No kas-build artifacts found matching pattern: ^kas-build-qcom-distro.*iq-[0-9]{4}-evk$"
+            echo ""
+            echo "🔍 Searching for alternative patterns..."
+            
+            # Try to find any kas-build artifacts
+            ALT_ARTIFACTS=$(echo "$ARTIFACTS_JSON" | jq -r '.artifacts[] | 
+              select(.name | contains("kas-build")) | 
+              .name' | head -20)
+            
+            if [ -n "$ALT_ARTIFACTS" ]; then
+              echo "Found artifacts with 'kas-build' in name (showing first 20):"
+              echo "$ALT_ARTIFACTS" | sed 's/^/  - /'
+            else
+              echo "No artifacts found with 'kas-build' pattern"
+            fi
+            echo ""
+            echo "⚠️  Skipping download step (no matching artifacts)"
+            exit 0
+          fi
+          
+          # Count matched artifacts
+          MATCHED_COUNT=$(echo "$ARTIFACTS" | wc -l)
+          echo "✅ Found $MATCHED_COUNT matching kas-build artifacts"
+          echo ""
+          echo "📦 Artifacts to download:"
+          echo "$ARTIFACTS" | while IFS=: read -r AID ANAME; do
+            echo "  - $ANAME (ID: $AID)"
+          done
+          echo ""
+          
+          mkdir -p kas-build-artifacts
+          
+          # Download each artifact with retry
+          DOWNLOAD_SUCCESS=0
+          DOWNLOAD_FAILED=0
+          
+          # Save artifacts to temp file to avoid subshell variable issues
+          echo "$ARTIFACTS" > /tmp/artifacts_to_download.txt
+          
+          while IFS=: read -r ARTIFACT_ID ARTIFACT_NAME; do
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Downloading: $ARTIFACT_NAME"
+            echo "   ID: $ARTIFACT_ID"
+            echo ""
+            
+            MAX_RETRIES=3
+            DOWNLOADED=false
+            
+            for attempt in $(seq 1 $MAX_RETRIES); do
+              echo "  Attempt $attempt of $MAX_RETRIES..."
+              
+              if gh api \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "/repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" > "kas-build-artifacts/${ARTIFACT_NAME}.zip" 2>&1; then
+                
+                # Check if file is valid zip
+                if unzip -t "kas-build-artifacts/${ARTIFACT_NAME}.zip" > /dev/null 2>&1; then
+                  echo "  ✅ Downloaded successfully"
+                  
+                  # Extract the artifact
+                  echo "  📂 Extracting..."
+                  unzip -q "kas-build-artifacts/${ARTIFACT_NAME}.zip" -d "kas-build-artifacts/${ARTIFACT_NAME}"
+                  rm "kas-build-artifacts/${ARTIFACT_NAME}.zip"
+                  
+                  # Verify extraction
+                  if [ -d "kas-build-artifacts/${ARTIFACT_NAME}" ]; then
+                    echo "  ✅ Extracted to: kas-build-artifacts/${ARTIFACT_NAME}/"
+                    
+                    # List contents
+                    echo "  📄 Contents:"
+                    find "kas-build-artifacts/${ARTIFACT_NAME}" -type f | sed 's/^/     /'
+                    
+                    DOWNLOADED=true
+                    DOWNLOAD_SUCCESS=$((DOWNLOAD_SUCCESS + 1))
+                    break
+                  else
+                    echo "  ❌ Extraction failed"
+                  fi
+                else
+                  echo "  ⚠️  Downloaded file is not a valid zip"
+                  rm -f "kas-build-artifacts/${ARTIFACT_NAME}.zip"
+                fi
+              else
+                echo "  ⚠️  Download failed"
+              fi
+              
+              if [ $attempt -lt $MAX_RETRIES ]; then
+                echo "  ⏳ Retrying in 10s..."
+                sleep 10
+              fi
+            done
+            
+            if [ "$DOWNLOADED" = false ]; then
+              echo "  ❌ Failed to download after $MAX_RETRIES attempts"
+              DOWNLOAD_FAILED=$((DOWNLOAD_FAILED + 1))
+            fi
+            
+            echo ""
+          done < /tmp/artifacts_to_download.txt
+          
+          # Clean up temp file
+          rm -f /tmp/artifacts_to_download.txt
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Download Summary:"
+          echo "   Total artifacts in workflow: $TOTAL_COUNT"
+          echo "   Matched kas-build artifacts: $MATCHED_COUNT"
+          echo "   ✅ Successfully downloaded: $DOWNLOAD_SUCCESS"
+          echo "   ❌ Failed downloads: $DOWNLOAD_FAILED"
+          echo ""
+          
+          if [ -d kas-build-artifacts ]; then
+            echo "📁 Downloaded artifacts structure:"
+            ls -la kas-build-artifacts/
+          fi
+          
+          # Exit with error if all downloads failed
+          if [ $DOWNLOAD_SUCCESS -eq 0 ]; then
+            echo ""
+            echo "❌ No artifacts were successfully downloaded"
+            exit 1
+          fi
+
+      - name: "Install PyYAML"
+        run: pip install --break-system-packages PyYAML
+
+      - name: "Update repos from kas-build artifacts"
+        id: merge-commit-id
+        shell: python
+        run: |
+          import yaml
+          import os
+          import sys
+          from pathlib import Path
+          
+          def load_yaml(file_path):
+              """Load YAML file with safe loader"""
+              try:
+                  with open(file_path, 'r') as f:
+                      return yaml.safe_load(f)
+              except Exception as e:
+                  print(f"❌ Error loading {file_path}: {e}")
+                  return None
+          
+          def save_yaml(data, file_path):
+              """Save YAML file with proper formatting"""
+              try:
+                  with open(file_path, 'w') as f:
+                      yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+                  return True
+              except Exception as e:
+                  print(f"❌ Error saving {file_path}: {e}")
+                  return False
+          
+          def merge_repos(target_repos, source_repos):
+              """Merge repo commits from source to target"""
+              updated_count = 0
+              updated_repos = []
+              
+              for repo_name, repo_data in source_repos.items():
+                  if repo_name in target_repos and isinstance(repo_data, dict):
+                      if 'commit' in repo_data:
+                          old_commit = target_repos[repo_name].get('commit', 'N/A')
+                          new_commit = repo_data['commit']
+                          
+                          if old_commit != new_commit:
+                              target_repos[repo_name]['commit'] = new_commit
+                              updated_count += 1
+                              updated_repos.append({
+                                  'name': repo_name,
+                                  'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
+                                  'new': new_commit[:8]
+                              })
+                              print(f"  ✓ Updated {repo_name}: {old_commit[:8]} → {new_commit[:8]}")
+              
+              return updated_count, updated_repos
+          
+          # Path to the target file
+          target_file = 'ci/qcom-robotics-distro.yml'
+          artifacts_dir = 'kas-build-artifacts'
+          
+          print("=" * 60)
+          print("🔄 Starting Repository Commit Merge")
+          print("=" * 60)
+          print()
+          
+          # Validate directories and files
+          if not os.path.exists(artifacts_dir):
+              print(f"❌ Artifacts directory not found: {artifacts_dir}")
+              print(f"   Current directory: {os.getcwd()}")
+              print(f"   Contents: {os.listdir('.')}")
+              sys.exit(1)
+          
+          if not os.path.exists(target_file):
+              print(f"❌ Target file not found: {target_file}")
+              sys.exit(1)
+          
+          # Load target YAML
+          print(f"📖 Loading target file: {target_file}")
+          target_data = load_yaml(target_file)
+          
+          if not target_data:
+              print("❌ Failed to load target file")
+              sys.exit(1)
+          
+          if 'repos' not in target_data:
+              print("❌ No 'repos' field found in target file")
+              sys.exit(1)
+          
+          print(f"   ✅ Loaded {len(target_data['repos'])} repositories from target")
+          print()
+          
+          # Find all kas-build.yml files
+          kas_build_files = list(Path(artifacts_dir).rglob('kas-build.yml'))
+          
+          if not kas_build_files:
+              print(f"⚠️  No kas-build.yml files found in {artifacts_dir}")
+              print(f"   Directory structure:")
+              for root, dirs, files in os.walk(artifacts_dir):
+                  level = root.replace(artifacts_dir, '').count(os.sep)
+                  indent = ' ' * 2 * level
+                  print(f"{indent}{os.path.basename(root)}/")
+                  subindent = ' ' * 2 * (level + 1)
+                  for file in files:
+                      print(f"{subindent}{file}")
+              sys.exit(0)
+          
+          print(f"📦 Found {len(kas_build_files)} kas-build.yml file(s):")
+          for f in kas_build_files:
+              print(f"   - {f}")
+          print()
+          
+          total_updates = 0
+          all_updated_repos = []
+          processed_artifacts = []
+          skipped_artifacts = []
+          
+          # Process each kas-build.yml file
+          for kas_file in kas_build_files:
+              artifact_name = kas_file.parent.name
+              
+              # Check if artifact matches expected pattern
+              if (artifact_name.startswith('kas-build-qcom-distro') and 
+                  (artifact_name.endswith('iq-8275-evk') or artifact_name.endswith('iq-9075-evk'))):
+                  
+                  print(f"🔄 Processing: {artifact_name}")
+                  
+                  try:
+                      source_data = load_yaml(kas_file)
+                      
+                      if not source_data:
+                          print(f"  ⚠️  Failed to load {kas_file}")
+                          continue
+                      
+                      if 'repos' in source_data:
+                          print(f"  📚 Found {len(source_data['repos'])} repositories in source")
+                          updates, updated_repos = merge_repos(target_data['repos'], source_data['repos'])
+                          total_updates += updates
+                          all_updated_repos.extend(updated_repos)
+                          processed_artifacts.append(artifact_name)
+                          
+                          if updates == 0:
+                              print(f"  ℹ️  No updates needed (all commits already up-to-date)")
+                      else:
+                          print(f"  ⚠️  No 'repos' field found in {kas_file}")
+                  
+                  except Exception as e:
+                      print(f"  ❌ Error processing {kas_file}: {e}")
+                      import traceback
+                      traceback.print_exc()
+                      continue
+              else:
+                  skipped_artifacts.append(artifact_name)
+                  print(f"⏭️  Skipping: {artifact_name} (doesn't match pattern)")
+              
+              print()
+          
+          # Summary
+          print("=" * 60)
+          print("📊 Merge Summary")
+          print("=" * 60)
+          print(f"Processed artifacts: {len(processed_artifacts)}")
+          print(f"Skipped artifacts: {len(skipped_artifacts)}")
+          print(f"Total repository updates: {total_updates}")
+          print()
+          
+          # Save updated target file
+          if total_updates > 0:
+              saved_yaml_file = 'ci/qcom-robotics-distro.yml'
+              print(f"💾 Saving updated file: {saved_yaml_file}")
+              
+              if save_yaml(target_data, saved_yaml_file):
+                  print(f"✅ Successfully saved {total_updates} repository commit update(s)")
+                  
+                  # Write detailed summary to GitHub Actions
+                  summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+                  if summary_file:
+                      with open(summary_file, 'a') as f:
+                          f.write("## 🔄 Repository Commit Updates\n\n")
+                          f.write(f"**Status:** ✅ Updated {total_updates} repository commits\n\n")
+                          f.write(f"**Processed Artifacts:** {len(processed_artifacts)}\n")
+                          for art in processed_artifacts:
+                              f.write(f"- `{art}`\n")
+                          f.write(f"\n**Target File:** `{saved_yaml_file}`\n\n")
+                          
+                          if all_updated_repos:
+                              f.write("### Updated Repositories\n\n")
+                              f.write("| Repository | New Commit |\n")
+                              f.write("|------------|------------|\n")
+                              for repo in all_updated_repos:
+                                  f.write(f"| `{repo['name']}` | `{repo['new']}` |\n")
+              else:
+                  print("❌ Failed to save updated file")
+                  sys.exit(1)
+          else:
+              print("⚠️  No updates were made (all commits already up-to-date)")
+              summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+              if summary_file:
+                  with open(summary_file, 'a') as f:
+                      f.write("## 🔄 Repository Commit Updates\n\n")
+                      f.write("**Status:** ℹ️  No repository commits needed updating\n\n")
+                      f.write("All repository commits are already up-to-date with the nightly build.\n")
+          
+          print("=" * 60)
+          print("✅ Merge process completed")
+          print("=" * 60)
+
+      - name: Upload merged configuration artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: qcom-robotics-distro-merged-${{ github.run_number }}
+          path: 'ci/'
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 6
+
+      # ------------------------------------------------------------------
+      # After uploading the artifact we make a quick branch, commit the
+      # updated configuration and open a pull request against main.  The
+      # commit/PR title, body and description all match the required text
+      # and include the nightly build URL and a timestamp.
+      # ------------------------------------------------------------------
+      - name: Checkout Fork Repository
+        uses: actions/checkout@v4
+        with:
+          repository: DotaIsMind/meta-qcom-robotics-sdk  
+          token: ${{ secrets.PAT_TOKEN }}  # Use PAT_TOKEN for fork access
+          fetch-depth: 0
+
+      - name: Configure git for actions
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add Upstream Remote
+        run: |
+          git remote add upstream https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
+          git fetch upstream main
+
+      - name: Cereate new branch for PR
+        run: |
+          BRANCH_NAME="auto-update-${{ github.run_id }}"
+          git checkout -b $BRANCH_NAME
+
+      - name: Prepare PR information
+        id: pr-info
+        run: |
+          echo "timestamp=$(date -u)" >> $GITHUB_OUTPUT
+          echo "workflow_url=${{ steps.get-workflow-run.outputs.workflow_url }}" >> $GITHUB_OUTPUT
+
+      - name: Download merged configuration artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: qcom-robotics-distro-merged-${{ github.run_number }}
+          path: 'ci/'
+
+      - name: Prepare Git for commit message 
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git diff .
+          git add ci/qcom-robotics-distro.yml
+          git commit -m "ci(automation): update the commit id from meta-qcom" \
+            -m "" \
+            -m "Auto-update repository commits from nightly build" \
+            -m "" \
+            -m "Build run: ${{ steps.pr-info.outputs.workflow_url }}" \
+            -m "Timestamp: ${{ steps.pr-info.outputs.timestamp }}" \
+            -s
+          git push origin HEAD --force-with-lease
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          commit-message: "ci(automation): update the commit id from meta-qcom"
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          signoff: true
+          title: "ci(automation): update the commit id from meta-qcom"
+          body: |
+            ## Auto-update from meta-qcom Nightly Build
+
+            This pull request automatically updates the repository commits from the latest meta-qcom nightly build.
+
+            **Build Details:**
+            - Build run ${{ steps.pr-info.outputs.workflow_url }}
+            - Timestamp ${{ steps.pr-info.outputs.timestamp }}
+          branch: auto-update-meta-qcom-commit-${{ steps.get-workflow-run.outputs.run_id }}
+          base: main
+          labels: automation
+          delete-branch: true
+
+      - name: Set outputs
+        id: set-output
+        if: always()
+        run: |
+          # Check if merge was successful by checking if artifact was uploaded
+          if [ -f "ci/qcom-robotics-distro.yml" ]; then
+            echo "artifact_name=qcom-robotics-distro-merged-${{ github.run_number }}" >> $GITHUB_OUTPUT
+            echo "success=true" >> $GITHUB_OUTPUT
+            echo "✅ Workflow completed successfully"
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "❌ Workflow failed - configuration file not found"
+          fi
