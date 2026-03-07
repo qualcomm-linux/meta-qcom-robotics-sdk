@@ -4,8 +4,8 @@ on:
   schedule:
   # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
   # so that build notification emails will be sent out properly.
-  # At 12:22 & 00:22 UTC everyday - picked a random "minute" as top of hour can be busy in github
-  - cron: "22 00 * * *"
+  # At 22:00 UTC everyday - picked a random "minute" as top of hour can be busy in github
+  - cron: "0 22 * * *"
 
   workflow_dispatch:
     inputs:
@@ -818,6 +818,8 @@ jobs:
           
           # Git commit and push changes
           git add ci
+          
+          # Git commit and push changes
           git rm --cached .github/workflows/download-nightly-artifacts.yml || true  # Unstage workflow file if it was accidentally added
           git commit -m "ci(automation): update the commit id from meta-qcom" \
             -m "" \
