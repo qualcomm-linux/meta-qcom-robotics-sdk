@@ -3,7 +3,7 @@ ROS_BUILD_TYPE = "ament_python"
 ROS_CN = "sample_depth_estimation"
 ROS_BPN = "sample_depth_estimation"
 
-S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
+S = "${UNPACKDIR}/${PN}-${PV}/ai_vision/${ROS_CN}"
 
 ROS_BUILD_DEPENDS = " \
 "
