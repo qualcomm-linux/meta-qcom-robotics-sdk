@@ -5,7 +5,7 @@ on:
   # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
   # so that build notification emails will be sent out properly.
   # At 12:22 & 00:22 UTC everyday - picked a random "minute" as top of hour can be busy in github
-  - cron: "22 12,00 * * *"
+  - cron: "22 00 * * *"
 
   workflow_dispatch:
     inputs:
@@ -798,8 +798,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
+          echo "📝 Updating the ci confiugration file from meta-qcom..."
+          git clone --depth 1 https://github.com/qualcomm-linux/meta-qcom.git -b master temp_meta_qcom
+          FILES_TO_SYNC=(
+            "ci/base.yml"
+            "ci/linux-qcom-6.18.yml"
+            "ci/linux-qcom-next.yml"
+            "ci/mirror.yml"
+            "ci/qcom-distro.yml"
+          )
+          for file in "${FILES_TO_SYNC[@]}"; do
+            cp "temp_meta_qcom/$file" "./ci/$(basename "$file")"
+          done
+          rm -rf temp_meta_qcom
+
+          echo "📝 ==== Git diff content start ==== "
           git diff .
-          git add ci/qcom-robotics-distro.yml
+          echo "📝 ==== Git diff content end ==== "
+          
+          # Git commit and push changes
+          git add ci
           git rm --cached .github/workflows/download-nightly-artifacts.yml || true  # Unstage workflow file if it was accidentally added
           git commit -m "ci(automation): update the commit id from meta-qcom" \
             -m "" \
@@ -824,7 +842,7 @@ jobs:
             --repo qualcomm-linux/meta-qcom-robotics-sdk \
             --head DotaIsMind:$BRANCH_NAME \
             --base main \
-            --title "ci(automation): update the commit id from meta-qcom" \
+            --title "ci(automation): update the commit id from meta-qcom: ${{ steps.get-workflow-run.outputs.run_id }}" \
             --body "$(cat << 'EOF'
           ## Auto-update from meta-qcom Nightly Build
 

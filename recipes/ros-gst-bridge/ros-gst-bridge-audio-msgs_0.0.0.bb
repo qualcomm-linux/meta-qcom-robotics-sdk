@@ -1,5 +1,6 @@
 inherit ros_distro_${ROS_DISTRO}
 inherit ros_component
+inherit robotics-package
 
 DESCRIPTION = "audio_msgs: subpackage of ros-gst-bridge."
 LICENSE = "Apache-2.0"
@@ -12,8 +13,6 @@ ROS_CN = "audio_msgs"
 ROS_BPN = "audio_msgs"
 
 S = "${UNPACKDIR}/${PN}-${PV}/${ROS_CN}"
-
-inherit robotics-package
 
 ROS_BUILD_TYPE = "ament_cmake"
 inherit ros_${ROS_BUILD_TYPE}
