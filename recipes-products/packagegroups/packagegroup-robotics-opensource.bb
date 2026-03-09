@@ -27,6 +27,8 @@ QUALCOMM_QRB_ROS = " \
 	qrb-ros-system-monitor \
 	qrb-ros-system-monitor-interfaces \
     qrb-ros-docker \
+    libqrc \
+    libqrc-udriver \
 "
 
 # If it is qrb ros sample, Please place all of them under this variable.
