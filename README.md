@@ -58,10 +58,10 @@ Here are the detailed steps:
    kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>.yml:meta-qcom-robotics-sdk/ci/<TARGET NAME>.yml
 
    # For example, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro image, run the following command:
-   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml
+   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/mirror.yml
 
    # For authorized registrants, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro property image, run the following command: 
-   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
+   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/mirror.yml
    ```
    Supported machines and distributions are listed below:
    | Machine Names | Target Names |
