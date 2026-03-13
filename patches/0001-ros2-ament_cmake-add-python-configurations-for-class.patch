@@ -1,0 +1,50 @@
+From 5961c1b73da1122c7774ff9a0b57e014ddc9b16f Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+Date: Wed, 4 Mar 2026 15:58:39 +0800
+Subject: [PATCH] {ros2}: ament_cmake: add python configurations for
+ class-target
+
+Add target python configurations for fixing wrong PYTHONSOABI
+of python c libraries in rosbag2_py.
+
+Signed-off-by: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+---
+ meta-ros2/classes/ros_ament_cmake.bbclass | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/meta-ros2/classes/ros_ament_cmake.bbclass b/meta-ros2/classes/ros_ament_cmake.bbclass
+index 0a2d87fed..a8044b95c 100644
+--- a/meta-ros2/classes/ros_ament_cmake.bbclass
++++ b/meta-ros2/classes/ros_ament_cmake.bbclass
+@@ -29,6 +29,28 @@ export AMENT_PREFIX_PATH = "${STAGING_DIR_HOST}${prefix};${STAGING_DIR_NATIVE}${
+ 
+ inherit cmake python3native
+ 
++EXTRA_PYTHON_DEPENDS ?= ""
++EXTRA_PYTHON_DEPENDS:class-target = "python3"
++DEPENDS:append = " ${EXTRA_PYTHON_DEPENDS}"
++setup_target_config() {
++        export _PYTHON_SYSCONFIGDATA_NAME="_sysconfigdata"
++        export _PYTHON_PROJECT_BASE="${B}"
++        export PYTHONPATH=${STAGING_LIBDIR}/python-sysconfigdata:$PYTHONPATH
++        export PATH=${STAGING_EXECPREFIXDIR}/python-target-config/:$PATH
++}
++
++do_configure:prepend:class-target() {
++        setup_target_config
++}
++
++do_compile:prepend:class-target() {
++        setup_target_config
++}
++
++do_install:prepend:class-target() {
++        setup_target_config
++}
++
+ FILES:${PN}:prepend = " \
+     ${datadir}/ament_index \
+ "
+-- 
+2.34.1
+
