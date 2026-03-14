@@ -1,0 +1,47 @@
+From cfaa06d7c6d08506ea54ccc52706f076b32670e3 Mon Sep 17 00:00:00 2001
+From: Canfeng Zhuang <canfeng.zhuang@oss.qualcomm.com>
+Date: Mon, 9 Mar 2026 15:47:55 +0800
+Subject: [PATCH 2/2] arm64: dts: qcom: monaco-evk: enable UART6 for robot
+ expansion board
+
+Upstream-Status: Submitted
+
+The monaco-evk mezzanine connector supports a robot expansion board that
+requires UART6, which is currently disabled. This prevents the expansion
+board from exchanging data and control commands.
+
+Enable UART6 and assign the serial2 alias to provide stable device
+
+enumeration for the expansion board.
+
+Signed-off-by: Canfeng Zhuang <canfeng.zhuang@oss.qualcomm.com>
+---
+ arch/arm64/boot/dts/qcom/monaco-evk.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/monaco-evk.dts b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+index ace3b3e42d9ef..65a1eb5ad5db9 100644
+--- a/arch/arm64/boot/dts/qcom/monaco-evk.dts
++++ b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+@@ -22,6 +22,7 @@ aliases {
+ 		i2c1 = &i2c1;
+ 		serial0 = &uart7;
+ 		serial1 = &uart2;
++		serial2 = &uart6;
+ 	};
+ 
+ 	chosen {
+@@ -771,6 +772,10 @@ bluetooth: bluetooth {
+ 	};
+ };
+ 
++&uart6 {
++	status = "okay";
++};
++
+ &uart7 {
+ 	status = "okay";
+ };
+-- 
+2.34.1
+

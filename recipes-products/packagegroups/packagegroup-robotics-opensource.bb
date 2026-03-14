@@ -41,6 +41,8 @@ EXTERNAL_OPENSOURCE = " \
     ${ROS_GST_BRIDGE} \
     rplidar-ros2 \
     orbbec-camera \
+    libqrc \
+    libqrc-udriver \
 "
 
 ROS_GST_BRIDGE = " \
