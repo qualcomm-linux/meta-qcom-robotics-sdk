@@ -1,11 +1,30 @@
 # Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
-
+#
+# psdk-image.bbclass
+# Purpose:
+#   Provides the QIRP SDK packaging flow for robotics images.
+#   After the image SDK is generated, this class collects the toolchain,
+#   setup scripts, sample content, runtime scripts, and runtime packages,
+#   then assembles them into a distributable SDK archive.
+#
+# Main responsibilities:
+#   1. Collect the standard SDK toolchain from the deploy directory.
+#   2. Copy setup and runtime helper scripts into the SDK layout.
+#   3. Import sample projects and scripts from local sources or git repositories.
+#   4. Collect runtime packages based on packagegroup dependency lists.
+#   5. Produce the final SDK tarball through an sstate-enabled task.
+#
+# Typical usage:
+#   Used by robotics image recipes such as qcom-robotics-image to create a releasable QIRP SDK bundle.
+#
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
 SDK_PN = "qirp-sdk"
 SDK_VERSION = "2.4.0"
 OSS_CHANNEL_FLAG = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-robotics-extras', 'false', 'true', d)}"
 
+# Collect the standard SDK toolchain and copy it into the SDK's toolchain/
+# directory. If no matching toolchain is found, the task only emits a warning.
 # Function: process_toolchain
 process_toolchain() {
     bbnote "Processing toolchain..."
@@ -18,7 +37,9 @@ process_toolchain() {
     fi
 }
 
-# Function: process_setup.sh
+# Function: process_setup_sh
+# Copy setup.sh into the SDK root so the extracted SDK can be initialized
+# conveniently by end users.
 process_setup_sh() {
     bbnote "Processing setup.sh..."
     SETUP_SH_PATH="${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/setup.sh"
@@ -31,6 +52,11 @@ process_setup_sh() {
     fi
 }
 
+# Function: process_qir_samples
+# Collect sample projects and helper scripts defined in the configuration files.
+# Supported sources include remote git repositories and local directories.
+# This function also filters content by channel and supports both monorepo-style
+# samples and individually cloned projects.
 process_qir_samples() {
     bbnote "Processing QIR samples..."
     
@@ -155,6 +181,9 @@ process_qir_samples() {
 }
 
 # Function: process_runtime
+# Collect runtime delivery content, including installation scripts and binary
+# packages resolved from packagegroup dependency lists, then package them as a
+# runtime tarball for target-side installation.
 process_runtime() {
     bbnote "Processing runtime packages for ${PN}..."
     
@@ -267,6 +296,8 @@ process_runtime() {
 }
 
 # Main function: do_generate_qirp_sdk
+# Execute the complete QIRP SDK generation flow and create the final
+# ${SDK_PN}_${SDK_VERSION}.tar.gz archive.
 do_generate_qirp_sdk(){
     bbnote "Starting QIRP SDK generation..."
     
@@ -305,6 +336,8 @@ do_generate_qirp_sdk[file-checksums] = " \
     ${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/samples.json:True \
 "
 
+# Add task dependencies so the packagegroup dependency lists are generated
+# before runtime package collection starts.
 # Add dependency on packagegroup RDEPENDS collection tasks
 python () {
     pn = d.getVar("PN")
