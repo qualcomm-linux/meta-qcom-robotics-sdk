@@ -258,7 +258,7 @@ index 0000000..f894a75
 +sysctl -w net.core.wmem_default=2147483647
 +
 +export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-+export FASTRTPS_DEFAULT_PROFILES_FILE=/usr/share/orbbec_camera/scripts/shm_fastdds.xml
++export FASTRTPS_DEFAULT_PROFILES_FILE=/usr/ros/jazzy/share/orbbec_camera/scripts/shm_fastdds.xml
 +export RMW_FASTRTPS_USE_QOS_FROM_XML=1
 \ No newline at end of file
 diff --git a/orbbec_camera/scripts/shm_fastdds.xml b/orbbec_camera/scripts/shm_fastdds.xml
