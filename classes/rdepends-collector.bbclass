@@ -2,8 +2,20 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 # rdepends-collector.bbclass
-# Collects packagegroup RDEPENDS and writes them to PACKAGEGROUP_LIST_DIR
-# This file is read by process_runtime when compiling qir sdk.
+# Purpose:
+#   Collects direct RDEPENDS from a packagegroup recipe and writes the result
+#   into PACKAGEGROUP_LIST_DIR as a plain package list file.
+#
+# Main responsibilities:
+#   1. Add a do_collect_rdepends task after package output is generated.
+#   2. Read the packagegroup's direct runtime dependencies.
+#   3. Write one package name per line into a deploy-side list file.
+#   4. Always append qirp-sdk so the SDK package is included in generated images.
+#   5. Remove generated list files during cleanup.
+#
+# Relationship to other classes:
+#   The generated *.list files are consumed by psdk-image.bbclass when it
+#   collects runtime packages for the final QIRP SDK archive.
 
 PACKAGEGROUP_LIST_DIR = "${DEPLOY_DIR}/packagegroup-lists"
 
@@ -11,6 +23,9 @@ PACKAGEGROUP_LIST_DIR = "${DEPLOY_DIR}/packagegroup-lists"
 addtask do_collect_rdepends after do_package_write before do_build
 do_collect_rdepends[vardeps] = "RDEPENDS"
 
+# Function: do_collect_rdepends
+# Collect direct runtime dependencies from the current packagegroup and write
+# them into ${PACKAGEGROUP_LIST_DIR}/${PN}.list for later SDK packaging use.
 python do_collect_rdepends() {
     """
     Collect packagegroup RDEPENDS and write to file
@@ -59,6 +74,9 @@ python do_collect_rdepends() {
     bb.note("Wrote {} packages to {}".format(package_count, list_file))
 }
 
+# Function: do_clean_rdepends
+# Remove the generated dependency list directory during cleanall so stale
+# package lists are not reused by later builds.
 # Cleanup task
 addtask do_clean_rdepends before do_cleanall
 
