@@ -44,6 +44,7 @@ RDEPENDS:${PN}-extend = "\
     moveit-planners-chomp \
     moveit-ros-perception-dev \
     moveit-planners-ompl-dev \
+    laser-filters \
 "
 
 RDEPENDS:${PN}-samples = "\
