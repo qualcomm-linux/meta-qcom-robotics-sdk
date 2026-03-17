@@ -45,6 +45,8 @@ RDEPENDS:${PN}-extend = "\
     moveit-ros-perception-dev \
     moveit-planners-ompl-dev \
     laser-filters \
+    octomap-staticdev \
+    osqp-vendor-staticdev \
 "
 
 RDEPENDS:${PN}-samples = "\
