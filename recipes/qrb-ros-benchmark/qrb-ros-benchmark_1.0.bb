@@ -52,10 +52,10 @@ RDEPENDS:${PN} += " \
 "
 RDEPENDS:${PN} += "dmabuf-transport"
 
-SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_benchmark.git;protocol=https;branch=main \
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_benchmark.git;protocol=https;branch=stable/1.1.0 \
            file://0001-fix-rosbag2_compression-dependency-issue-in-qrb_ros_benchmark.patch \
 "
-SRCREV = "4684a501ddab5226c9a02e77f0e5f759793e1ea3"
+SRCREV = "38a80bbe1b2a80603c990b510cc4642816e111d4"
 
 ROS_BUILD_TYPE = "ament_cmake"
 

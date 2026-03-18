@@ -44,7 +44,7 @@ DEPENDS += "${ROS_EXPORT_DEPENDS} ${ROS_BUILDTOOL_EXPORT_DEPENDS}"
 
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
-SRC_URI = "git://github.com/qualcomm-qrb-ros/ros2_benchmark.git;branch=jazzy;protocol=https;lfs=0 \
+SRC_URI = "git://github.com/qualcomm-qrb-ros/ros2_benchmark.git;branch=stable/1.0.0;protocol=https;lfs=0 \
            file://0001-fix-rosbag2_compression-dependency-issue-in-ros2_benchmark.patch \
 "
 SRCREV = "c06e10927371f4933c740e87b42baecfe220705f"

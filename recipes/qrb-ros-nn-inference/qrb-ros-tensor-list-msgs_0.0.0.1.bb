@@ -42,8 +42,8 @@ DEPENDS += "${ROS_EXPORT_DEPENDS} ${ROS_BUILDTOOL_EXPORT_DEPENDS} ${ROS_TEST_DEP
 
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
-SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_interfaces.git;protocol=https;branch=main"
-SRCREV = "0190003040d7ab66846b4b34ac326397aeded6e7"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_interfaces.git;protocol=https;branch=stable/0.2.0"
+SRCREV = "58afc211200aee777d16ce9b9e916f645de44190"
 S = "${UNPACKDIR}/${BPN}-${PV}/qrb_ros_tensor_list_msgs"
 
 ROS_BUILD_TYPE = "ament_cmake"

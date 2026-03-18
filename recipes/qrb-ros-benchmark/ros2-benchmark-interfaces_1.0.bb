@@ -44,7 +44,7 @@ DEPENDS += "${ROS_EXPORT_DEPENDS} ${ROS_BUILDTOOL_EXPORT_DEPENDS}"
 
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
-SRC_URI = "git://github.com/qualcomm-qrb-ros/ros2_benchmark;branch=jazzy;protocol=https;lfs=0"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/ros2_benchmark;branch=stable/1.0.0;protocol=https;lfs=0"
 SRCREV = "c06e10927371f4933c740e87b42baecfe220705f"
 S = "${UNPACKDIR}/${BPN}-${PV}/ros2_benchmark_interfaces"
 
