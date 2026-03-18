@@ -1,0 +1,26 @@
+From be15a541c7a164b1d5d09f75695e4bf19ba413fa Mon Sep 17 00:00:00 2001
+From: Na Song <nasong@qti.qualcomm.com>
+Date: Fri, 27 Feb 2026 11:29:30 +0800
+Subject: [PATCH] fix: rosbag2_compression dependency issue in ros2_benchmark
+
+Upstream-Status: Pending
+
+Signed-off-by: Na Song <nasong@qti.qualcomm.com>
+---
+ CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index cb59366..e91a6e2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -37,6 +37,7 @@ find_package(ament_cmake_auto REQUIRED)
+ find_package(ament_cmake_python REQUIRED)
+ find_package(rclcpp REQUIRED)
+
++find_package(rosbag2_compression REQUIRED)
+ ament_auto_find_build_dependencies()
+
+ ament_python_install_package(${PROJECT_NAME})
+--
+2.34.1

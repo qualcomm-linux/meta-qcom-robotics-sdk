@@ -1,0 +1,28 @@
+From df77024b49f4b7fc811924f670a482f217ac3c64 Mon Sep 17 00:00:00 2001
+From: Na Song <nasong@qti.qualcomm.com>
+Date: Fri, 27 Feb 2026 11:31:55 +0800
+Subject: [PATCH] fix: rosbag2_compression dependency issue in
+ qrb_ros_benchmark
+
+Upstream-Status: Pending
+
+Signed-off-by: Na Song <nasong@qti.qualcomm.com>
+---
+ CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7dea933..5d338dc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -19,6 +19,8 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
+
+ # find dependencies
+ find_package(ament_cmake_auto REQUIRED)
++
++find_package(rosbag2_compression REQUIRED)
+ ament_auto_find_build_dependencies()
+
+ # add qrb_playback_node lib
+--
+2.34.1
