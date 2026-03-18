@@ -10,7 +10,7 @@ repos:
 
   meta-qcom:
       url: https://github.com/qualcomm-linux/meta-qcom
-      commit: 3b2c2c8b815e135a01db7b6a77e3a0c57048bca8
+      commit: 08826f0bdc9b36db8d5bcdd980b11648b185a930
   oe-core:
       url: https://github.com/openembedded/openembedded-core
       layers:
@@ -19,16 +19,16 @@ repos:
           fix-BSD-license-missing:
               repo: meta-qcom-robotics-sdk
               path: patches/Initial-commit-of-license.patch
-      commit: d3e757f21403554e7064c5fa2b353080d14d2ce7
+      commit: c1fb515f2a88fa0a0e95529afc07a99db001af0e
   bitbake:
       url: https://github.com/openembedded/bitbake
       layers:
           .: disabled
-      commit: 48efc36b4e03f736e7521d269ced3417522784e9
+      commit: e8ace6e16c78ddbc2cfe985b88b66800d99282b3
   meta-qcom-distro:
       url: https://github.com/qualcomm-linux/meta-qcom-distro
       branch: main
-      commit: 98e83ead3caa95184d2a37e02b4b6928caa754a4
+      commit: dff5734a74cf5f2a875f469fe1eaf8c90a33babf
   meta-openembedded:
       url: https://github.com/openembedded/meta-openembedded
       layers:
@@ -39,15 +39,15 @@ repos:
           meta-oe:
           meta-python:
           meta-xfce:
-      commit: 7bc5268662f1428bdbca08e14d223aa6b62e87f3
+      commit: 0bc67b61ca52e85a5a882d809ba0c98d21cceac8
   meta-virtualization:
       url: https://git.yoctoproject.org/git/meta-virtualization
       branch: master
-      commit: a1e1a021b49f5257d8908aa9b8c2ee9c083e674c
+      commit: 4162f89853eeeec194530dfbbb2210143ede1ca9
   meta-audioreach:
       url: https://github.com/AudioReach/meta-audioreach
       branch: master
-      commit: 7cd6eeb2c6bfda35a622df9a37eb5bbf0371253e
+      commit: 1e91ad67c8c6a62cee4ef92761f022a459d1aa8a
   meta-selinux:
       branch: master
       url: https://git.yoctoproject.org/meta-selinux
@@ -55,7 +55,7 @@ repos:
   meta-updater:
       branch: master
       url: https://github.com/uptane/meta-updater
-      commit: 9fb4d7e2c087511d3dff233ebd342f35facf4cde
+      commit: fdc475db4833f5edfb4417d40ecea00fc2af7cbf
   meta-security:
       url: https://git.yoctoproject.org/meta-security
       branch: master
