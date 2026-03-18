@@ -1,0 +1,71 @@
+# This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From dfef591de4621add4cd2415a850acd74b71c5021 Mon Sep 17 00:00:00 2001
+From: weijshen <weijshen@qti.qualcomm.com>
+Date: Tue, 26 Aug 2025 10:42:16 +0800
+Subject: [PATCH] : add a ros2 launch file for gazebo sim
+
+Upstream-Status: Inappropriate [platform specific]
+Signed-off-by: weijshen <weijshen@qti.qualcomm.com>
+---
+ .../qrb_2d_lidar_slam_gazebo_sim.launch.py    | 46 +++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+ create mode 100644 cartographer_ros/launch/qrb_2d_lidar_slam_gazebo_sim.launch.py
+
+diff --git a/cartographer_ros/launch/qrb_2d_lidar_slam_gazebo_sim.launch.py b/cartographer_ros/launch/qrb_2d_lidar_slam_gazebo_sim.launch.py
+new file mode 100644
+index 0000000..956c316
+--- /dev/null
++++ b/cartographer_ros/launch/qrb_2d_lidar_slam_gazebo_sim.launch.py
+@@ -0,0 +1,46 @@
++# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++import os
++from launch import LaunchDescription
++from launch.substitutions import LaunchConfiguration
++from launch.actions import DeclareLaunchArgument
++from launch_ros.actions import Node
++from launch_ros.substitutions import FindPackageShare
++
++
++def generate_launch_description():
++
++    package_share_amr_carto = FindPackageShare(package='cartographer_ros').find('cartographer_ros')
++
++    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
++    resolution = LaunchConfiguration('resolution', default='0.05')
++
++    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
++
++    cartographer_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_node',
++        name='cartographer_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++    )
++
++    occupancy_grid_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_occupancy_grid_node',
++        name='cartographer_occupancy_grid_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++        arguments=['-resolution', resolution,
++                   '-publish_period_sec', publish_period_sec,
++                   '-enable_standard_gridmap',
++                #    '-include_unfrozen_submaps',
++                #    '-include_frozen_submaps',
++                   ]
++    )
++
++    ld = LaunchDescription()
++    ld.add_action(cartographer_node)
++    ld.add_action(occupancy_grid_node)
++    return ld
+-- 
+2.34.1
+

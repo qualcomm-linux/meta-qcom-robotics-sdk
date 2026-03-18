@@ -1,0 +1,1907 @@
+# This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+From 15c8b229458befd73df233e445bf75c2bff5c175 Mon Sep 17 00:00:00 2001
+From: xiaohui <xkuo@qti.qualcomm.com>
+Date: Thu, 29 May 2025 14:58:56 +0800
+Subject: [PATCH] Add qrb slam feature
+
+Upstream-Status: Inappropriate [platform specific]
+Signed-off-by: xiaohui kuo <quic_xkuo@quicinc.com>
+---
+ cartographer_ros/CMakeLists.txt               |  89 ++--
+ .../qrb_amr_localization_2d.lua               |  11 +
+ .../qrb_amr_mapping_2d.lua                    |  50 +++
+ .../cartographer_ros/map_builder_bridge.h     |  29 +-
+ .../cartographer_ros/metrics/internal/gauge.h |   2 +-
+ .../metrics/internal/histogram.h              |   4 +-
+ .../include/cartographer_ros/msg_conversion.h |   3 +-
+ .../include/cartographer_ros/node.h           |  76 +++-
+ .../include/cartographer_ros/node_constants.h |   8 +
+ .../include/cartographer_ros/node_options.h   |   1 +
+ .../include/cartographer_ros/ros_map.h        |   4 +-
+ .../launch/qrb_2d_lidar_slam.launch.py        |  47 ++
+ .../launch/qti_amr_localization_2d.launch.py  |  58 +++
+ .../launch/qti_amr_mapping_2d.launch.py       |  45 ++
+ cartographer_ros/map/README.txt               |   1 +
+ cartographer_ros/package.xml                  |   1 +
+ .../scripts/qrb_slam_service_request.sh       |  27 ++
+ cartographer_ros/src/map_builder_bridge.cpp   | 107 +++++
+ cartographer_ros/src/msg_conversion.cpp       |  51 ++-
+ cartographer_ros/src/node.cpp                 | 418 +++++++++++++++++-
+ cartographer_ros/src/node_main.cpp            |  42 +-
+ cartographer_ros/src/node_options.cpp         |   4 +
+ .../src/occupancy_grid_node_main.cpp          |  98 +++-
+ cartographer_ros/src/ros_map.cpp              |  24 +-
+ .../cartographer_rviz/drawable_submap.h       |  10 +-
+ .../cartographer_rviz/submaps_display.h       |   2 +-
+ 26 files changed, 1074 insertions(+), 138 deletions(-)
+ create mode 100644 cartographer_ros/configuration_files/qrb_amr_localization_2d.lua
+ create mode 100644 cartographer_ros/configuration_files/qrb_amr_mapping_2d.lua
+ create mode 100644 cartographer_ros/launch/qrb_2d_lidar_slam.launch.py
+ create mode 100644 cartographer_ros/launch/qti_amr_localization_2d.launch.py
+ create mode 100644 cartographer_ros/launch/qti_amr_mapping_2d.launch.py
+ create mode 100644 cartographer_ros/map/README.txt
+ create mode 100644 cartographer_ros/scripts/qrb_slam_service_request.sh
+
+diff --git a/cartographer_ros/CMakeLists.txt b/cartographer_ros/CMakeLists.txt
+index f7f4762..2b3cad0 100644
+--- a/cartographer_ros/CMakeLists.txt
++++ b/cartographer_ros/CMakeLists.txt
+@@ -26,11 +26,14 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+   add_compile_options(-Wall -Wextra)
+ endif()
+ 
++set(CMAKE_CXX_STANDARD 17)
++set(CMAKE_CXX_EXTENSIONS 17)
+ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+ 
+ find_package(builtin_interfaces REQUIRED)
+ find_package(cartographer REQUIRED)
+ find_package(cartographer_ros_msgs REQUIRED)
++find_package(qrb_ros_slam_msgs REQUIRED)
+ find_package(Eigen3 REQUIRED)
+ find_package(geometry_msgs REQUIRED)
+ find_package(absl REQUIRED)
+@@ -84,6 +87,7 @@ set(dependencies
+   builtin_interfaces
+   cartographer
+   cartographer_ros_msgs
++  qrb_ros_slam_msgs
+   geometry_msgs
+   nav_msgs
+   pcl_conversions
+@@ -100,43 +104,61 @@ set(dependencies
+   urdf
+   urdfdom
+ )
++
++set(ABSEIL_LIBRARIES
++  absl::absl_check
++  absl::absl_log
++  absl::algorithm
++  absl::base
++  absl::bind_front
++  absl::bits
++  absl::btree
++  absl::cleanup
++  absl::cord
++  absl::core_headers
++  absl::debugging
++  absl::die_if_null
++  absl::dynamic_annotations
++  absl::flags
++  absl::flat_hash_map
++  absl::flat_hash_set
++  absl::function_ref
++  absl::hash
++  absl::layout
++  absl::log_initialize
++  absl::log_severity
++  absl::memory
++  absl::node_hash_map
++  absl::node_hash_set
++  absl::optional
++  absl::span
++  absl::status
++  absl::statusor
++  absl::strings
++  absl::synchronization
++  absl::time
++  absl::type_traits
++  absl::utility
++  absl::variant
++)
++
+ ament_target_dependencies(${PROJECT_NAME}
+   ${dependencies}
+   )
+-target_link_libraries(${PROJECT_NAME} cartographer ${PCL_LIBRARIES})
++target_link_libraries(${PROJECT_NAME} cartographer ${PCL_LIBRARIES} ${ABSEIL_LIBRARIES})
+ 
+ # Executables
+ add_executable(cartographer_node src/node_main.cpp)
+-target_link_libraries(cartographer_node ${PROJECT_NAME})
++target_link_libraries(cartographer_node ${PROJECT_NAME} ${ABSEIL_LIBRARIES})
+ ament_target_dependencies(cartographer_node ${dependencies})
+ 
+ add_executable(cartographer_occupancy_grid_node src/occupancy_grid_node_main.cpp)
+-target_link_libraries(cartographer_occupancy_grid_node ${PROJECT_NAME})
++target_link_libraries(cartographer_occupancy_grid_node ${PROJECT_NAME} ${ABSEIL_LIBRARIES})
+ ament_target_dependencies(cartographer_occupancy_grid_node ${dependencies})
+ 
+-add_executable(cartographer_offline_node src/offline_node_main.cpp)
+-target_link_libraries(cartographer_offline_node ${PROJECT_NAME})
+-ament_target_dependencies(cartographer_offline_node ${dependencies})
+-
+-add_executable(cartographer_assets_writer src/assets_writer_main.cpp)
+-target_link_libraries(cartographer_assets_writer ${PROJECT_NAME})
+-ament_target_dependencies(cartographer_assets_writer ${dependencies})
+-
+-add_executable(cartographer_pbstream_map_publisher src/pbstream_map_publisher_main.cpp)
+-target_link_libraries(cartographer_pbstream_map_publisher ${PROJECT_NAME})
+-ament_target_dependencies(cartographer_pbstream_map_publisher ${dependencies})
+-
+-add_executable(cartographer_pbstream_to_ros_map src/pbstream_to_ros_map_main.cpp)
+-target_link_libraries(cartographer_pbstream_to_ros_map ${PROJECT_NAME})
+-ament_target_dependencies(cartographer_pbstream_to_ros_map ${dependencies})
+-
+-add_executable(cartographer_rosbag_validate src/rosbag_validate_main.cpp)
+-target_link_libraries(cartographer_rosbag_validate ${PROJECT_NAME})
+-ament_target_dependencies(cartographer_rosbag_validate ${dependencies})
+-
+ if($ENV{ROS_DISTRO} MATCHES "humble" OR $ENV{ROS_DISTRO} MATCHES "iron")
+   target_compile_definitions(${PROJECT_NAME} PRIVATE PRE_JAZZY_SERIALIZED_BAG_MSG_FIELD_NAME)
+-  target_compile_definitions(cartographer_rosbag_validate PRIVATE PRE_JAZZY_SERIALIZED_BAG_MSG_FIELD_NAME)
++#  target_compile_definitions(cartographer_rosbag_validate PRIVATE PRE_JAZZY_SERIALIZED_BAG_MSG_FIELD_NAME)
+ endif()
+ 
+ install(TARGETS
+@@ -149,11 +171,6 @@ install(TARGETS
+ install(TARGETS
+   cartographer_node
+   cartographer_occupancy_grid_node
+-  cartographer_offline_node
+-  cartographer_assets_writer
+-  cartographer_pbstream_map_publisher
+-  cartographer_pbstream_to_ros_map
+-  cartographer_rosbag_validate
+   RUNTIME DESTINATION lib/${PROJECT_NAME}
+ )
+ 
+@@ -161,9 +178,21 @@ install(DIRECTORY include/
+   DESTINATION include/
+ )
+ 
+-install(DIRECTORY configuration_files urdf launch
++install(DIRECTORY map
+   DESTINATION share/${PROJECT_NAME}/
+ )
++file(GLOB_RECURSE QRB_CONFIG "configuration_files/qrb*.lua")
++install(FILES ${QRB_CONFIG}
++  DESTINATION share/${PROJECT_NAME}/configuration_files
++)
++file(GLOB_RECURSE QRB_SCRIPTS "scripts/qrb*.sh")
++install(FILES ${QRB_SCRIPTS}
++  DESTINATION share/${PROJECT_NAME}/scripts
++)
++file(GLOB_RECURSE QRB_LAUNCH "launch/qrb*.launch.py")
++install(FILES ${QRB_LAUNCH}
++  DESTINATION share/${PROJECT_NAME}/launch
++)
+ 
+ ament_export_include_directories(include)
+ ament_export_libraries(${PROJECT_NAME})
+diff --git a/cartographer_ros/configuration_files/qrb_amr_localization_2d.lua b/cartographer_ros/configuration_files/qrb_amr_localization_2d.lua
+new file mode 100644
+index 0000000..52bbb2b
+--- /dev/null
++++ b/cartographer_ros/configuration_files/qrb_amr_localization_2d.lua
+@@ -0,0 +1,11 @@
++-- Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++-- SPDX-License-Identifier: BSD-3-Clause-Clear
++
++include "qrb_amr_mapping_2d.lua"
++
++TRAJECTORY_BUILDER.pure_localization_trimmer = {
++    max_submaps_to_keep = 3,
++}
++POSE_GRAPH.optimize_every_n_nodes = 60
++
++return options
+\ No newline at end of file
+diff --git a/cartographer_ros/configuration_files/qrb_amr_mapping_2d.lua b/cartographer_ros/configuration_files/qrb_amr_mapping_2d.lua
+new file mode 100644
+index 0000000..9b45f81
+--- /dev/null
++++ b/cartographer_ros/configuration_files/qrb_amr_mapping_2d.lua
+@@ -0,0 +1,50 @@
++-- Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++-- SPDX-License-Identifier: BSD-3-Clause-Clear
++
++include "map_builder.lua"
++include "trajectory_builder.lua"
++
++options = {
++  map_builder = MAP_BUILDER,
++  trajectory_builder = TRAJECTORY_BUILDER,
++  map_frame = "map",
++  tracking_frame = "base_footprint",
++  published_frame = "base_footprint",
++  odom_frame = "odom",
++  provide_odom_frame = true,
++  publish_frame_projected_to_2d = false,
++  use_pose_extrapolator = true,
++  use_odometry = true,
++  use_nav_sat = false,
++  use_landmarks = false,
++  publish_tracked_pose = true,
++  num_laser_scans = 1,
++  num_multi_echo_laser_scans = 0,
++  num_subdivisions_per_laser_scan = 1,
++  num_point_clouds = 0,
++  lookup_transform_timeout_sec = 0.2,
++  submap_publish_period_sec = 0.3,
++  pose_publish_period_sec = 5e-3,
++  trajectory_publish_period_sec = 30e-3,
++  rangefinder_sampling_ratio = 1.,
++  odometry_sampling_ratio = 1.,
++  fixed_frame_pose_sampling_ratio = 1.,
++  imu_sampling_ratio = 1.,
++  landmarks_sampling_ratio = 1.,
++
++  save_pose_to_scv = true,
++}
++
++MAP_BUILDER.use_trajectory_builder_2d = true
++
++TRAJECTORY_BUILDER_2D.use_imu_data = false
++TRAJECTORY_BUILDER_2D.min_range = 0.2
++TRAJECTORY_BUILDER_2D.max_range = 7.0
++TRAJECTORY_BUILDER_2D.missing_data_ray_length = 7.0
++TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = false
++TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.1)
++
++POSE_GRAPH.constraint_builder.min_score = 0.65
++POSE_GRAPH.constraint_builder.global_localization_min_score = 0.7
++
++return options
+diff --git a/cartographer_ros/include/cartographer_ros/map_builder_bridge.h b/cartographer_ros/include/cartographer_ros/map_builder_bridge.h
+index b2c00b7..49a806c 100644
+--- a/cartographer_ros/include/cartographer_ros/map_builder_bridge.h
++++ b/cartographer_ros/include/cartographer_ros/map_builder_bridge.h
+@@ -44,6 +44,9 @@
+ #undef DELETE
+ #endif
+ #include "visualization_msgs/msg/marker_array.hpp"
++#include "qrb_ros_slam_msgs/msg/status_code.hpp"
++#include "qrb_ros_slam_msgs/msg/command_code.hpp"
++#include "qrb_ros_slam_msgs/msg/command_response.hpp"
+ 
+ namespace cartographer_ros {
+ 
+@@ -63,6 +66,10 @@ class MapBuilderBridge {
+     std::unique_ptr<cartographer::transform::Rigid3d> published_to_tracking;
+     TrajectoryOptions trajectory_options;
+   };
++  struct ReLocalizationState {
++    ::cartographer::common::Time time;
++    std::vector<int> to_trajectories;
++  };
+ 
+   MapBuilderBridge(
+       const NodeOptions& node_options,
+@@ -73,6 +80,8 @@ class MapBuilderBridge {
+   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
+ 
+   void LoadState(const std::string& state_filename, bool load_frozen_state);
++  std::map<int /* trajectory id in proto */, int /* trajectory id */>
++  LoadMap(const std::string& pbstream_filename, bool load_frozen_state);
+   int AddTrajectory(
+       const std::set<
+           ::cartographer::mapping::TrajectoryBuilderInterface::SensorId>&
+@@ -93,13 +102,20 @@ class MapBuilderBridge {
+   std::map<int /* trajectory_id */,
+            ::cartographer::mapping::PoseGraphInterface::TrajectoryState>
+   GetTrajectoryStates();
++
++  std::unordered_map<int /* trajectory_id */,
++      ::cartographer::mapping::PoseGraphInterface::TrajectoryMode>
++  GetTrajectoriesMode();
+   cartographer_ros_msgs::msg::SubmapList GetSubmapList(rclcpp::Time node_time);
++  cartographer_ros_msgs::msg::SubmapList GetStaticSubmaps(rclcpp::Time node_time);
+   std::unordered_map<int, LocalTrajectoryData> GetLocalTrajectoryData()
+-      LOCKS_EXCLUDED(mutex_);
++      ABSL_LOCKS_EXCLUDED(mutex_);
+   visualization_msgs::msg::MarkerArray GetTrajectoryNodeList(rclcpp::Time node_time);
+   visualization_msgs::msg::MarkerArray GetLandmarkPosesList(rclcpp::Time node_time);
+   visualization_msgs::msg::MarkerArray GetConstraintList(rclcpp::Time node_time);
+-
++  bool GetReLocalizationState(int trajectory_id, ReLocalizationState& state);
++  bool HasReLocalizationOccurred(int trajectory_id);
++  void ValidateRelocalization(qrb_ros_slam_msgs::msg::CommandResponse& res);
+   SensorBridge* sensor_bridge(int trajectory_id);
+ 
+  private:
+@@ -107,13 +123,17 @@ class MapBuilderBridge {
+                          const ::cartographer::common::Time time,
+                          const ::cartographer::transform::Rigid3d local_pose,
+                          ::cartographer::sensor::RangeData range_data_in_local)
+-      LOCKS_EXCLUDED(mutex_);
++      ABSL_LOCKS_EXCLUDED(mutex_);
++  void OnRelocalizationResult(
++      const std::map<int, ::cartographer::common::Time>& ids_last_connection_time,
++      const std::map<int, std::vector<int>>& to_other_trajectories)
++      ABSL_LOCKS_EXCLUDED(mutex_);
+ 
+   absl::Mutex mutex_;
+   const NodeOptions node_options_;
+   std::unordered_map<int,
+                      std::shared_ptr<const LocalTrajectoryData::LocalSlamData>>
+-      local_slam_data_ GUARDED_BY(mutex_);
++      local_slam_data_ ABSL_GUARDED_BY(mutex_);
+   std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder_;
+   tf2_ros::Buffer* const tf_buffer_;
+ 
+@@ -123,6 +143,7 @@ class MapBuilderBridge {
+   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
+   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
+   std::unordered_map<int, size_t> trajectory_to_highest_marker_id_;
++  std::unordered_map<int, ReLocalizationState> relocalization_states_;
+ };
+ 
+ }  // namespace cartographer_ros
+diff --git a/cartographer_ros/include/cartographer_ros/metrics/internal/gauge.h b/cartographer_ros/include/cartographer_ros/metrics/internal/gauge.h
+index f311ab1..26d0caf 100644
+--- a/cartographer_ros/include/cartographer_ros/metrics/internal/gauge.h
++++ b/cartographer_ros/include/cartographer_ros/metrics/internal/gauge.h
+@@ -71,7 +71,7 @@ class Gauge : public ::cartographer::metrics::Gauge {
+ 
+   absl::Mutex mutex_;
+   const std::map<std::string, std::string> labels_;
+-  double value_ GUARDED_BY(mutex_);
++  double value_ ABSL_GUARDED_BY(mutex_);
+ };
+ 
+ }  // namespace metrics
+diff --git a/cartographer_ros/include/cartographer_ros/metrics/internal/histogram.h b/cartographer_ros/include/cartographer_ros/metrics/internal/histogram.h
+index b5d8404..e47f99b 100644
+--- a/cartographer_ros/include/cartographer_ros/metrics/internal/histogram.h
++++ b/cartographer_ros/include/cartographer_ros/metrics/internal/histogram.h
+@@ -50,8 +50,8 @@ class Histogram : public ::cartographer::metrics::Histogram {
+   absl::Mutex mutex_;
+   const std::map<std::string, std::string> labels_;
+   const BucketBoundaries bucket_boundaries_;
+-  std::vector<double> bucket_counts_ GUARDED_BY(mutex_);
+-  double sum_ GUARDED_BY(mutex_);
++  std::vector<double> bucket_counts_ ABSL_GUARDED_BY(mutex_);
++  double sum_ ABSL_GUARDED_BY(mutex_);
+ };
+ 
+ }  // namespace metrics
+diff --git a/cartographer_ros/include/cartographer_ros/msg_conversion.h b/cartographer_ros/include/cartographer_ros/msg_conversion.h
+index e895144..d1070c1 100644
+--- a/cartographer_ros/include/cartographer_ros/msg_conversion.h
++++ b/cartographer_ros/include/cartographer_ros/msg_conversion.h
+@@ -88,7 +88,8 @@ cartographer::transform::Rigid3d ComputeLocalFrameFromLatLong(double latitude,
+ std::unique_ptr<nav_msgs::msg::OccupancyGrid> CreateOccupancyGridMsg(
+     const cartographer::io::PaintSubmapSlicesResult& painted_slices,
+     const double resolution, const std::string& frame_id,
+-    const rclcpp::Time& time);
++    const rclcpp::Time& time,
++    const bool enable_standard_gridmap=false);
+ 
+ }  // namespace cartographer_ros
+ 
+diff --git a/cartographer_ros/include/cartographer_ros/node.h b/cartographer_ros/include/cartographer_ros/node.h
+index f3527ca..087b8d3 100644
+--- a/cartographer_ros/include/cartographer_ros/node.h
++++ b/cartographer_ros/include/cartographer_ros/node.h
+@@ -23,6 +23,7 @@
+ #include <unordered_map>
+ #include <unordered_set>
+ #include <vector>
++#include <filesystem>
+ 
+ #include "absl/synchronization/mutex.h"
+ #include "cartographer/common/fixed_ratio_sampler.h"
+@@ -42,6 +43,14 @@
+ #include "cartographer_ros_msgs/msg/submap_list.hpp"
+ #include "cartographer_ros_msgs/srv/submap_query.hpp"
+ #include "cartographer_ros_msgs/srv/write_state.hpp"
++#include "cartographer/io/proto_stream.h"
++#include "cartographer/io/proto_stream_deserializer.h"
++#include "cartographer/io/submap_painter.h"
++#include "cartographer_ros/ros_map.h"
++#include "qrb_ros_slam_msgs/msg/status_code.hpp"
++#include "qrb_ros_slam_msgs/msg/command_code.hpp"
++#include "qrb_ros_slam_msgs/msg/command_response.hpp"
++#include "qrb_ros_slam_msgs/srv/slam_command.hpp"
+ #include "nav_msgs/msg/odometry.hpp"
+ #include <rclcpp/rclcpp.hpp>
+ #include <sensor_msgs/msg/imu.hpp>
+@@ -55,6 +64,23 @@
+ 
+ namespace cartographer_ros {
+ 
++enum class SlamStateMachine {
++  IDLE,
++  MAPPING_ACTIVATED,
++  MAPPING_FINISHED,
++  MAP_READY,
++  LOCALIZATION_ACTIVATED,
++};
++
++struct SlamEvent{
++  static constexpr int START_MAPPING_EVENT = 0;
++  static constexpr int FINISH_MAPPING_EVENT = 1;
++  static constexpr int SAVE_MAP_EVENT = 2;
++  static constexpr int LOAD_MAP_EVENT = 3;
++  static constexpr int START_LOCALIZATION_EVENT = 4;
++  static constexpr int VALIDATE_RELOCALIZATION = 5;
++};
++
+ // Wires up ROS topics to SLAM.
+ class Node {
+  public:
+@@ -80,6 +106,27 @@ class Node {
+   // Starts the first trajectory with the default topics.
+   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
+ 
++  // Start Mapping with default configuration
++  qrb_ros_slam_msgs::msg::CommandResponse StartMapping();
++
++  // Finish all Mapping trajectory
++  qrb_ros_slam_msgs::msg::CommandResponse FinishMapping();
++
++  // Save Map for all Mapping trajectory
++  qrb_ros_slam_msgs::msg::CommandResponse SaveMap();
++
++  // Load default map which is saved previous
++  qrb_ros_slam_msgs::msg::CommandResponse LoadMap();
++
++  // Start Localization with new trajectory id
++  qrb_ros_slam_msgs::msg::CommandResponse StartLocalization(bool is_hot_start=false);
++
++  qrb_ros_slam_msgs::msg::CommandResponse ValidateRelocalization();
++
++  void SendEvent(int event, qrb_ros_slam_msgs::msg::CommandResponse& res);
++
++  void UpdateSlamState(int event, qrb_ros_slam_msgs::msg::CommandResponse& res);
++
+   // Returns unique SensorIds for multiple input bag files based on
+   // their TrajectoryOptions.
+   // 'SensorId::id' is the expected ROS topic name.
+@@ -151,7 +198,9 @@ class Node {
+       cartographer_ros_msgs::srv::GetTrajectoryStates::Response::SharedPtr response);
+   bool handleReadMetrics(const cartographer_ros_msgs::srv::ReadMetrics::Request::SharedPtr,
+       cartographer_ros_msgs::srv::ReadMetrics::Response::SharedPtr response);
+-
++  bool handleQrbSlamCommand(
++      const qrb_ros_slam_msgs::srv::SlamCommand::Request::SharedPtr request,
++      qrb_ros_slam_msgs::srv::SlamCommand::Response::SharedPtr response);
+   // Returns the set of SensorIds expected for a trajectory.
+   // 'SensorId::id' is the expected ROS topic name.
+   std::set<::cartographer::mapping::TrajectoryBuilderInterface::SensorId>
+@@ -168,9 +217,14 @@ class Node {
+   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
+   bool ValidateTopicNames(const TrajectoryOptions& options);
+   cartographer_ros_msgs::msg::StatusResponse FinishTrajectoryUnderLock(
+-      int trajectory_id) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
++      int trajectory_id) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+   void MaybeWarnAboutTopicMismatch();
++  bool ConvertPbstreamToRosMap(const std::string& pbstream_file_name,
++                               const std::string& ros_map_file_name,
++                               const double resolution);
+ 
++  std::string StateMachineToString(const SlamStateMachine& state);
++  bool CreatFileIfNotExist(const std::string &file_name);
+   // Helper function for service handlers that need to check trajectory states.
+   cartographer_ros_msgs::msg::StatusResponse TrajectoryStateToStatus(
+       int trajectory_id,
+@@ -183,10 +237,11 @@ class Node {
+ 
+   absl::Mutex mutex_;
+   std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry_;
+-  std::shared_ptr<MapBuilderBridge> map_builder_bridge_ GUARDED_BY(mutex_);
++  std::shared_ptr<MapBuilderBridge> map_builder_bridge_ ABSL_GUARDED_BY(mutex_);
+ 
+   rclcpp::Node::SharedPtr node_;
+   ::rclcpp::Publisher<::cartographer_ros_msgs::msg::SubmapList>::SharedPtr submap_list_publisher_;
++  ::rclcpp::Publisher<::cartographer_ros_msgs::msg::SubmapList>::SharedPtr static_submap_list_publisher_;
+   ::rclcpp::Publisher<::visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_node_list_publisher_;
+   ::rclcpp::Publisher<::visualization_msgs::msg::MarkerArray>::SharedPtr landmark_poses_list_publisher_;
+   ::rclcpp::Publisher<::visualization_msgs::msg::MarkerArray>::SharedPtr constraint_list_publisher_;
+@@ -195,12 +250,12 @@ class Node {
+   // These ros service servers need to live for the lifetime of the node.
+   ::rclcpp::Service<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr submap_query_server_;
+   ::rclcpp::Service<cartographer_ros_msgs::srv::TrajectoryQuery>::SharedPtr trajectory_query_server;
+-  ::rclcpp::Service<cartographer_ros_msgs::srv::StartTrajectory>::SharedPtr start_trajectory_server_;
+-  ::rclcpp::Service<cartographer_ros_msgs::srv::FinishTrajectory>::SharedPtr finish_trajectory_server_;
+-  ::rclcpp::Service<cartographer_ros_msgs::srv::WriteState>::SharedPtr write_state_server_;
+-  ::rclcpp::Service<cartographer_ros_msgs::srv::GetTrajectoryStates>::SharedPtr get_trajectory_states_server_;
+-  ::rclcpp::Service<cartographer_ros_msgs::srv::ReadMetrics>::SharedPtr read_metrics_server_;
+-
++//  ::rclcpp::Service<cartographer_ros_msgs::srv::StartTrajectory>::SharedPtr start_trajectory_server_;
++//  ::rclcpp::Service<cartographer_ros_msgs::srv::FinishTrajectory>::SharedPtr finish_trajectory_server_;
++//  ::rclcpp::Service<cartographer_ros_msgs::srv::WriteState>::SharedPtr write_state_server_;
++//  ::rclcpp::Service<cartographer_ros_msgs::srv::GetTrajectoryStates>::SharedPtr get_trajectory_states_server_;
++//  ::rclcpp::Service<cartographer_ros_msgs::srv::ReadMetrics>::SharedPtr read_metrics_server_;
++  ::rclcpp::Service<qrb_ros_slam_msgs::srv::SlamCommand>::SharedPtr slam_command_server_;
+ 
+   struct TrajectorySensorSamplers {
+     TrajectorySensorSamplers(const double rangefinder_sampling_ratio,
+@@ -239,6 +294,9 @@ class Node {
+   ::rclcpp::TimerBase::SharedPtr landmark_pose_list_timer_;
+   ::rclcpp::TimerBase::SharedPtr constrain_list_timer_;
+   ::rclcpp::TimerBase::SharedPtr maybe_warn_about_topic_mismatch_timer_;
++
++  SlamStateMachine current_slam_state_machine_{ SlamStateMachine::IDLE };
++  std::ofstream rigid3d_output_file_;
+ };
+ 
+ }  // namespace cartographer_ros
+diff --git a/cartographer_ros/include/cartographer_ros/node_constants.h b/cartographer_ros/include/cartographer_ros/node_constants.h
+index 07a85f3..b11d45b 100644
+--- a/cartographer_ros/include/cartographer_ros/node_constants.h
++++ b/cartographer_ros/include/cartographer_ros/node_constants.h
+@@ -32,8 +32,10 @@ constexpr char kNavSatFixTopic[] = "fix";
+ constexpr char kLandmarkTopic[] = "landmark";
+ constexpr char kFinishTrajectoryServiceName[] = "finish_trajectory";
+ constexpr char kOccupancyGridTopic[] = "map";
++constexpr char kStaticOccupancyGridTopic[] = "static_map";
+ constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
+ constexpr char kSubmapListTopic[] = "submap_list";
++constexpr char kStaticSubmapListTopic[] = "static_submap_list";
+ constexpr char kTrackedPoseTopic[] = "tracked_pose";
+ constexpr char kSubmapQueryServiceName[] = "submap_query";
+ constexpr char kTrajectoryQueryServiceName[] = "trajectory_query";
+@@ -44,6 +46,12 @@ constexpr char kReadMetricsServiceName[] = "read_metrics";
+ constexpr char kTrajectoryNodeListTopic[] = "trajectory_node_list";
+ constexpr char kLandmarkPosesListTopic[] = "landmark_poses_list";
+ constexpr char kConstraintListTopic[] = "constraint_list";
++constexpr char kQrbDefaultConfigDirectory[] = "/opt/ros/jazzy/share/cartographer_ros/configuration_files";
++constexpr char kQrbDefaultMapDir[] = "/opt/ros/jazzy/share/cartographer_ros/map";
++constexpr char kQrbDefault2DMappingConfigName[] = "qrb_amr_mapping_2d.lua";
++constexpr char kQrbDefault2DLocalizationConfigName[] = "qrb_amr_localization_2d.lua";
++constexpr char kQrbSlamCommandServiceName[] = "qrb_slam_command";
++constexpr char kQrbRigidOutputFile[] = "/opt/ros/jazzy/share/cartographer_ros/rigid3d_tf_pub.csv";
+ constexpr double kConstraintPublishPeriodSec = 0.5;
+ constexpr double kTopicMismatchCheckDelaySec = 3.0;
+ 
+diff --git a/cartographer_ros/include/cartographer_ros/node_options.h b/cartographer_ros/include/cartographer_ros/node_options.h
+index 95bb159..8233e77 100644
+--- a/cartographer_ros/include/cartographer_ros/node_options.h
++++ b/cartographer_ros/include/cartographer_ros/node_options.h
+@@ -37,6 +37,7 @@ struct NodeOptions {
+   double trajectory_publish_period_sec;
+   bool publish_to_tf = true;
+   bool publish_tracked_pose = false;
++  bool save_pose_to_scv = false;
+   bool use_pose_extrapolator = true;
+ };
+ 
+diff --git a/cartographer_ros/include/cartographer_ros/ros_map.h b/cartographer_ros/include/cartographer_ros/ros_map.h
+index 4336a16..57bf1b8 100644
+--- a/cartographer_ros/include/cartographer_ros/ros_map.h
++++ b/cartographer_ros/include/cartographer_ros/ros_map.h
+@@ -28,11 +28,11 @@ namespace cartographer_ros {
+ 
+ // Write 'image' as a pgm into 'file_writer'. The resolution is used in the
+ // comment only'
+-void WritePgm(const ::cartographer::io::Image& image, const double resolution,
++bool WritePgm(const ::cartographer::io::Image& image, const double resolution,
+               ::cartographer::io::FileWriter* file_writer);
+ 
+ // Write the corresponding yaml into 'file_writer'.
+-void WriteYaml(const double resolution, const Eigen::Vector2d& origin,
++bool WriteYaml(const double resolution, const Eigen::Vector2d& origin,
+                const std::string& pgm_filename,
+                ::cartographer::io::FileWriter* file_writer);
+ 
+diff --git a/cartographer_ros/launch/qrb_2d_lidar_slam.launch.py b/cartographer_ros/launch/qrb_2d_lidar_slam.launch.py
+new file mode 100644
+index 0000000..848b146
+--- /dev/null
++++ b/cartographer_ros/launch/qrb_2d_lidar_slam.launch.py
+@@ -0,0 +1,47 @@
++# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++
++import os
++from launch import LaunchDescription
++from launch.substitutions import LaunchConfiguration
++from launch.actions import DeclareLaunchArgument
++from launch_ros.actions import Node
++from launch_ros.substitutions import FindPackageShare
++
++
++def generate_launch_description():
++
++    package_share_amr_carto = FindPackageShare(package='cartographer_ros').find('cartographer_ros')
++
++    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
++    resolution = LaunchConfiguration('resolution', default='0.05')
++
++    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
++
++    cartographer_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_node',
++        name='cartographer_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++    )
++
++    occupancy_grid_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_occupancy_grid_node',
++        name='cartographer_occupancy_grid_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++        arguments=['-resolution', resolution,
++                   '-publish_period_sec', publish_period_sec,
++                   '-enable_standard_gridmap',
++                #    '-include_unfrozen_submaps',
++                #    '-include_frozen_submaps',
++                   ]
++    )
++
++    ld = LaunchDescription()
++    ld.add_action(cartographer_node)
++    ld.add_action(occupancy_grid_node)
++    return ld
+\ No newline at end of file
+diff --git a/cartographer_ros/launch/qti_amr_localization_2d.launch.py b/cartographer_ros/launch/qti_amr_localization_2d.launch.py
+new file mode 100644
+index 0000000..31a69c4
+--- /dev/null
++++ b/cartographer_ros/launch/qti_amr_localization_2d.launch.py
+@@ -0,0 +1,58 @@
++# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++import os
++from launch import LaunchDescription
++from launch.substitutions import LaunchConfiguration
++from launch_ros.actions import Node
++from launch_ros.substitutions import FindPackageShare
++
++
++def generate_launch_description():
++
++    package_share_amr_carto = FindPackageShare(package='cartographer_ros').find('cartographer_ros')
++    
++    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
++
++    resolution = LaunchConfiguration('resolution', default='0.05')
++
++    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
++
++    configuration_directory = LaunchConfiguration('configuration_directory',default= os.path.join(package_share_amr_carto, 'configuration_files') )
++
++    configuration_basename = LaunchConfiguration('configuration_basename', default='qti_amr_localization_2d.lua')
++    
++    # pbstream file
++    load_state_filename = LaunchConfiguration('load_state_filename', default= os.path.join(package_share_amr_carto, 'map', 'demo_map.pbstream'))
++
++
++    cartographer_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_node',
++        name='cartographer_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++        arguments=['-configuration_directory', configuration_directory,
++                   '-configuration_basename', configuration_basename,
++                   '-load_state_filename', load_state_filename],
++    )
++
++    occupancy_grid_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_occupancy_grid_node',
++        name='cartographer_occupancy_grid_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++        arguments=['-resolution', resolution, 
++                   '-publish_period_sec', publish_period_sec,
++                #    '-include_unfrozen_submaps', false,
++                #    '-include_frozen_submaps', true,
++                   ]
++    )
++
++    ld = LaunchDescription()
++    ld.add_action(cartographer_node)
++    ld.add_action(occupancy_grid_node)
++
++
++    return ld
+\ No newline at end of file
+diff --git a/cartographer_ros/launch/qti_amr_mapping_2d.launch.py b/cartographer_ros/launch/qti_amr_mapping_2d.launch.py
+new file mode 100644
+index 0000000..19b12bd
+--- /dev/null
++++ b/cartographer_ros/launch/qti_amr_mapping_2d.launch.py
+@@ -0,0 +1,45 @@
++# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++import os
++from launch import LaunchDescription
++from launch_ros.actions import Node
++from launch.substitutions import LaunchConfiguration
++from launch_ros.substitutions import FindPackageShare
++
++
++def generate_launch_description():
++
++    package_share_amr_carto = FindPackageShare(package='cartographer_ros').find('cartographer_ros')
++    
++    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
++
++    resolution = LaunchConfiguration('resolution', default='0.05')
++
++    publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
++
++    configuration_directory = LaunchConfiguration('configuration_directory',default= os.path.join(package_share_amr_carto, 'configuration_files') )
++
++    configuration_basename = LaunchConfiguration('configuration_basename', default='qti_amr_mapping_2d.lua')
++    
++    cartographer_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_node',
++        name='cartographer_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++        arguments=['-configuration_directory', configuration_directory,
++                   '-configuration_basename', configuration_basename])
++
++    occupancy_grid_node = Node(
++        package='cartographer_ros',
++        executable='cartographer_occupancy_grid_node',
++        name='cartographer_occupancy_grid_node',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++        arguments=['-resolution', resolution, '-publish_period_sec', publish_period_sec])
++
++    ld = LaunchDescription()
++    ld.add_action(cartographer_node)
++    ld.add_action(occupancy_grid_node)
++    return ld
+\ No newline at end of file
+diff --git a/cartographer_ros/map/README.txt b/cartographer_ros/map/README.txt
+new file mode 100644
+index 0000000..6b29ff1
+--- /dev/null
++++ b/cartographer_ros/map/README.txt
+@@ -0,0 +1 @@
++# This is a folder for storing maps which are saved by SLAM
+\ No newline at end of file
+diff --git a/cartographer_ros/package.xml b/cartographer_ros/package.xml
+index 154ba58..c2960c7 100644
+--- a/cartographer_ros/package.xml
++++ b/cartographer_ros/package.xml
+@@ -78,6 +78,7 @@
+   <depend>builtin_interfaces</depend>
+   <depend>cartographer</depend>
+   <depend>cartographer_ros_msgs</depend>
++  <depend>qrb_ros_slam_msgs</depend>
+   <depend>eigen</depend>
+   <depend>geometry_msgs</depend>
+   <depend>libabsl-dev</depend>
+diff --git a/cartographer_ros/scripts/qrb_slam_service_request.sh b/cartographer_ros/scripts/qrb_slam_service_request.sh
+new file mode 100644
+index 0000000..fedb751
+--- /dev/null
++++ b/cartographer_ros/scripts/qrb_slam_service_request.sh
+@@ -0,0 +1,27 @@
++# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++# SPDX-License-Identifier: BSD-3-Clause-Clear
++
++while true
++do
++echo "
++==================================================
++Please Enter the corresponding number or exit
++0) START_MAPPING
++1) FINISH_MAPPING
++2) SAVE_MAP
++3) LOAD_MAP
++4) START_LOCALIZATION
++5) VALIDATE_RELOCALIZATION
++q) QUIT
++=================================================="
++read choose
++case $choose in
++    0) ros2 service call /qrb_slam_command qrb_ros_slam_msgs/srv/SlamCommand "{command_id: 0}";;
++    1) ros2 service call /qrb_slam_command qrb_ros_slam_msgs/srv/SlamCommand "{command_id: 1}";;
++    2) ros2 service call /qrb_slam_command qrb_ros_slam_msgs/srv/SlamCommand "{command_id: 2}";;
++    3) ros2 service call /qrb_slam_command qrb_ros_slam_msgs/srv/SlamCommand "{command_id: 3}";;
++    4) ros2 service call /qrb_slam_command qrb_ros_slam_msgs/srv/SlamCommand "{command_id: 4}";;
++    5) ros2 service call /qrb_slam_command qrb_ros_slam_msgs/srv/SlamCommand "{command_id: 5}";;
++    q) break;;
++esac
++done
+\ No newline at end of file
+diff --git a/cartographer_ros/src/map_builder_bridge.cpp b/cartographer_ros/src/map_builder_bridge.cpp
+index 4ea2b19..300a2ec 100644
+--- a/cartographer_ros/src/map_builder_bridge.cpp
++++ b/cartographer_ros/src/map_builder_bridge.cpp
+@@ -119,6 +119,19 @@ void MapBuilderBridge::LoadState(const std::string& state_filename,
+   map_builder_->LoadState(&stream, load_frozen_state);
+ }
+ 
++std::map<int /* trajectory id in proto */, int /* trajectory id */>
++MapBuilderBridge::LoadMap(const std::string& pbstream_filename, bool load_frozen_state) {
++  // Check if suffix of the state file is ".pbstream".
++  const std::string suffix = ".pbstream";
++  CHECK_EQ(pbstream_filename.substr(
++      std::max<int>(pbstream_filename.size() - suffix.size(), 0)),
++           suffix)
++    << "The file containing the state to be loaded must be a "
++       ".pbstream file.";
++  LOG(INFO) << "Loading saved map '" << pbstream_filename << "'...";
++  cartographer::io::ProtoStreamReader stream(pbstream_filename);
++  return map_builder_->LoadState(&stream, load_frozen_state);
++}
+ int MapBuilderBridge::AddTrajectory(
+     const std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>&
+         expected_sensor_ids,
+@@ -132,6 +145,11 @@ int MapBuilderBridge::AddTrajectory(
+                  const ::cartographer::mapping::TrajectoryBuilderInterface::
+                      InsertionResult>) {
+         OnLocalSlamResult(trajectory_id, time, local_pose, range_data_in_local);
++      },
++      [this](
++          const std::map<int, ::cartographer::common::Time>& last_connection_time,
++          const std::map<int, std::vector<int>>& to_other_trajectories){
++        OnRelocalizationResult(last_connection_time, to_other_trajectories);
+       });
+   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
+ 
+@@ -212,6 +230,28 @@ MapBuilderBridge::GetTrajectoryStates() {
+   return trajectory_states;
+ }
+ 
++bool MapBuilderBridge::GetReLocalizationState(int trajectory_id, ReLocalizationState& state) {
++  absl::MutexLock lock(&mutex_);
++  auto it = relocalization_states_.find(trajectory_id);
++  if (it != relocalization_states_.end()) {
++    state = it->second;
++    return true;
++  } else {
++    return false;
++  }
++}
++
++bool MapBuilderBridge::HasReLocalizationOccurred(int trajectory_id) {
++  absl::MutexLock lock(&mutex_);
++  return relocalization_states_.count(trajectory_id);
++}
++
++std::unordered_map<int /* trajectory_id */,
++    ::cartographer::mapping::PoseGraphInterface::TrajectoryMode>
++MapBuilderBridge::GetTrajectoriesMode() {
++  auto trajectories_mode = map_builder_->GetAllTrajectoryMode();
++  return trajectories_mode;
++}
+ cartographer_ros_msgs::msg::SubmapList MapBuilderBridge::GetSubmapList(rclcpp::Time node_time) {
+   cartographer_ros_msgs::msg::SubmapList submap_list;
+   submap_list.header.stamp = node_time;
+@@ -230,6 +270,36 @@ cartographer_ros_msgs::msg::SubmapList MapBuilderBridge::GetSubmapList(rclcpp::T
+   return submap_list;
+ }
+ 
++cartographer_ros_msgs::msg::SubmapList MapBuilderBridge::GetStaticSubmaps(rclcpp::Time node_time) {
++  cartographer_ros_msgs::msg::SubmapList submap_list;
++  submap_list.header.stamp = node_time;
++  submap_list.header.frame_id = node_options_.map_frame;
++  auto trajectories_modes = GetTrajectoriesMode();
++  using TrajectoryMode = ::cartographer::mapping::PoseGraphInterface::TrajectoryMode;
++  for (const auto& submap_id_pose :
++      map_builder_->pose_graph()->GetAllSubmapPoses()) {
++    cartographer_ros_msgs::msg::SubmapEntry submap_entry;
++    auto id_mode = trajectories_modes.find(submap_id_pose.id.trajectory_id);
++    if(id_mode != trajectories_modes.end()) {
++      if (id_mode->second != TrajectoryMode::PREVIOUS_MAP) {
++        // LOG(INFO) << "Localization Submap ignore when GetStaticSubmaps.";
++        continue;
++      }
++    } else {
++      LOG(INFO) << "Trajectory index error when GetStaticSubmaps.";
++      continue;
++    }
++    submap_entry.is_frozen = map_builder_->pose_graph()->IsTrajectoryFrozen(
++        submap_id_pose.id.trajectory_id);
++    submap_entry.trajectory_id = submap_id_pose.id.trajectory_id;
++    submap_entry.submap_index = submap_id_pose.id.submap_index;
++    submap_entry.submap_version = submap_id_pose.data.version;
++    submap_entry.pose = ToGeometryMsgPose(submap_id_pose.data.pose);
++    submap_list.submap.push_back(submap_entry);
++  }
++  return submap_list;
++}
++
+ std::unordered_map<int, MapBuilderBridge::LocalTrajectoryData>
+ MapBuilderBridge::GetLocalTrajectoryData() {
+   std::unordered_map<int, LocalTrajectoryData> local_trajectory_data;
+@@ -528,6 +598,27 @@ SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
+   return sensor_bridges_.at(trajectory_id).get();
+ }
+ 
++void MapBuilderBridge::ValidateRelocalization(qrb_ros_slam_msgs::msg::CommandResponse& res) {
++  res.result = false;
++  using TrajectoryMode = ::cartographer::mapping::PoseGraphInterface::TrajectoryMode;
++  const auto trajectories_mode = GetTrajectoriesMode();
++  for (const auto id_mode : trajectories_mode) {
++    if (id_mode.second != TrajectoryMode::LOCALIZATION) {
++      continue;
++    }
++    if (HasReLocalizationOccurred(id_mode.first)) {
++      res.result = true;
++      res.code = qrb_ros_slam_msgs::msg::StatusCode::OK;
++      res.message += "Relocalization Successful, Localization ID: " +
++                    std::to_string(id_mode.first);
++    }
++  }
++  if (!res.result) {
++    res.code = qrb_ros_slam_msgs::msg::StatusCode::UNAVAILABLE;
++    res.message = "Relocalization Not Ready.";
++  }
++}
++
+ void MapBuilderBridge::OnLocalSlamResult(
+     const int trajectory_id, const ::cartographer::common::Time time,
+     const Rigid3d local_pose,
+@@ -540,4 +631,20 @@ void MapBuilderBridge::OnLocalSlamResult(
+   local_slam_data_[trajectory_id] = std::move(local_slam_data);
+ }
+ 
++void MapBuilderBridge::OnRelocalizationResult(
++    const std::map<int, ::cartographer::common::Time>& ids_last_connection_time,
++    const std::map<int, std::vector<int>>& to_other_trajectories) {
++  LOG(INFO) << "------------ OnRelocalizationResult ----------";
++  for (const auto& id_time_relocalization : ids_last_connection_time) {
++    LOG(INFO) << "Relocalization Trajectory: " << id_time_relocalization.first << ", "
++              << "Time: " << id_time_relocalization.second;
++    ReLocalizationState relocalization_state;
++    relocalization_state.time = id_time_relocalization.second;
++    for (const int to_trajectory : to_other_trajectories.at(id_time_relocalization.first)) {
++      relocalization_state.to_trajectories.push_back(to_trajectory);
++    }
++    absl::MutexLock lock(&mutex_);
++    relocalization_states_[id_time_relocalization.first] = relocalization_state;
++  }
++}
+ }  // namespace cartographer_ros
+diff --git a/cartographer_ros/src/msg_conversion.cpp b/cartographer_ros/src/msg_conversion.cpp
+index 973563e..65cabe4 100644
+--- a/cartographer_ros/src/msg_conversion.cpp
++++ b/cartographer_ros/src/msg_conversion.cpp
+@@ -374,7 +374,8 @@ cartographer::transform::Rigid3d ComputeLocalFrameFromLatLong(
+ std::unique_ptr<nav_msgs::msg::OccupancyGrid> CreateOccupancyGridMsg(
+     const cartographer::io::PaintSubmapSlicesResult& painted_slices,
+     const double resolution, const std::string& frame_id,
+-    const rclcpp::Time& time) {
++    const rclcpp::Time& time,
++    const bool enable_standard_gridmap) {
+   auto occupancy_grid = absl::make_unique<nav_msgs::msg::OccupancyGrid>();
+ 
+   const int width = cairo_image_surface_get_width(painted_slices.surface.get());
+@@ -400,21 +401,45 @@ std::unique_ptr<nav_msgs::msg::OccupancyGrid> CreateOccupancyGridMsg(
+   const uint32_t* pixel_data = reinterpret_cast<uint32_t*>(
+       cairo_image_surface_get_data(painted_slices.surface.get()));
+   occupancy_grid->data.reserve(width * height);
+-  for (int y = height - 1; y >= 0; --y) {
+-    for (int x = 0; x < width; ++x) {
+-      const uint32_t packed = pixel_data[y * width + x];
+-      const unsigned char color = packed >> 16;
+-      const unsigned char observed = packed >> 8;
+-      const int value =
++  if (enable_standard_gridmap) {
++    for (int y = height - 1; y >= 0; --y) {
++      for (int x = 0; x < width; ++x) {
++        const uint32_t packed = pixel_data[y * width + x];
++        const unsigned char color = packed >> 16;
++        const unsigned char observed = packed >> 8;
++        int value_temp = ::cartographer::common::RoundToInt((1.-color/255.)*100);
++        if(value_temp > 100 * 0.55) {
++          value_temp = 100;
++        } else if(value_temp < 100 * 0.20) {
++          value_temp = 0;
++        } else {
++          value_temp = -1;
++        }
++        const int value =
++            observed == 0
++            ? -1
++            : value_temp;
++        CHECK_LE(-1, value);
++        CHECK_GE(100, value);
++        occupancy_grid->data.push_back(value);
++      }
++    }
++  } else {
++    for (int y = height - 1; y >= 0; --y) {
++      for (int x = 0; x < width; ++x) {
++        const uint32_t packed = pixel_data[y * width + x];
++        const unsigned char color = packed >> 16;
++        const unsigned char observed = packed >> 8;
++        const int value =
+           observed == 0
+               ? -1
+-              : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
+-      CHECK_LE(-1, value);
+-      CHECK_GE(100, value);
+-      occupancy_grid->data.push_back(value);
+-    }
++            : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
++        CHECK_LE(-1, value);
++        CHECK_GE(100, value);
++        occupancy_grid->data.push_back(value);
++      }
++  }
+   }
+-
+   return occupancy_grid;
+ }
+ 
+diff --git a/cartographer_ros/src/node.cpp b/cartographer_ros/src/node.cpp
+index 813ae4b..14c273b 100644
+--- a/cartographer_ros/src/node.cpp
++++ b/cartographer_ros/src/node.cpp
+@@ -19,6 +19,7 @@
+ #include <chrono>
+ #include <string>
+ #include <vector>
++#include <filesystem>
+ 
+ #include "Eigen/Core"
+ #include "absl/memory/memory.h"
+@@ -46,6 +47,7 @@
+ #include "sensor_msgs/msg/point_cloud2.hpp"
+ #include "tf2_eigen/tf2_eigen.hpp"
+ #include "visualization_msgs/msg/marker_array.hpp"
++#include <pcl/console/time.h>
+ 
+ namespace cartographer_ros {
+ 
+@@ -96,6 +98,13 @@ Node::Node(
+     : node_options_(node_options)
+ {
+   node_ = node;
++  // TODO Check the options
++  CreatFileIfNotExist(std::string(kQrbRigidOutputFile));
++  rigid3d_output_file_.open(kQrbRigidOutputFile);
++  if (!rigid3d_output_file_.is_open()) {
++    LOG(ERROR) << "Failed to open file: " << kQrbRigidOutputFile;
++  }
++  rigid3d_output_file_ << "# Trajectory_ID, timestamp, x, y, z, q_x, q_y, q_z, q_w\n";
+   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(node_) ;
+   map_builder_bridge_.reset(new cartographer_ros::MapBuilderBridge(node_options_, std::move(map_builder), tf_buffer.get()));
+ 
+@@ -108,6 +117,9 @@ Node::Node(
+   submap_list_publisher_ =
+       node_->create_publisher<::cartographer_ros_msgs::msg::SubmapList>(
+           kSubmapListTopic, 10);
++  static_submap_list_publisher_ =
++      node_->create_publisher<::cartographer_ros_msgs::msg::SubmapList>(
++          kStaticSubmapListTopic, 10);
+   trajectory_node_list_publisher_ =
+       node_->create_publisher<::visualization_msgs::msg::MarkerArray>(
+           kTrajectoryNodeListTopic, 10);
+@@ -135,27 +147,10 @@ Node::Node(
+       kTrajectoryQueryServiceName,
+       std::bind(
+           &Node::handleTrajectoryQuery, this, std::placeholders::_1, std::placeholders::_2));
+-  start_trajectory_server_ = node_->create_service<cartographer_ros_msgs::srv::StartTrajectory>(
+-      kStartTrajectoryServiceName,
+-      std::bind(
+-          &Node::handleStartTrajectory, this, std::placeholders::_1, std::placeholders::_2));
+-  finish_trajectory_server_ = node_->create_service<cartographer_ros_msgs::srv::FinishTrajectory>(
+-      kFinishTrajectoryServiceName,
+-      std::bind(
+-          &Node::handleFinishTrajectory, this, std::placeholders::_1, std::placeholders::_2));
+-  write_state_server_ = node_->create_service<cartographer_ros_msgs::srv::WriteState>(
+-      kWriteStateServiceName,
++  slam_command_server_ = node_->create_service<qrb_ros_slam_msgs::srv::SlamCommand>(
++      kQrbSlamCommandServiceName,
+       std::bind(
+-          &Node::handleWriteState, this, std::placeholders::_1, std::placeholders::_2));
+-  get_trajectory_states_server_ = node_->create_service<cartographer_ros_msgs::srv::GetTrajectoryStates>(
+-      kGetTrajectoryStatesServiceName,
+-      std::bind(
+-          &Node::handleGetTrajectoryStates, this, std::placeholders::_1, std::placeholders::_2));
+-  read_metrics_server_ = node_->create_service<cartographer_ros_msgs::srv::ReadMetrics>(
+-      kReadMetricsServiceName,
+-      std::bind(
+-          &Node::handleReadMetrics, this, std::placeholders::_1, std::placeholders::_2));
+-
++          &Node::handleQrbSlamCommand, this, std::placeholders::_1, std::placeholders::_2));
+ 
+   submap_list_timer_ = node_->create_wall_timer(
+     std::chrono::milliseconds(int(node_options_.submap_publish_period_sec * 1000)),
+@@ -186,7 +181,12 @@ Node::Node(
+     });
+ }
+ 
+-Node::~Node() { FinishAllTrajectories(); }
++Node::~Node() {
++  if (rigid3d_output_file_.is_open()) {
++    rigid3d_output_file_.close();
++  }
++  FinishAllTrajectories();
++}
+ 
+ bool Node::handleSubmapQuery(
+     const cartographer_ros_msgs::srv::SubmapQuery::Request::SharedPtr request,
+@@ -216,6 +216,8 @@ bool Node::handleTrajectoryQuery(
+ void Node::PublishSubmapList() {
+   absl::MutexLock lock(&mutex_);
+   submap_list_publisher_->publish(map_builder_bridge_->GetSubmapList(node_->now()));
++  static_submap_list_publisher_->publish(
++      map_builder_bridge_->GetStaticSubmaps(node_->now()));
+ }
+ 
+ void Node::AddExtrapolator(const int trajectory_id,
+@@ -349,6 +351,27 @@ void Node::PublishLocalTrajectoryData() {
+         pose_msg.pose = ToGeometryMsgPose(tracking_to_map);
+         tracked_pose_publisher_->publish(pose_msg);
+       }
++      if (node_options_.save_pose_to_scv) {
++        if(current_slam_state_machine_ == SlamStateMachine::LOCALIZATION_ACTIVATED &&
++           map_builder_bridge_->HasReLocalizationOccurred(entry.first)) {
++          const Rigid3d localization_pose = tracking_to_map *
++                                            (*trajectory_data.published_to_tracking);
++          rigid3d_output_file_<< "Localization_ID:" << entry.first << " "
++                              << std::to_string(
++                                  rclcpp::Time(stamped_transform.header.stamp).seconds())
++                              << " "
++                              << localization_pose.DebugStringForEvaluation();
++        }
++        if (current_slam_state_machine_ == SlamStateMachine::MAPPING_ACTIVATED) {
++          const Rigid3d mapping_pose = tracking_to_map *
++                                       (*trajectory_data.published_to_tracking);
++          rigid3d_output_file_<< "Mapping_ID:" << entry.first << " "
++                              << std::to_string(
++                                  rclcpp::Time(stamped_transform.header.stamp).seconds())
++                              << " "
++                              << mapping_pose.DebugStringForEvaluation();
++        }
++      }
+     }
+   }
+ }
+@@ -641,6 +664,234 @@ void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
+   AddTrajectory(options);
+ }
+ 
++qrb_ros_slam_msgs::msg::CommandResponse Node::StartMapping() {
++  TrajectoryOptions mapping_options;
++  std::tie(std::ignore, mapping_options) = LoadOptions(
++      kQrbDefaultConfigDirectory, kQrbDefault2DMappingConfigName);
++  qrb_ros_slam_msgs::msg::CommandResponse command_response;
++  absl::MutexLock lock(&mutex_);
++  if (!ValidateTrajectoryOptions(mapping_options)) {
++    command_response.result = false;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::INVALID_ARGUMENT;
++    command_response.message = "INVALID_ARGUMENT: "
++                               "Invalid Mapping options. Check default Mapping Option.";
++    LOG(ERROR) << command_response.message;
++  } else if (!ValidateTopicNames(mapping_options)) {
++    command_response.result = false;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::INVALID_ARGUMENT;
++    command_response.message = "INVALID_ARGUMENT: "
++                               "Topics are already used by another trajectory.";
++    LOG(ERROR) << command_response.message;
++  } else {
++      int mapping_trajectory_id = AddTrajectory(mapping_options);
++      command_response.result = true;
++      command_response.code = qrb_ros_slam_msgs::msg::StatusCode::OK;
++      command_response.message = "Success. Mapping is Started. Trajectory ID: " +
++                                 std::to_string(mapping_trajectory_id);
++      LOG(INFO) << command_response.message;
++  }
++  return command_response;
++}
++
++qrb_ros_slam_msgs::msg::CommandResponse Node::FinishMapping() {
++  qrb_ros_slam_msgs::msg::CommandResponse command_response;
++  using TrajectoryMode = ::cartographer::mapping::PoseGraphInterface::TrajectoryMode;
++  auto trajectories_mode = map_builder_bridge_->GetTrajectoriesMode();
++  bool all_finished = true;
++  for (const auto id_mode : trajectories_mode) {
++    if (id_mode.second == TrajectoryMode::MAPPING) {
++      if (FinishTrajectory(id_mode.first)) {
++        std::string finished_message =
++            "TrajectoryID:" +
++            std::to_string(id_mode.first) +
++            " has finished.\n";
++        command_response.message += finished_message;
++      } else {
++        all_finished = false;
++        std::string miss_message =
++            "TrajectoryID:" +
++            std::to_string(id_mode.first) +
++            " can't finish.\n";
++        command_response.message += miss_message;
++      }
++    }
++  }
++  command_response.result = all_finished;
++  if (command_response.result) {
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::OK;
++  } else {
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::UNKNOWN;
++  }
++  return command_response;
++}
++
++qrb_ros_slam_msgs::msg::CommandResponse Node::SaveMap() {
++  qrb_ros_slam_msgs::msg::CommandResponse command_response;
++  command_response.result = true;
++
++  std::string map_base_name;
++  map_base_name = std::string(kQrbDefaultMapDir) + "/map_0";
++
++  std::string map_pbstream_name;
++  map_pbstream_name = map_base_name + ".pbstream";
++
++  absl::MutexLock lock(&mutex_);
++  if (map_builder_bridge_->SerializeState(map_pbstream_name,
++                                          true)) {
++    command_response.message += "Write state to pbstream successfully.";
++    if (ConvertPbstreamToRosMap(map_pbstream_name,
++                                map_base_name, 0.05)){
++      command_response.result = true;
++      command_response.code = qrb_ros_slam_msgs::msg::StatusCode::OK;
++      command_response.message += "Already Convert to ROS Map: ";
++      command_response.message += map_base_name;
++    } else {
++      command_response.result = false;
++      command_response.code = qrb_ros_slam_msgs::msg::StatusCode::DATA_LOSS;
++      command_response.message += "Pbstream file is not exist or broken. File name: ";
++      command_response.message += map_pbstream_name;
++    }
++  } else {
++    command_response.result = false;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::RESOURCE_EXHAUSTED;
++    command_response.message += "Failed to serialize state to pbstream.";
++  }
++  return command_response;
++}
++
++qrb_ros_slam_msgs::msg::CommandResponse Node::LoadMap() {
++  qrb_ros_slam_msgs::msg::CommandResponse command_response;
++  std::string map_base_name;
++  map_base_name = std::string(kQrbDefaultMapDir) + "/map_0";
++  std::string map_pbstream_name;
++  map_pbstream_name = map_base_name + ".pbstream";
++  if (!std::filesystem::exists(map_pbstream_name)) {
++    command_response.result = false;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::NOT_FOUND;
++    command_response.message = "Load Map Failed. Pbstream not found";
++    return command_response;
++  }
++  absl::MutexLock lock(&mutex_);
++  const auto remapping_ids =
++      map_builder_bridge_->LoadMap(map_pbstream_name, true);
++  if (remapping_ids.empty()) {
++    command_response.result = false;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::DATA_LOSS;
++    command_response.message = "Load Map Failed. Pbstream maybe empty or broken.";
++  } else {
++    command_response.result = true;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::OK;
++    command_response.message = "Load Map Successfully." ;
++  }
++  return command_response;
++}
++
++qrb_ros_slam_msgs::msg::CommandResponse Node::StartLocalization(bool is_hot_start) {
++  TrajectoryOptions localization_options;
++  std::tie(std::ignore, localization_options) = LoadOptions(
++      kQrbDefaultConfigDirectory, kQrbDefault2DLocalizationConfigName);
++  qrb_ros_slam_msgs::msg::CommandResponse command_response;
++  absl::MutexLock lock(&mutex_);
++  if (!ValidateTrajectoryOptions(localization_options)) {
++    command_response.result = false;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::INVALID_ARGUMENT;
++    command_response.message = "INVALID_ARGUMENT: "
++                               "Invalid Localization options. Check default localization Option.";
++    LOG(ERROR) << command_response.message;
++  } else if (!ValidateTopicNames(localization_options)) {
++    command_response.result = false;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::INVALID_ARGUMENT;
++    command_response.message = "INVALID_ARGUMENT: "
++                               "Topics are already used by another trajectory.";
++    LOG(ERROR) << command_response.message;
++  } else {
++    int mapping_trajectory_id = AddTrajectory(localization_options);
++    command_response.result = true;
++    command_response.code = qrb_ros_slam_msgs::msg::StatusCode::OK;
++    command_response.message = "Success. Localization is Started. Trajectory ID: " +
++                               std::to_string(mapping_trajectory_id);
++    LOG(INFO) << command_response.message;
++  }
++  return command_response;
++
++}
++
++qrb_ros_slam_msgs::msg::CommandResponse Node::ValidateRelocalization() {
++  qrb_ros_slam_msgs::msg::CommandResponse command_response;
++  absl::MutexLock lock(&mutex_);
++  map_builder_bridge_->ValidateRelocalization(command_response);
++  return command_response;
++}
++
++void Node::SendEvent(int event, qrb_ros_slam_msgs::msg::CommandResponse& res) {
++  UpdateSlamState(event, res);
++  LOG(INFO) << "Current SLAM STATE: "
++            << StateMachineToString(current_slam_state_machine_);
++}
++
++void Node::UpdateSlamState(int event, qrb_ros_slam_msgs::msg::CommandResponse& res) {
++  switch (event) {
++    case SlamEvent::START_MAPPING_EVENT:
++      if (current_slam_state_machine_ == SlamStateMachine::IDLE) {
++        res = StartMapping();
++        if (res.result) {
++          current_slam_state_machine_ = SlamStateMachine::MAPPING_ACTIVATED;
++        }
++      }
++      break;
++
++    case SlamEvent::FINISH_MAPPING_EVENT:
++      if (current_slam_state_machine_ == SlamStateMachine::MAPPING_ACTIVATED) {
++        res = FinishMapping();
++        if (res.result) {
++          current_slam_state_machine_ = SlamStateMachine::MAPPING_FINISHED;
++        }
++      }
++      break;
++
++    case SlamEvent::LOAD_MAP_EVENT:
++      if (current_slam_state_machine_ == SlamStateMachine::IDLE) {
++        res = LoadMap();
++        if (res.result) {
++          current_slam_state_machine_ = SlamStateMachine::MAP_READY;
++        }
++      }
++      break;
++
++    case SlamEvent::SAVE_MAP_EVENT:
++      if (current_slam_state_machine_ == SlamStateMachine::MAPPING_FINISHED) {
++        res = SaveMap();
++        if (res.result) {
++          current_slam_state_machine_ = SlamStateMachine::MAPPING_FINISHED;
++        }
++      }
++      break;
++
++    case SlamEvent::START_LOCALIZATION_EVENT:
++      if (current_slam_state_machine_ == SlamStateMachine::MAPPING_FINISHED) {
++        res = StartLocalization();
++        if (res.result) {
++          current_slam_state_machine_ = SlamStateMachine::LOCALIZATION_ACTIVATED;
++        }
++      }
++      if (current_slam_state_machine_ == SlamStateMachine::MAP_READY) {
++        res = StartLocalization();
++        if (res.result) {
++          current_slam_state_machine_ = SlamStateMachine::LOCALIZATION_ACTIVATED;
++        }
++      }
++      break;
++
++    case SlamEvent::VALIDATE_RELOCALIZATION:
++      if (current_slam_state_machine_ == SlamStateMachine::LOCALIZATION_ACTIVATED) {
++        res = ValidateRelocalization();
++        if (res.result) {
++          current_slam_state_machine_ = SlamStateMachine::LOCALIZATION_ACTIVATED;
++        }
++      }
++      break;
++  }
++}
+ std::vector<
+     std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
+ Node::ComputeDefaultSensorIdsForMultipleBags(
+@@ -748,6 +999,47 @@ bool Node::handleReadMetrics(
+   return true;
+ }
+ 
++bool Node::handleQrbSlamCommand(
++    const qrb_ros_slam_msgs::srv::SlamCommand::Request::SharedPtr request,
++    qrb_ros_slam_msgs::srv::SlamCommand::Response::SharedPtr response) {
++  pcl::console::TicToc execution_time;
++  execution_time.tic();
++  std::string previous_state = StateMachineToString(current_slam_state_machine_);
++  using CommandCode = qrb_ros_slam_msgs::msg::CommandCode;
++  qrb_ros_slam_msgs::msg::CommandResponse qrb_slam_command_response;
++  qrb_slam_command_response.result = false;
++  qrb_slam_command_response.code = qrb_ros_slam_msgs::msg::StatusCode::UNKNOWN;
++  switch (request->command_id) {
++    case CommandCode::START_MAPPING:
++      SendEvent(SlamEvent::START_MAPPING_EVENT, qrb_slam_command_response);
++      break;
++
++    case CommandCode::FINISH_MAPPING:
++      SendEvent(SlamEvent::FINISH_MAPPING_EVENT, qrb_slam_command_response);
++      break;
++
++    case CommandCode::SAVE_MAP:
++      SendEvent(SlamEvent::SAVE_MAP_EVENT, qrb_slam_command_response);
++      break;
++
++    case CommandCode::LOAD_MAP:
++      SendEvent(SlamEvent::LOAD_MAP_EVENT,qrb_slam_command_response);
++      break;
++
++    case CommandCode::START_LOCALIZATION:
++      SendEvent(SlamEvent::START_LOCALIZATION_EVENT, qrb_slam_command_response);
++      break;
++
++    case CommandCode::VALIDATE_RELOCALIZATION:
++      SendEvent(SlamEvent::VALIDATE_RELOCALIZATION, qrb_slam_command_response);
++      break;
++  }
++  response->response = qrb_slam_command_response;
++  std::string now_state = StateMachineToString(current_slam_state_machine_);
++  LOG(INFO) << "[Service] "<< previous_state << " -> " << now_state << ", Time cost: " << execution_time.toc() << " ms." ;
++  LOG(INFO) << response->response.message;
++  return true;
++}
+ void Node::FinishAllTrajectories() {
+   absl::MutexLock lock(&mutex_);
+   for (const auto& entry : map_builder_bridge_->GetTrajectoryStates()) {
+@@ -792,6 +1084,17 @@ void Node::HandleOdometryMessage(const int trajectory_id,
+   if (!sensor_samplers_.at(trajectory_id).odometry_sampler.Pulse()) {
+     return;
+   }
++  {
++    static double last_odom_time = 0.0;
++    if (last_odom_time == 0.0 ||
++        last_odom_time >= rclcpp::Time(msg->header.stamp).seconds()) {
++        LOG(WARNING) << std::setprecision(6)
++                    << std::to_string(last_odom_time)
++                    << "  ****** VS ******   "
++                    << rclcpp::Time(msg->header.stamp).seconds();
++    }
++    last_odom_time = rclcpp::Time(msg->header.stamp).seconds();
++  }
+   auto sensor_bridge_ptr = map_builder_bridge_->sensor_bridge(trajectory_id);
+   auto odometry_data_ptr = sensor_bridge_ptr->ToOdometryData(msg);
+   if (odometry_data_ptr != nullptr) {
+@@ -884,6 +1187,79 @@ void Node::LoadState(const std::string& state_filename,
+   map_builder_bridge_->LoadState(state_filename, load_frozen_state);
+ }
+ 
++bool Node::ConvertPbstreamToRosMap(const std::string& pbstream_file_name,
++                             const std::string& ros_map_file_name,
++                             const double resolution) {
++  LOG(INFO) << "Convert Pbstream to ROS Map.";
++  LOG(INFO) << "Pbstream Filename: " + pbstream_file_name;
++  LOG(INFO) << "ROS Map Filestem: " + ros_map_file_name;
++  if (!std::filesystem::exists(pbstream_file_name)) {
++    return false;
++  }
++  ::cartographer::io::ProtoStreamReader reader(pbstream_file_name);
++  ::cartographer::io::ProtoStreamDeserializer deserializer(&reader);
++  std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
++      submap_slices;
++  ::cartographer::mapping::ValueConversionTables conversion_tables;
++  ::cartographer::io::DeserializeAndFillSubmapSlices(
++      &deserializer, &submap_slices, &conversion_tables);
++  if (!reader.eof()) {
++    return false;
++  }
++
++  auto result =
++      ::cartographer::io::PaintSubmapSlices(submap_slices, resolution);
++
++  ::cartographer::io::StreamFileWriter pgm_writer(ros_map_file_name + ".pgm");
++
++  ::cartographer::io::Image image(std::move(result.surface));
++  bool write_done = WritePgm(image, resolution, &pgm_writer);
++  if (!write_done) {
++    return false;
++  }
++  const Eigen::Vector2d origin(
++      -result.origin.x() * resolution,
++      (result.origin.y() - image.height()) * resolution);
++
++  ::cartographer::io::StreamFileWriter yaml_writer(ros_map_file_name + ".yaml");
++  write_done = WriteYaml(resolution, origin, pgm_writer.GetFilename(), &yaml_writer);
++  if (!write_done) {
++    return false;
++  }
++  return true;
++}
++
++std::string Node::StateMachineToString(const SlamStateMachine& state) {
++  std::string state_str;
++  if (state == SlamStateMachine::IDLE) {
++    state_str = "IDLE";
++  } else if (state == SlamStateMachine::MAPPING_ACTIVATED) {
++    state_str = "MAPPING_ACTIVATED";
++  } else if (state == SlamStateMachine::MAPPING_FINISHED) {
++    state_str = "MAPPING_FINISHED";
++  } else if (state == SlamStateMachine::MAP_READY) {
++    state_str = "MAP_READY";
++  } else if (state == SlamStateMachine::LOCALIZATION_ACTIVATED) {
++    state_str = "LOCALIZATION_ACTIVATED";
++  }
++  return state_str;
++}
++
++bool Node::CreatFileIfNotExist(const std::string &file_name) {
++  if (!std::filesystem::exists(file_name))
++  {
++    std::ofstream create_file(file_name);
++    if (!create_file.is_open())
++    {
++      LOG(ERROR) << "Failed to create file! Please check the output path.";
++      return false;
++    } else {
++      create_file.close();
++    }
++  }
++  return true;
++}
++
+ // TODO: find ROS equivalent to ros::master::getTopics
+ void Node::MaybeWarnAboutTopicMismatch() {
+ //  ::ros::master::V_TopicInfo ros_topics;
+diff --git a/cartographer_ros/src/node_main.cpp b/cartographer_ros/src/node_main.cpp
+index f403be0..4458090 100644
+--- a/cartographer_ros/src/node_main.cpp
++++ b/cartographer_ros/src/node_main.cpp
+@@ -15,6 +15,8 @@
+  */
+ 
+ #include "absl/memory/memory.h"
++#include "absl/synchronization/mutex.h"
++#include "absl/synchronization/internal/graphcycles.h"
+ #include "cartographer/mapping/map_builder.h"
+ #include "cartographer_ros/node.h"
+ #include "cartographer_ros/node_options.h"
+@@ -25,30 +27,13 @@
+ DEFINE_bool(collect_metrics, false,
+             "Activates the collection of runtime metrics. If activated, the "
+             "metrics can be accessed via a ROS service.");
+-DEFINE_string(configuration_directory, "",
+-              "First directory in which configuration files are searched, "
+-              "second is always the Cartographer installation to allow "
+-              "including files from there.");
+-DEFINE_string(configuration_basename, "",
+-              "Basename, i.e. not containing any directory prefix, of the "
+-              "configuration file.");
+-DEFINE_string(load_state_filename, "",
+-              "If non-empty, filename of a .pbstream file to load, containing "
+-              "a saved SLAM state.");
+-DEFINE_bool(load_frozen_state, true,
+-            "Load the saved state as frozen (non-optimized) trajectories.");
+-DEFINE_bool(
+-    start_trajectory_with_default_topics, true,
+-    "Enable to immediately start the first trajectory with default topics.");
+-DEFINE_string(
+-    save_state_filename, "",
+-    "If non-empty, serialize state and write it to disk before shutting down.");
+ 
+ namespace cartographer_ros {
+ namespace {
+ 
+ void Run() {
+   rclcpp::Node::SharedPtr cartographer_node = rclcpp::Node::make_shared("cartographer_node");
++  LOG(INFO) << "Run Ignore Cycle";
+   constexpr double kTfBufferCacheTimeInSeconds = 10.;
+ 
+   std::shared_ptr<tf2_ros::Buffer> tf_buffer =
+@@ -63,36 +48,26 @@ void Run() {
+   NodeOptions node_options;
+   TrajectoryOptions trajectory_options;
+   std::tie(node_options, trajectory_options) =
+-      LoadOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
++      LoadOptions(kQrbDefaultConfigDirectory,
++                  kQrbDefault2DMappingConfigName);
+ 
+   auto map_builder =
+     cartographer::mapping::CreateMapBuilder(node_options.map_builder_options);
+   auto node = std::make_shared<cartographer_ros::Node>(
+     node_options, std::move(map_builder), tf_buffer, cartographer_node,
+     FLAGS_collect_metrics);
+-  if (!FLAGS_load_state_filename.empty()) {
+-    node->LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
+-  }
+-
+-  if (FLAGS_start_trajectory_with_default_topics) {
+-    node->StartTrajectoryWithDefaultTopics(trajectory_options);
+-  }
+ 
+   rclcpp::spin(cartographer_node);
+ 
+   node->FinishAllTrajectories();
+   node->RunFinalOptimization();
+-
+-  if (!FLAGS_save_state_filename.empty()) {
+-    node->SerializeState(FLAGS_save_state_filename,
+-                        true /* include_unfinished_submaps */);
+-  }
+ }
+ 
+ }  // namespace
+ }  // namespace cartographer_ros
+ 
+ int main(int argc, char** argv) {
++  absl::SetMutexDeadlockDetectionMode(absl::OnDeadlockCycle::kIgnore);
+   // Init rclcpp first because gflags reorders command line flags in argv
+   rclcpp::init(argc, argv);
+ 
+@@ -100,11 +75,6 @@ int main(int argc, char** argv) {
+   google::InitGoogleLogging(argv[0]);
+   google::ParseCommandLineFlags(&argc, &argv, false);
+ 
+-  CHECK(!FLAGS_configuration_directory.empty())
+-      << "-configuration_directory is missing.";
+-  CHECK(!FLAGS_configuration_basename.empty())
+-      << "-configuration_basename is missing.";
+-
+   cartographer_ros::ScopedRosLogSink ros_log_sink;
+   cartographer_ros::Run();
+   ::rclcpp::shutdown();
+diff --git a/cartographer_ros/src/node_options.cpp b/cartographer_ros/src/node_options.cpp
+index 681754e..c41d50a 100644
+--- a/cartographer_ros/src/node_options.cpp
++++ b/cartographer_ros/src/node_options.cpp
+@@ -48,6 +48,10 @@ NodeOptions CreateNodeOptions(
+     options.publish_tracked_pose =
+         lua_parameter_dictionary->GetBool("publish_tracked_pose");
+   }
++  if (lua_parameter_dictionary->HasKey("save_pose_to_scv")) {
++    options.save_pose_to_scv =
++        lua_parameter_dictionary->GetBool("save_pose_to_scv");
++  }
+   if (lua_parameter_dictionary->HasKey("use_pose_extrapolator")) {
+     options.use_pose_extrapolator =
+         lua_parameter_dictionary->GetBool("use_pose_extrapolator");
+diff --git a/cartographer_ros/src/occupancy_grid_node_main.cpp b/cartographer_ros/src/occupancy_grid_node_main.cpp
+index 282b890..9da700a 100644
+--- a/cartographer_ros/src/occupancy_grid_node_main.cpp
++++ b/cartographer_ros/src/occupancy_grid_node_main.cpp
+@@ -46,8 +46,12 @@ DEFINE_bool(include_frozen_submaps, true,
+             "Include frozen submaps in the occupancy grid.");
+ DEFINE_bool(include_unfrozen_submaps, true,
+             "Include unfrozen submaps in the occupancy grid.");
++DEFINE_bool(enable_standard_gridmap, false,
++            "Enable ros map published with three numerical(-1,0,100) formats");
+ DEFINE_string(occupancy_grid_topic, cartographer_ros::kOccupancyGridTopic,
+               "Name of the topic on which the occupancy grid is published.");
++DEFINE_string(static_occupancy_grid_topic, cartographer_ros::kStaticOccupancyGridTopic,
++              "Name of the topic on which the static occupancy grid is published.");
+ 
+ namespace cartographer_ros {
+ namespace {
+@@ -74,13 +78,18 @@ class Node : public rclcpp::Node
+   absl::Mutex mutex_;
+   rclcpp::CallbackGroup::SharedPtr callback_group_;
+   rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor_;
+-  ::rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client_ GUARDED_BY(mutex_);
+-  ::rclcpp::Subscription<cartographer_ros_msgs::msg::SubmapList>::SharedPtr submap_list_subscriber_ GUARDED_BY(mutex_);
+-  ::rclcpp::Publisher<::nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_grid_publisher_ GUARDED_BY(mutex_);
+-  std::map<SubmapId, SubmapSlice> submap_slices_ GUARDED_BY(mutex_);
++  ::rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client_ ABSL_GUARDED_BY(mutex_);
++  ::rclcpp::Subscription<cartographer_ros_msgs::msg::SubmapList>::SharedPtr submap_list_subscriber_ ABSL_GUARDED_BY(mutex_);
++  ::rclcpp::Subscription<cartographer_ros_msgs::msg::SubmapList>::SharedPtr static_submaps_subscriber_ ABSL_GUARDED_BY(mutex_);
++  ::rclcpp::Publisher<::nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_grid_publisher_ ABSL_GUARDED_BY(mutex_);
++  ::rclcpp::Publisher<::nav_msgs::msg::OccupancyGrid>::SharedPtr static_occupancy_grid_publisher_ ABSL_GUARDED_BY(mutex_);
++  std::map<SubmapId, SubmapSlice> submap_slices_ ABSL_GUARDED_BY(mutex_);
++  std::map<SubmapId, SubmapSlice> static_submap_slices_ ABSL_GUARDED_BY(mutex_);
+   rclcpp::TimerBase::SharedPtr occupancy_grid_publisher_timer_;
+   std::string last_frame_id_;
++  std::string last_static_frame_id_;
+   rclcpp::Time last_timestamp_;
++  rclcpp::Time last_static_timestamp_;
+ };
+ 
+ Node::Node(const double resolution, const double publish_period_sec)
+@@ -105,6 +114,9 @@ Node::Node(const double resolution, const double publish_period_sec)
+   occupancy_grid_publisher_ = this->create_publisher<::nav_msgs::msg::OccupancyGrid>(
+       kOccupancyGridTopic, rclcpp::QoS(10).transient_local());
+ 
++  static_occupancy_grid_publisher_ = this->create_publisher<::nav_msgs::msg::OccupancyGrid>(
++      kStaticOccupancyGridTopic, rclcpp::QoS(10).transient_local());
++
+   occupancy_grid_publisher_timer_ = this->create_wall_timer(
+     std::chrono::milliseconds(int(publish_period_sec * 1000)),
+     [this]() {
+@@ -175,8 +187,74 @@ Node::Node(const double resolution, const double publish_period_sec)
+     last_frame_id_ = msg->header.frame_id;
+     };
+ 
++  auto handleStaticSubmaps =
++    [this, publish_period_sec](const typename cartographer_ros_msgs::msg::SubmapList::SharedPtr msg) -> void
++    {
++      absl::MutexLock locker(&mutex_);
++
++      // We do not do any work if nobody listens.
++      if (this->count_publishers(kSubmapListTopic) == 0){
++        return;
++      }
++
++      // Keep track of submap IDs that don't appear in the message anymore.
++      std::set<SubmapId> submap_ids_to_delete;
++      for (const auto& pair : static_submap_slices_) {
++        submap_ids_to_delete.insert(pair.first);
++      }
++
++      for (const auto& submap_msg : msg->submap) {
++        const SubmapId id{submap_msg.trajectory_id, submap_msg.submap_index};
++        submap_ids_to_delete.erase(id);
++        if ((submap_msg.is_frozen && !FLAGS_include_frozen_submaps) ||
++            (!submap_msg.is_frozen && !FLAGS_include_unfrozen_submaps)) {
++          continue;
++        }
++        SubmapSlice& submap_slice = static_submap_slices_[id];
++        submap_slice.pose = ToRigid3d(submap_msg.pose);
++        submap_slice.metadata_version = submap_msg.submap_version;
++        if (submap_slice.surface != nullptr &&
++            submap_slice.version == submap_msg.submap_version) {
++          continue;
++        }
++
++        auto fetched_textures = cartographer_ros::FetchSubmapTextures(
++            id, client_, callback_group_executor_,
++            std::chrono::milliseconds(int(publish_period_sec * 1000)));
++        if (fetched_textures == nullptr) {
++          continue;
++        }
++        CHECK(!fetched_textures->textures.empty());
++        submap_slice.version = fetched_textures->version;
++
++        // We use the first texture only. By convention this is the highest
++        // resolution texture and that is the one we want to use to construct the
++        // map for ROS.
++        const auto fetched_texture = fetched_textures->textures.begin();
++        submap_slice.width = fetched_texture->width;
++        submap_slice.height = fetched_texture->height;
++        submap_slice.slice_pose = fetched_texture->slice_pose;
++        submap_slice.resolution = fetched_texture->resolution;
++        submap_slice.cairo_data.clear();
++        submap_slice.surface = ::cartographer::io::DrawTexture(
++            fetched_texture->pixels.intensity, fetched_texture->pixels.alpha,
++            fetched_texture->width, fetched_texture->height,
++            &submap_slice.cairo_data);
++      }
++
++      // Delete all submaps that didn't appear in the message.
++      for (const auto& id : submap_ids_to_delete) {
++        static_submap_slices_.erase(id);
++      }
++
++      last_static_timestamp_ = msg->header.stamp;
++      last_static_frame_id_ = msg->header.frame_id;
++    };
++
+   submap_list_subscriber_ = create_subscription<cartographer_ros_msgs::msg::SubmapList>(
+     kSubmapListTopic, rclcpp::QoS(10), handleSubmapList);
++  static_submaps_subscriber_ = create_subscription<cartographer_ros_msgs::msg::SubmapList>(
++      kStaticSubmapListTopic, rclcpp::QoS(10), handleStaticSubmaps);
+ }
+ 
+ void Node::DrawAndPublish() {
+@@ -186,8 +264,18 @@ void Node::DrawAndPublish() {
+   }
+   auto painted_slices = PaintSubmapSlices(submap_slices_, resolution_);
+   std::unique_ptr<nav_msgs::msg::OccupancyGrid> msg_ptr = CreateOccupancyGridMsg(
+-      painted_slices, resolution_, last_frame_id_, last_timestamp_);
++      painted_slices, resolution_,
++      last_frame_id_, last_timestamp_, FLAGS_enable_standard_gridmap);
+   occupancy_grid_publisher_->publish(*msg_ptr);
++
++  if (static_submap_slices_.empty() || last_frame_id_.empty()) {
++    return;
++  }
++  auto painted_static_slices = PaintSubmapSlices(static_submap_slices_, resolution_);
++  std::unique_ptr<nav_msgs::msg::OccupancyGrid> static_map_msg_ptr = CreateOccupancyGridMsg(
++      painted_static_slices, resolution_,
++      last_static_frame_id_, last_static_timestamp_, FLAGS_enable_standard_gridmap);
++  static_occupancy_grid_publisher_->publish(*static_map_msg_ptr);
+ }
+ 
+ }  // namespace
+diff --git a/cartographer_ros/src/ros_map.cpp b/cartographer_ros/src/ros_map.cpp
+index a8a18d2..095a848 100644
+--- a/cartographer_ros/src/ros_map.cpp
++++ b/cartographer_ros/src/ros_map.cpp
+@@ -19,31 +19,39 @@
+ namespace cartographer_ros {
+ 
+ // TODO: png ?
+-void WritePgm(const ::cartographer::io::Image& image, const double resolution,
++bool WritePgm(const ::cartographer::io::Image& image, const double resolution,
+               ::cartographer::io::FileWriter* file_writer) {
+   const std::string header =
+       "P5\n# Cartographer map; " + std::to_string(resolution) + " m/pixel\n" +
+       std::to_string(image.width()) + " " + std::to_string(image.height()) + "\n255\n";
+-  file_writer->Write(header.data(), header.size());
++  bool write_done = file_writer->Write(header.data(), header.size());
++  if (!write_done) {return false;}
+   for (int y = 0; y < image.height(); ++y) {
+     for (int x = 0; x < image.width(); ++x) {
+       const char color = image.GetPixel(x, y)[0];
+-      file_writer->Write(&color, 1);
++      write_done = file_writer->Write(&color, 1);
++      if (!write_done) { return false; }
+     }
+   }
++  return true;
+ }
+ 
+-void WriteYaml(const double resolution, const Eigen::Vector2d& origin,
++bool WriteYaml(const double resolution, const Eigen::Vector2d& origin,
+                const std::string& pgm_filename,
+                ::cartographer::io::FileWriter* file_writer) {
+   // Magic constants taken directly from ros map_saver code:
+   // https://github.com/ros-planning/navigation/blob/ac41d2480c4cf1602daf39a6e9629142731d92b0/map_server/src/map_saver.cpp#L114
+   // TODO: check ROS2 map format
+   const std::string output =
+-      "image: " + pgm_filename + "\n" + "resolution: " + std::to_string(resolution) + "\n" +
+-      "origin: [" + std::to_string(origin.x()) + ", " + std::to_string(origin.y()) +
+-      ", 0.0]\nnegate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.196\n";
+-  file_writer->Write(output.data(), output.size());
++      "image: " + pgm_filename + "\n" +
++      "resolution: " + std::to_string(resolution) + "\n"
++      "origin: [" +  std::to_string(origin.x()) + ", " +
++      std::to_string(origin.y()) + ", 0.0]\n" +
++      "negate: 0\n"
++      "occupied_thresh: 0.65\n"
++      "free_thresh: 0.196\n";
++  bool write_done = file_writer->Write(output.data(), output.size());
++  return write_done;
+ }
+ 
+ }  // namespace cartographer_ros
+diff --git a/cartographer_rviz/include/cartographer_rviz/drawable_submap.h b/cartographer_rviz/include/cartographer_rviz/drawable_submap.h
+index fe9d5ba..e145c33 100644
+--- a/cartographer_rviz/include/cartographer_rviz/drawable_submap.h
++++ b/cartographer_rviz/include/cartographer_rviz/drawable_submap.h
+@@ -108,16 +108,16 @@ class DrawableSubmap : public QObject{
+   Ogre::SceneNode* const submap_node_;
+   Ogre::SceneNode* const submap_id_text_node_;
+   std::vector<std::unique_ptr<OgreSlice>> ogre_slices_;
+-  ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
++  ::cartographer::transform::Rigid3d pose_ ABSL_GUARDED_BY(mutex_);
+   ::rviz_rendering::Axes pose_axes_;
+   bool pose_axes_visible_;
+   ::rviz_rendering::MovableText submap_id_text_;
+-  std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
+-  bool query_in_progress_ GUARDED_BY(mutex_) = false;
+-  int metadata_version_ GUARDED_BY(mutex_) = -1;
++  std::chrono::milliseconds last_query_timestamp_ ABSL_GUARDED_BY(mutex_);
++  bool query_in_progress_ ABSL_GUARDED_BY(mutex_) = false;
++  int metadata_version_ ABSL_GUARDED_BY(mutex_) = -1;
+   std::future<void> rpc_request_future_;
+   std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures_
+-      GUARDED_BY(mutex_);
++      ABSL_GUARDED_BY(mutex_);
+   float current_alpha_ = 0.f;
+   std::unique_ptr<::rviz_common::properties::BoolProperty> visibility_;
+ };
+diff --git a/cartographer_rviz/include/cartographer_rviz/submaps_display.h b/cartographer_rviz/include/cartographer_rviz/submaps_display.h
+index 4b128aa..99c5cea 100644
+--- a/cartographer_rviz/include/cartographer_rviz/submaps_display.h
++++ b/cartographer_rviz/include/cartographer_rviz/submaps_display.h
+@@ -97,7 +97,7 @@ class SubmapsDisplay
+   std::unique_ptr<std::string> map_frame_;
+   ::rviz_common::properties::StringProperty* tracking_frame_property_;
+   Ogre::SceneNode* map_node_ = nullptr;  // Represents the map frame.
+-  std::map<int, std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
++  std::map<int, std::unique_ptr<Trajectory>> trajectories_ ABSL_GUARDED_BY(mutex_);
+   absl::Mutex mutex_;
+   ::rviz_common::properties::BoolProperty* slice_high_resolution_enabled_;
+   ::rviz_common::properties::BoolProperty* slice_low_resolution_enabled_;
+-- 
+2.41.0.windows.3
+
