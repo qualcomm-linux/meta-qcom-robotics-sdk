@@ -40,6 +40,10 @@ repos:
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     branch: master
+    patches:
+      plain:
+        repo: meta-qcom
+        path: 0001-meta-security-layers-update-for-wrynose-release-series.patch
     layers:
       .:
       meta-tpm:
