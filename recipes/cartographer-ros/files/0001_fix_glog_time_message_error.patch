@@ -1,0 +1,27 @@
+# This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+From 15c8b229458befd73df233e445bf75c2bff5c175 Mon Sep 17 00:00:00 2001
+From: xiaohui <xkuo@qti.qualcomm.com>
+Date: Thu, 29 May 2025 14:58:56 +0800
+Subject: [PATCH] fix glog time message error
+
+Upstream-Status: Inappropriate [platform specific]
+Signed-off-by: xiaohui kuo <quic_xkuo@quicinc.com>
+---
+
+diff --git a/cartographer_ros/src/ros_log_sink.cpp b/cartographer_ros/src/ros_log_sink.cpp
+index ba050f3..78d5947 100644
+--- a/cartographer_ros/src/ros_log_sink.cpp
++++ b/cartographer_ros/src/ros_log_sink.cpp
+@@ -64,7 +64,9 @@ void ScopedRosLogSink::send(const ::google::LogSeverity severity,
+       severity, GetBasename(filename), line, tm_time, message, message_len);
+ #else
+   const std::string message_string = ::google::LogSink::ToString(
+-      severity, GetBasename(filename), line, ::google::LogMessageTime(*tm_time), message, message_len);
++      severity, GetBasename(filename), line,
++      ::google::LogMessageTime(std::chrono::system_clock::from_time_t(::mktime(const_cast<std::tm*>(tm_time)))),
++      message, message_len);
+ #endif
+   switch (severity) {
+     case ::google::GLOG_INFO:
