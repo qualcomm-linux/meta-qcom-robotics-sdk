@@ -59,6 +59,10 @@ repos:
   meta-security:
       url: https://git.yoctoproject.org/meta-security
       branch: master
+      patches:
+           plain:
+               repo: meta-qcom
+               path: 0001-meta-security-layers-update-for-wrynose-release-series.patch
       layers:
           .:
           meta-tpm:
@@ -84,6 +88,9 @@ repos:
           ament_cmake_py_fix:
               repo:  meta-qcom-robotics-sdk
               path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
+          qcom-fixes4:
+              repo: meta-qcom-robotics-sdk
+              path: 0001-fix-Update-LAYERSERIES_COMPAT-to-adapt-to-upstream-u.patch
       commit: fceba46917fe9473e64534d972d3cf853aa7674d
 
 local_conf_header:
