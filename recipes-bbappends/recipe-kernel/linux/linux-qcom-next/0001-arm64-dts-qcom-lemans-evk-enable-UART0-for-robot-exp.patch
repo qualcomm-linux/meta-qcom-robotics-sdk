@@ -1,0 +1,46 @@
+From 8ccaa05b94625b75cf0cbac631ecfa21dd206480 Mon Sep 17 00:00:00 2001
+From: Canfeng Zhuang <canfeng.zhuang@oss.qualcomm.com>
+Date: Mon, 9 Mar 2026 15:41:46 +0800
+Subject: [PATCH 1/2] arm64: dts: qcom: lemans-evk: enable UART0 for robot
+ expansion board
+
+Upstream-Status: Submitted
+
+The lemans-evk mezzanine connector supports a robot expansion board that
+requires UART0, which is currently disabled. This prevents the expansion
+board from exchanging data and control commands.
+
+Enable UART0 and assign the serial2 alias to provide stable device
+enumeration for the expansion board.
+
+Signed-off-by: Canfeng Zhuang <canfeng.zhuang@oss.qualcomm.com>
+---
+ arch/arm64/boot/dts/qcom/lemans-evk.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/lemans-evk.dts b/arch/arm64/boot/dts/qcom/lemans-evk.dts
+index 5d1b1d8c6cfa1..cba4ce75832ca 100644
+--- a/arch/arm64/boot/dts/qcom/lemans-evk.dts
++++ b/arch/arm64/boot/dts/qcom/lemans-evk.dts
+@@ -22,6 +22,7 @@ aliases {
+ 		mmc1 = &sdhc;
+ 		serial0 = &uart10;
+ 		serial1 = &uart17;
++		serial2 = &uart0;
+ 	};
+ 
+ 	dmic: audio-codec-0 {
+@@ -853,6 +854,10 @@ sd_cd: sd-cd-state {
+ 	};
+ };
+ 
++&uart0 {
++	status = "okay";
++};
++
+ &uart10 {
+ 	compatible = "qcom,geni-debug-uart";
+ 	pinctrl-0 = <&qup_uart10_default>;
+-- 
+2.34.1
+

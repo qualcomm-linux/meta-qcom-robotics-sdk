@@ -60,23 +60,27 @@ repos:
       meta-tpm: null
     commit: 0936595355433f9691fd30257743865b9ae27a1d
   meta-ros:
-    url: https://github.com/ros/meta-ros.git
-    branch: master
-    layers:
-      meta-ros-common: null
-      meta-ros2: null
-      meta-ros2-jazzy: null
-    patches:
-      qcom-fixes1:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
-      qcom-fixes2:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0002-jazzy-update-libdir-of-ompl.patch
-      qcom-fixes3:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
-    commit: fceba46917fe9473e64534d972d3cf853aa7674d
+      url: https://github.com/ros/meta-ros.git
+      branch: master
+      layers:
+          meta-ros-common:
+          meta-ros2:
+          meta-ros2-jazzy:
+      patches:
+          qcom-fixes1:
+              repo: meta-qcom-robotics-sdk
+              path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
+          qcom-fixes2:
+              repo: meta-qcom-robotics-sdk
+              path: patches/0002-jazzy-update-libdir-of-ompl.patch
+          qcom-fixes3:
+              repo: meta-qcom-robotics-sdk
+              path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
+          ament_cmake_py_fix:
+              repo:  meta-qcom-robotics-sdk
+              path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
+      commit: fceba46917fe9473e64534d972d3cf853aa7674d
+
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
 

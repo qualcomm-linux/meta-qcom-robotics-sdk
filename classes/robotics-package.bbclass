@@ -1,10 +1,28 @@
 # Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# robotics-package.bbclass
+# Purpose:
+#   Provides common packaging behavior for robotics SDK components.
+#   This class adjusts install layout, package splitting, package metadata,
+#   and selected QA / shlibs behaviors to better match robotics and ROS-style
+#   deliverables, including Ubuntu-targeted packaging scenarios.
+#
+# Main responsibilities:
+#   1. Optionally relocate installed files under a configured package prefix.
+#   2. Define how runtime, -dev, -staticdev, and -dbg packages are exposed.
+#   3. Control RPROVIDES / PROVIDES behavior for the main package outputs.
+#   4. Adjust QA and shlibs processing for ROS / Ubuntu integration cases.
+#   5. Override package composition dynamically based on dependency settings.
+#
 SDK_NAME = "qirp"
 
 pkg_dest ?= "/opt/qcom/${SDK_NAME}-sdk"
 pkg_dest = " "
 
+# Function: do_move_opt
+# Move installed content under ${pkg_dest} when a non-root destination is used.
+# This helps recipes share a consistent SDK-oriented install layout.
 do_move_opt() {
     if [ "${pkg_dest}" == "/" or "${pkg_dest}" == " " ]; then
         bbnote "pkg_dest set to root , did not need copy"
@@ -71,6 +89,9 @@ INSANE_SKIP:${PN} += "${@skip_ros_dev_so_check(d)}"
 
 PACKAGEFUNCS:remove = "${@packages_funcs(d)}"
 
+# Function: skip_ros_dev_so_check
+# Return the QA check name to skip when ROS dependency settings indicate that
+# development symlink validation should not be enforced.
 def skip_ros_dev_so_check(d):
     # Your code here
     ros_exec_depends = d.getVar("ROS_EXEC_DEPENDS") or ""
@@ -78,6 +99,9 @@ def skip_ros_dev_so_check(d):
     if len(ros_exec_depends.strip()) != 0 or len(ros_build_depends.strip()) != 0:
         return "dev-so"
     return ""
+# Function: packages_funcs
+# Disable selected package shlibs processing for Ubuntu-targeted ROS builds
+# where the default shared library scanning behavior is not desired.
 def packages_funcs(d):
     # Your code here
     ros_exec_depends = d.getVar("ROS_EXEC_DEPENDS") or ""
@@ -87,6 +111,9 @@ def packages_funcs(d):
         if len(ubuntu_version.strip()) != 0:
             return "package_do_shlibs"
     return ""
+# Function: remove_rdepends
+# Remove automatically generated runtime dependencies for ROS / Ubuntu builds
+# when ROS dependency variables explicitly define the desired package content.
 def remove_rdepends(d):
     ros_exec_depends = d.getVar("ROS_EXEC_DEPENDS") or ""
     ros_build_depends = d.getVar("ROS_BUILD_DEPENDS") or ""
@@ -96,18 +123,17 @@ def remove_rdepends(d):
         if len(ubuntu_version.strip()) != 0:
             return ros_exec_depends
     return ""
+# Function: get_runtime_depends
+# Helper to read the runtime dependency string for a specific package name.
 def get_runtime_depends(PN,d):
     runtime_depends = d.getVar('RDEPENDS:{}'.format(PN), True)
     if runtime_depends :
         return runtime_depends
     return " "
 
-
-# define the ${PN} package to replace ${PN}
-# package all the file to ${PN}
-# add provide for ${PN} , keep ${PN} as provider too
-# add Rprovider ${PN} , keep ${PN} as provider too
-
+# Function: __anonymous
+# Configure package splitting and package architecture dynamically based on
+# ROS dependency variables and the target Ubuntu integration mode.
 python __anonymous(){
     package_name = d.getVar("PN")
     target_package_name = ""
