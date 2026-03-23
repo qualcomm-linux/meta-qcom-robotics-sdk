@@ -69,104 +69,37 @@ process_qir_samples() {
     
     jq -c '.samples[]' $CONFIG_FILE | while read line; do
         name=$(echo $line | jq -r '.name')
-        oss_channel=$(echo $line | jq -r '.oss_channel')
-        from_uri=$(echo $line | jq -r '.from_uri')
-        branch=$(echo $line | jq -r '.branch')
-        src_rev=$(echo $line | jq -r '.src_rev')
-        individual_prj=$(echo $line | jq -r '.individual_prj')
-        from_local="$(echo $line | jq -r '.from_local')"
-        to="${QIRP_SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
+        to_dir="${QIRP_SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
         bbnote "  Processing sample: $name"
-        bbnote "  oss_channel: $oss_channel, OSS_CHANNEL_FLAG: ${OSS_CHANNEL_FLAG}"
-        bbnote "  from_uri: $from_uri"
-        bbnote "  src_rev: $src_rev"
-        bbnote "  Target path (to): $to"
-
-        # Use test command instead of [[ ]]
-        if [ "$oss_channel" = "false" ] && [ "$oss_channel" != "${OSS_CHANNEL_FLAG}" ]; then
-            bbwarn "Skipping $name cause of channel mismatch ..."
-            continue
+        bbnote "  Target directory: $to_dir"
+        
+        # mkdir ${to_dir}
+        install -d "${to_dir}"
+        
+        # Copy ${source_dir} to ${to_dir}
+        source_dir="${DEPLOY_DIR}/sample_source_code/${name}"
+        if [ -d "${source_dir}" ]; then
+            bbnote "  Copying entire directory ${source_dir} to ${to_dir}/"
+            cp -rf "${source_dir}" "${to_dir}/"
+        else
+            bbwarn "  Source directory ${source_dir} does not exist, skipping sample: $name"
         fi
 
-        if [ -n "$from_uri" ] && [ "$from_uri" != "null" ]; then
-            # Special handling for qrb_ros_samples
-            if echo "$from_uri" | grep -q "qrb_ros_samples"; then
-                bbnote "Detected qrb_ros_samples repository"
-                if [ -z "${QRB_ROS_SAMPLE_REV}" ]; then
-                    bbwarn "QRB_ROS_SAMPLE_REV is not set, using original src_rev: $src_rev"
-                else
-                    src_rev="${QRB_ROS_SAMPLE_REV}"
-                    bbnote "Using QRB_ROS_SAMPLE_REV: $src_rev"
-                fi
-            fi
-            
-            if [ "$individual_prj" = "false" ]; then
-                # For non-individual projects, clone to temp directory and copy specific subdirectory
-                bbnote "$name: cloning to temp directory (individual_prj=false)"
-                tempdir=$(mktemp -p ${TOPDIR} -d)
-                
-                # Clone to temp directory
-                if git clone -b $branch $from_uri $tempdir; then
-                    cd $tempdir/
-                    if git checkout $src_rev; then
-                        cd -
-                        # Ensure target directory exists
-                        install -d $to
-                        # Find and copy the specific subdirectory
-                        if find $tempdir/ -name "$name" -type d -prune -exec cp -r {} $to \;; then
-                            bbnote "Successfully copied $name from $tempdir to $to"
-                        else
-                            bbwarn "Could not find $name in cloned repository at $tempdir"
-                        fi
-                    else
-                        bbwarn "Failed to checkout $src_rev for $name"
-                    fi
-                else
-                    bbwarn "Failed to clone $from_uri for $name"
-                fi
-                # Clean up temp directory
-                rm -rf $tempdir
-            else
-                # For individual projects, create target directory and clone directly
-                bbnote "$name: cloning as individual project (individual_prj=true)"
-                install -d $to
-                if git clone -b $branch $from_uri $to$name; then
-                    cd $to$name
-                    if git checkout $src_rev; then
-                        cd -
-                        bbnote "Successfully cloned and checked out $name"
-                    else
-                        bbwarn "Failed to checkout $src_rev for $name"
-                    fi
-                else
-                    bbwarn "Failed to clone $from_uri for $name"
-                fi
-            fi
-            continue
-        fi
-
-        # Handle local source copying
-        if [ -d "${TOPDIR}/$from_local$name" ]; then
-            bbnote "Copy sample source from ${TOPDIR}/$from_local$name to $to"
-            install -d $to
-            cp -r ${TOPDIR}/$from_local$name $to
-        fi
     done
 
     # Process scripts from config file
     jq -c '.scripts[]' $CONFIG_FILE | while read line; do
-        name=$(echo $line | jq -r '.name')
         from_local="${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/$(echo $line | jq -r '.from_local')"
         to="${QIRP_SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
-        if [ -d "$from_local$name" ]; then
+        if [ -d "$from_local" ]; then
             # Ensure target directory exists
             install -d $(dirname "$to")
-            cp -r "$from_local$name" "$to"
-            bbnote "Copy sample source from $from_local$name to $to"
+            cp -r "$from_local" "$to"
+            bbnote "Copy sample source from $from_local to $to"
         else
-            bbwarn "Source directory $from_local$name does not exist, skipping"
+            bbwarn "Source directory $from_local does not exist, skipping"
         fi
     done
 

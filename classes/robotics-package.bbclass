@@ -39,6 +39,33 @@ do_move_opt() {
 
 do_install[postfuncs] += "do_move_opt"
 
+# Function: do_copy_source_to_deploy
+# Copy all files from S directory to ${DEPLOY_DIR}/sample_source_code/${BPN}/
+# This happens after do_patch and before do_package to capture patched source code.
+do_copy_source_to_deploy() {
+    # Create destination directory: ${DEPLOY_DIR}/sample_source_code/${BPN}/
+    dest_dir="${DEPLOY_DIR}/sample_source_code/${BPN}"
+    
+    # Remove directory if it exists, then recreate it
+    if [ -d "${dest_dir}" ]; then
+        bbnote "Removing existing directory: ${dest_dir}"
+        rm -rf "${dest_dir}"
+    fi
+    
+    install -d "${dest_dir}"
+    
+    # Copy all files from S directory
+    if [ -d "${S}" ]; then
+        bbnote "Copying source files from ${S} to ${dest_dir}"
+        cp -r "${S}/"* "${dest_dir}/" 2>/dev/null || true
+    else
+        bbwarn "Source directory ${S} does not exist, skipping source copy"
+    fi
+}
+
+# Add task: copy source to deploy directory after patching
+addtask do_copy_source_to_deploy after do_patch before do_configure
+
 AUTO_LIBNAME_PKGS = ""
 
 FILES:${PN} += " \
