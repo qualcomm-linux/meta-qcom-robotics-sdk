@@ -1,0 +1,55 @@
+From a2844b1a85fc8cdebe2fbecd16eccc11adb5ee70 Mon Sep 17 00:00:00 2001
+From: Guohang Miao <guohmiao@qti.qualcomm>
+Date: Mon, 23 Mar 2026 16:49:45 +0800
+Subject: [PATCH] fix: Update LAYERSERIES_COMPAT to adapt to upstream updates
+
+Upstream-Status: Inappropriate [oe specific]
+
+Signed-off-by: Guohang Miao <guohmiao@qti.qualcomm>
+---
+ meta-ros-common/conf/layer.conf | 2 +-
+ meta-ros2-jazzy/conf/layer.conf | 2 +-
+ meta-ros2/conf/layer.conf       | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/meta-ros-common/conf/layer.conf b/meta-ros-common/conf/layer.conf
+index 3cdb409bc..bbeb731d2 100644
+--- a/meta-ros-common/conf/layer.conf
++++ b/meta-ros-common/conf/layer.conf
+@@ -22,7 +22,7 @@ LAYERDEPENDS_ros-common-layer = " \
+     openembedded-layer \
+ "
+ 
+-LAYERSERIES_COMPAT_ros-common-layer = "whinlatter"
++LAYERSERIES_COMPAT_ros-common-layer = "wrynose"
+ 
+ BBFILES_DYNAMIC += " \
+     meta-python-ai:${LAYERDIR}/dynamic-layers/meta-python-ai/*/*/*.bb \
+diff --git a/meta-ros2-jazzy/conf/layer.conf b/meta-ros2-jazzy/conf/layer.conf
+index c2a027cd4..26dff0a02 100644
+--- a/meta-ros2-jazzy/conf/layer.conf
++++ b/meta-ros2-jazzy/conf/layer.conf
+@@ -21,7 +21,7 @@ LAYERDEPENDS_ros2-jazzy-layer = " \
+     ros2-layer \
+ "
+ 
+-LAYERSERIES_COMPAT_ros2-jazzy-layer = "whinlatter"
++LAYERSERIES_COMPAT_ros2-jazzy-layer = "wrynose"
+ 
+ require conf/ros-distro/include/jazzy/ros-distro.inc
+ require conf/ros-distro/include/jazzy/ros-sdk.inc
+diff --git a/meta-ros2/conf/layer.conf b/meta-ros2/conf/layer.conf
+index 423c7235e..d67085bf4 100644
+--- a/meta-ros2/conf/layer.conf
++++ b/meta-ros2/conf/layer.conf
+@@ -20,6 +20,6 @@ LAYERDEPENDS_ros2-layer = " \
+     ros-common-layer \
+ "
+ 
+-LAYERSERIES_COMPAT_ros2-layer = "whinlatter"
++LAYERSERIES_COMPAT_ros2-layer = "wrynose"
+ 
+ ROS_OE_DISTRO_NAME ?= "Robot Operating System 2 (ROS 2)"
+-- 
+2.34.1
+
