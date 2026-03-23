@@ -10,7 +10,7 @@ repos:
 
   meta-qcom:
       url: https://github.com/qualcomm-linux/meta-qcom
-      commit: 12b6a4409330f97cff3cdb08c3de29c0b56e21e4
+      commit: b765fe140e93ca1f6607c33f2a193bc545c9bc0d
   oe-core:
       url: https://github.com/openembedded/openembedded-core
       layers:
@@ -19,16 +19,16 @@ repos:
           fix-BSD-license-missing:
               repo: meta-qcom-robotics-sdk
               path: patches/Initial-commit-of-license.patch
-      commit: 2dc4d2f8b5c7a6e87291385fb860436593767199
+      commit: 8061433fcd11eba91a29004dfafd175d449fb2fd
   bitbake:
       url: https://github.com/openembedded/bitbake
       layers:
           .: disabled
-      commit: 76b6edbd3b1f8d60c9e5720c8beae41caec694b7
+      commit: e7d5e156275782948d3346f299780389ab263ab6
   meta-qcom-distro:
       url: https://github.com/qualcomm-linux/meta-qcom-distro
       branch: main
-      commit: 43beb0b5c55d5cb806452b782225a4d330a151b2
+      commit: a6a98025fab52a90c2c9517ca66cb8f1bf9a9b7a
   meta-openembedded:
       url: https://github.com/openembedded/meta-openembedded
       layers:
@@ -39,30 +39,30 @@ repos:
           meta-oe:
           meta-python:
           meta-xfce:
-      commit: 5899a5e6ff3d1592624cfcf1f50a4df1b7c139c8
+      commit: b883bd25cdd27560fdebc5a4bf56f90e99964c4c
   meta-virtualization:
       url: https://git.yoctoproject.org/git/meta-virtualization
       branch: master
-      commit: f505ae07df8d8350b715fe20bdacfe3bcf1bf8c6
+      commit: 475530ac08ecf716917f48dfa60e0607d324ff9a
   meta-audioreach:
       url: https://github.com/AudioReach/meta-audioreach
       branch: master
-      commit: 1e91ad67c8c6a62cee4ef92761f022a459d1aa8a
+      commit: 1d60c211c874bb342d27699e717d53bde94f7299
   meta-selinux:
       branch: master
       url: https://git.yoctoproject.org/meta-selinux
-      commit: 9f235db38e7ddaefe95cd4ef6fb6f47e28a18ffd
+      commit: 50803c3dd3d42bfe060b96a094c01d9075e37f41
   meta-updater:
       branch: master
       url: https://github.com/uptane/meta-updater
-      commit: 8dcfc8882ca02f54c01563d6fdcad2d2c9cd65e0
+      commit: 399ca9f0b99a1b1fd38c27df7aa1bf21b232ba30
   meta-security:
       url: https://git.yoctoproject.org/meta-security
       branch: master
       layers:
           .:
           meta-tpm:
-      commit: 9e6d962250aab6e5319215f15b0201ef233c46cd
+      commit: 0936595355433f9691fd30257743865b9ae27a1d
 
   meta-ros:
       url: https://github.com/ros/meta-ros.git
