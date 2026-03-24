@@ -35,6 +35,13 @@ QUALCOMM_QRB_ROS = " \
     qrb-ros-robot-base-urdf \
     qrb-ros-robot-base \
     qrb-ros-benchmark \
+    qrb-ros-slam-msgs \
+    qrb-ros-amr-msgs \
+    qrb-ros-navigation-msgs \
+    qrb-amr-manager \
+    qrb-follow-path-manager \
+    qrb-ros-amr \
+    qrb-ros-follow-path \
 "
 
 # If it is qrb ros sample, Please place all of them under this variable.
