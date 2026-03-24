@@ -1,0 +1,78 @@
+From c049a4f4ea66ba9fcaed1a61e46cedebc797d5fb Mon Sep 17 00:00:00 2001
+From: danwa1117 <danwa@qti.qualcomm.com>
+Date: Thu, 19 Mar 2026 10:20:20 +0800
+Subject: [PATCH] patch: update for mainline0.0
+
+Upstream-Status: Pending
+
+Signed-off-by: Dan Wang <danwa@qti.qualcomm.com>
+---
+ CMakeLists.txt                          | 8 ++++++--
+ include/qrb_camera/camera_interface.hpp | 1 +
+ src/qmmf_camera.cpp                     | 1 +
+ 3 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0a31b57..a6ca359 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,6 +12,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+ include_directories(include)
+ 
+ find_package(ament_cmake_auto REQUIRED)
++find_package(PkgConfig REQUIRED)
++pkg_check_modules(QMMF_CAMERA_METADATA REQUIRED IMPORTED_TARGET qmmf_camera_metadata)
+ 
+ ament_auto_add_library(qrb_camera SHARED
+   src/camera_manager.cpp
+@@ -22,10 +24,11 @@ ament_auto_add_library(qrb_camera SHARED
+ )
+ 
+ target_link_libraries(qrb_camera
+-  camera_metadata
+   qmmf_recorder_client
+   qmmf_camera_metadata
+   qmmf_utils
++  PkgConfig::QMMF_CAMERA_METADATA
+ )
+ 
+ set_target_properties(qrb_camera PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 2)
+@@ -43,10 +46,11 @@ if(BUILD_TESTING)
+   )
+ 
+   target_link_libraries(qrb_camera_test
+-    camera_metadata
+     qmmf_recorder_client
+     qmmf_camera_metadata
+     qmmf_utils
++    PkgConfig::QMMF_CAMERA_METADATA
+   )
+ 
+ endif()
+diff --git a/include/qrb_camera/camera_interface.hpp b/include/qrb_camera/camera_interface.hpp
+index 1adae05..b4c0fa8 100644
+--- a/include/qrb_camera/camera_interface.hpp
++++ b/include/qrb_camera/camera_interface.hpp
+@@ -35,6 +35,7 @@
+ #ifndef QRB_CAMERA__CAMERA_INTERFACE_HPP_
+ #define QRB_CAMERA__CAMERA_INTERFACE_HPP_
+ 
++#include <cstdint>
+ #include <string>
+ #include <vector>
+ 
+diff --git a/src/qmmf_camera.cpp b/src/qmmf_camera.cpp
+index c627349..7ec2381 100644
+--- a/src/qmmf_camera.cpp
++++ b/src/qmmf_camera.cpp
+@@ -5,6 +5,7 @@
+  */
+ #include "qrb_camera/qmmf_camera.hpp"
+ 
++#include <algorithm>
+ #include <iostream>
+ 
+ using namespace qmmf;
+-- 
+2.34.1
+

@@ -1,0 +1,35 @@
+From c049a4f4ea66ba9fcaed1a61e46cedebc797d5fb Mon Sep 17 00:00:00 2001
+From: danwa1117 <danwa@qti.qualcomm.com>
+Date: Thu, 19 Mar 2026 10:20:20 +0800
+Subject: [PATCH] patch:update for mainline0.0
+
+Upstream-Status: Pending
+
+Signed-off-by: Dan Wang <danwa@qti.qualcomm.com>
+---
+ CMakeLists.txt                      | 2 ++
+ 1 files changed, 2 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e5f9a6c..4d05511 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -23,6 +23,7 @@ ament_auto_find_build_dependencies()
+ 
+ find_package(PkgConfig REQUIRED)
+ pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
++pkg_check_modules(QMMF_CAMERA_METADATA REQUIRED IMPORTED_TARGET qmmf_camera_metadata)
+ 
+ include_directories(include)
+ include_directories(${YAML_CPP_INCLUDE_DIRS})
+@@ -34,6 +35,7 @@ ament_auto_add_library(camera_node SHARED
+ 
+ target_link_libraries(camera_node
+   ${YAML_CPP_LIBRARIES}
++  PkgConfig::QMMF_CAMERA_METADATA
+ )
+ 
+ rclcpp_components_register_nodes(camera_node "qrb_ros::camera::CameraNode")
+-- 
+2.34.1
+
