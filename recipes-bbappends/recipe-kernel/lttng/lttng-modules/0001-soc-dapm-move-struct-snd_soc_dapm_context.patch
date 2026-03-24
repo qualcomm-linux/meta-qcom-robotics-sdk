@@ -1,0 +1,81 @@
+From 3a1d7582bb5dc5f6b05d3d9031e10276ad6aa219 Mon Sep 17 00:00:00 2001
+From: Michael Jeanson <mjeanson@efficios.com>
+Date: Mon, 2 Mar 2026 11:31:10 -0500
+Subject: [PATCH] fix: ASoC: soc-dapm: move struct snd_soc_dapm_context (v7.0)
+
+  commit 5b517f1a5cace3cba9a48491706e330848ecef86
+  Author: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+  Date:   Tue Jan 20 00:15:01 2026 +0000
+
+    ASoC: soc-dapm: move struct snd_soc_dapm_context
+
+    All drivers are now using new dapm functions.
+    Move struct snd_soc_dapm_context to soc-dapm.c
+
+Change-Id: I8f8e214178955a0e3e0e576b565c574d44489cbb
+Upstream-Status: Backport [https://github.com/lttng/lttng-modules/commit/3a1d7582bb5dc5f6b05d3d9031e10276ad6aa219]
+Signed-off-by: Michael Jeanson <mjeanson@efficios.com>
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+---
+ include/instrumentation/events/asoc.h | 41 ++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
+
+diff --git a/include/instrumentation/events/asoc.h b/include/instrumentation/events/asoc.h
+index c38e9e94..5dce3732 100644
+--- a/include/instrumentation/events/asoc.h
++++ b/include/instrumentation/events/asoc.h
+@@ -12,6 +12,10 @@
+ #include <linux/ktime.h>
+ #include <lttng/kernel-version.h>
+ 
++#if (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(7,0,0))
++#include <sound/soc-dapm.h>
++#endif
++
+ #define DAPM_DIRECT "(direct)"
+ #define DAPM_COMPONENT_NONE "(none)"
+ 
+@@ -23,7 +27,42 @@ struct snd_soc_dapm_widget;
+ struct snd_soc_dapm_path;
+ #endif
+ 
+-#if (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(6,9,0) || \
++#if (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(7,0,0))
++
++LTTNG_TRACEPOINT_EVENT_CLASS(asoc_snd_soc_dapm_context,
++
++	TP_PROTO(struct snd_soc_dapm_context *dapm, int val),
++
++	TP_ARGS(dapm, val),
++
++	TP_FIELDS(
++		ctf_string(name, snd_soc_dapm_to_card(dapm)->name)
++		ctf_string(component, snd_soc_dapm_to_component(dapm) ? snd_soc_dapm_to_component(dapm)->name : DAPM_COMPONENT_NONE)
++		ctf_integer(int, val, val)
++	)
++)
++
++LTTNG_TRACEPOINT_EVENT_INSTANCE_MAP(asoc_snd_soc_dapm_context, snd_soc_bias_level_start,
++
++	asoc_snd_soc_bias_level_start,
++
++	TP_PROTO(struct snd_soc_dapm_context *dapm, int val),
++
++	TP_ARGS(dapm, val)
++
++)
++
++LTTNG_TRACEPOINT_EVENT_INSTANCE_MAP(asoc_snd_soc_dapm_context, snd_soc_bias_level_done,
++
++	asoc_snd_soc_bias_level_done,
++
++	TP_PROTO(struct snd_soc_dapm_context *dapm, int val),
++
++	TP_ARGS(dapm, val)
++
++)
++
++#elif (LTTNG_LINUX_VERSION_CODE >= LTTNG_KERNEL_VERSION(6,9,0) || \
+     LTTNG_RHEL_KERNEL_RANGE(5,14,0,503,21,1,  5,15,0,0,0,0))
+ 
+ LTTNG_TRACEPOINT_EVENT_CLASS(asoc_snd_soc_dapm_context,
