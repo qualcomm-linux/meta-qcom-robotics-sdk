@@ -18,6 +18,7 @@ inherit rdepends-collector
 QUALCOMM_QRB_ROS = " \
     qrb-colorspace-convert-lib \
     qrb-ros-colorspace-convert \
+    qrb-ros-camera \
 "
 
 # If it is qrb ros sample, Please place all of them under this variable.

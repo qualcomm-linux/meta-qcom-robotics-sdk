@@ -7,10 +7,10 @@ Upstream-Status: Pending
 
 Signed-off-by: Dan Wang <danwa@qti.qualcomm.com>
 ---
- CMakeLists.txt                          | 8 ++++++--
+ CMakeLists.txt                          | 6 ++++--
  include/qrb_camera/camera_interface.hpp | 1 +
  src/qmmf_camera.cpp                     | 1 +
- 3 files changed, 8 insertions(+), 2 deletions(-)
+ 3 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 0a31b57..a6ca359 100644
@@ -25,7 +25,7 @@ index 0a31b57..a6ca359 100644
  
  ament_auto_add_library(qrb_camera SHARED
    src/camera_manager.cpp
-@@ -22,10 +24,11 @@ ament_auto_add_library(qrb_camera SHARED
+@@ -22,10 +24,10 @@ ament_auto_add_library(qrb_camera SHARED
  )
  
  target_link_libraries(qrb_camera
@@ -37,7 +37,7 @@ index 0a31b57..a6ca359 100644
  )
  
  set_target_properties(qrb_camera PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 2)
-@@ -43,10 +46,11 @@ if(BUILD_TESTING)
+@@ -43,10 +45,10 @@ if(BUILD_TESTING)
    )
  
    target_link_libraries(qrb_camera_test
