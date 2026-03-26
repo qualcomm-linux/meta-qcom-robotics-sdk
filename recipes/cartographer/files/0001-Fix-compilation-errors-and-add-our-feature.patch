@@ -9,7 +9,7 @@ Subject: [PATCH] Fix compilation errors and add our feature
 Upstream-Status: Inappropriate [platform specific]
 Signed-off-by: xiaohui kuo <quic_xkuo@quicinc.com>
 ---
- CMakeLists.txt                                |  16 ++-
+ CMakeLists.txt                                |  17 +++-
  .../cloud/internal/map_builder_server.h       |   4 +-
  cartographer/common/internal/blocking_queue.h |  20 +--
  .../testing/thread_pool_for_testing.cc        |   4 +-
@@ -37,7 +37,7 @@ Signed-off-by: xiaohui kuo <quic_xkuo@quicinc.com>
  cmake/functions.cmake                         |   1 -
  cmake/modules/FindGMock.cmake                 |  10 +-
  cmake/modules/FindLuaGoogle.cmake             |   4 +-
- 28 files changed, 453 insertions(+), 246 deletions(-)
+ 28 files changed, 454 insertions(+), 246 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 7a80f16..05f489b 100644
@@ -83,7 +83,15 @@ index 7a80f16..05f489b 100644
  
  google_binary(cartographer_pbstream
    SRCS
-@@ -294,7 +298,7 @@ if(${BUILD_PROMETHEUS})
+@@ -278,5 +282,6 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+   absl::strings
+   absl::synchronization
+   absl::time
+-  absl::utility 
++  absl::utility 
++  absl::log_internal_check_op
+ )
+@@ -294,7 +299,7 @@ if(${BUILD_PROMETHEUS})
    target_compile_definitions(${PROJECT_NAME} PUBLIC USE_PROMETHEUS=1)
  endif()
  
@@ -92,7 +100,7 @@ index 7a80f16..05f489b 100644
  set_target_properties(${PROJECT_NAME} PROPERTIES
    COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
  
-@@ -329,7 +333,7 @@ foreach(ABS_FIL ${ALL_TESTS})
+@@ -329,7 +334,7 @@ foreach(ABS_FIL ${ALL_TESTS})
      target_link_libraries("${TEST_TARGET_NAME}" PUBLIC prometheus-cpp-core)
      target_link_libraries("${TEST_TARGET_NAME}" PUBLIC prometheus-cpp-pull)
    endif()
@@ -1954,4 +1962,3 @@ index c76b8cc..b7d5a2d 100644
          set(LUA_LIBRARIES "${LUA_LIBRARY}")
 -- 
 2.41.0.windows.3
-
