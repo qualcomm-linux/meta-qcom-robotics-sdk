@@ -8,6 +8,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 ROS_BRANCH ?= "branch=ros2"
 SRC_URI = "git://github.com/ros2/cartographer;${ROS_BRANCH};protocol=https \
            file://0001-Fix-compilation-errors-and-add-our-feature.patch \
+           file://0002-cmake-Add-FindLua-module-with-Lua-5.5-support.patch \
 "
 SRCREV = "ddfd4414ef2907b6c46a195f1d4e380beedce05d"
 
@@ -16,6 +17,7 @@ PATCH_DIR = "${UNPACKDIR}/${BP}"
 do_patch() {
     cd ${PATCH_DIR}
     git apply ${UNPACKDIR}/0001-Fix-compilation-errors-and-add-our-feature.patch
+    git apply ${UNPACKDIR}/0002-cmake-Add-FindLua-module-with-Lua-5.5-support.patch
 }
 
 ROS_CN = "cartographer"
@@ -80,8 +82,6 @@ ROS_BUILD_DEPENDS:remove = "${PYTHON_PN}-sphinx python-sphinx"
 DEPENDS += " \
     protobuf-native \
 "
-
-
 
 # Doesn't need runtime dependency on ceres-solver
 ROS_EXEC_DEPENDS:remove = "ceres-solver"
