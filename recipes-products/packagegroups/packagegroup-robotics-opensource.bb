@@ -50,6 +50,7 @@ EXTERNAL_OPENSOURCE = " \
     rplidar-ros2 \
     orbbec-camera \
     cartographer \
+    cartographer-ros \
 "
 
 ROS_GST_BRIDGE = " \
