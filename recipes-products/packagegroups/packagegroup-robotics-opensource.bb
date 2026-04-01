@@ -42,6 +42,7 @@ QUALCOMM_QRB_ROS = " \
     qrb-follow-path-manager \
     qrb-ros-amr \
     qrb-ros-follow-path \
+    qrb-ros-nn-inference \
 "
 
 # If it is qrb ros sample, Please place all of them under this variable.
