@@ -32,13 +32,13 @@ runs:
   using: "composite"
   steps:
     # - name: Download kas lockfile
-    #   uses: actions/download-artifact@v6
+    #   uses: actions/download-artifact@v7
     #   with:
     #     name: kas-lockfile
     #     path: ci/
 
     - name: Download kas-container
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
          name: kas-container
          path: ${{runner.temp}}
@@ -86,14 +86,14 @@ runs:
         # Build qir-sdk
         $KAS_CONTAINER build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} --task generate_qirp_sdk
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       with:
         name: buildchart-${{ inputs.distro_name }}-${{ inputs.target_type }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
         path: |
           buildchart.svg
           buildchart-world.svg
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       with:
         name: kas-build-${{ inputs.distro_name }}-${{ inputs.target_type }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
         path: kas-build.yml
@@ -133,14 +133,9 @@ runs:
           echo "WARNING: No QIRP-SDK files found!"
         fi
 
-    - name: Upload private artifacts
-      uses: qualcomm-linux/upload-private-artifact-action@v1
-      id: upload_artifacts
-      with:
-        path: ./uploads
-
     - name: Upload artifacts to S3 bucket
-      uses: qualcomm-linux/upload-private-artifact-action@aws-v1
+      uses: qualcomm-linux/upload-private-artifact-action@aws-v4
+      id: upload_s3_artifacts
       with:
         path: ./uploads
         destination: ${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ github.run_id }}-${{ github.run_attempt }}/
@@ -153,10 +148,15 @@ runs:
         KERNEL_DIRNAME="${{ inputs.kernel_dirname }}"
         BUILDNAME="${{ inputs.machine }}_${{ inputs.distro_name }}${{ inputs.target_type }}${KERNEL_DIRNAME}"
         FILENAME="build-url_${BUILDNAME}"
-        echo "${{ steps.upload_artifacts.outputs.url }}" > "${FILENAME}"
+        echo "${{ steps.upload_s3_artifacts.outputs.url }}" > "${FILENAME}"
         echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
+      env:
+        INPUTS_KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
+        INPUTS_MACHINE: ${{ inputs.machine }}
+        INPUTS_DISTRO_NAME: ${{ inputs.distro_name }}
+        
     - name: Upload build URL
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         overwrite: true
         name: ${{ steps.print-output.outputs.filename }}
