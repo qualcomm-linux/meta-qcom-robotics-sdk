@@ -35,7 +35,7 @@ jobs:
           wget -qO ${KAS_CONTAINER} https://raw.githubusercontent.com/siemens/kas/refs/tags/$LATEST/kas-container
           chmod +x ${KAS_CONTAINER}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run kas lock
         run: |
@@ -48,7 +48,7 @@ jobs:
           path: ci/*.lock.yml
 
       - name: Upload kas-container
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: kas-container
           path: ${{ env.KAS_CONTAINER }}
@@ -68,7 +68,7 @@ jobs:
       #     path: ci
 
       - name: Download kas-container
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: kas-container
           path: ${{ runner.temp }}
@@ -145,7 +145,7 @@ jobs:
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: 'Download build URLs'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: build-url*
