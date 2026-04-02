@@ -38,7 +38,9 @@ QUALCOMM_QRB_ROS = " \
     qrb-ros-slam-msgs \
     qrb-ros-amr-msgs \
     qrb-ros-navigation-msgs \
+    qrb-amr-manager \
     qrb-follow-path-manager \
+    qrb-ros-amr \
     qrb-ros-follow-path \
 "
 
