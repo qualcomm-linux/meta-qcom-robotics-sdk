@@ -96,10 +96,10 @@ repos:
 local_conf_header:
   resource_limitation: |   
     # Capture the count of cpu cores available from the host.
-    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=8)}"
+    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=9)}"
 
     # Number of parallel threads make can run based on cpu cores with a max cap at 20.
-    THREAD_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=8)}"
+    THREAD_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=10)}"
 
     # Determines how many tasks bitbake should run in parallel.
     BB_NUMBER_THREADS ?= "${CPU_COUNT}"
