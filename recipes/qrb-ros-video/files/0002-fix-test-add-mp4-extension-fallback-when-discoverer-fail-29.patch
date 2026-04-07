@@ -1,0 +1,280 @@
+From 7e5a41cf7ec60b7fc7cfb6c76559d47afeef40df Mon Sep 17 00:00:00 2001
+From: jeanxiao-quic <jianxiao@qti.qualcomm.com>
+Date: Mon, 30 Mar 2026 09:31:01 +0800
+Subject: [PATCH 2/2] fix(test): add mp4 extension fallback when discoverer
+ fail (#29)
+
+- Always attempt GStreamer URI discovery for input files.
+- Keep discovered codec update for pixel_format_ when discovery succeeds on mp4.
+- On discovery failure, fallback by filename extension:
+    - if .mp4, set pixel_format_ = format_ and force format_ = "mp4".
+    - otherwise fallback to pixel_format_ = format_.
+- Preserve non-fatal discovery behavior so pipeline setup can continue.
+
+Upstream-Status: Backport [https://github.com/qualcomm-qrb-ros/qrb_ros_video/commit/7e5a41cf7ec60b7fc7cfb6c76559d47afeef40df]
+
+Signed-off-by: Jean Xiao <jianxiao@qti.qualcomm.com>
+---
+ qrb_ros_video/test/include/base_node.hpp | 206 +++++++++++++----------
+ 1 file changed, 115 insertions(+), 91 deletions(-)
+
+diff --git a/qrb_ros_video/test/include/base_node.hpp b/qrb_ros_video/test/include/base_node.hpp
+index 4f32197..d9d3a63 100644
+--- a/qrb_ros_video/test/include/base_node.hpp
++++ b/qrb_ros_video/test/include/base_node.hpp
+@@ -11,6 +11,7 @@
+ #include <gst/gst.h>
+ #include <gst/pbutils/pbutils.h>
+ 
++#include <cctype>
+ #include <chrono>
+ #include <memory>
+ #include <mutex>
+@@ -87,74 +88,102 @@ protected:
+       return false;
+     }
+ 
+-    // Discover the pipeline based on the format
+-    if (format_ == "mp4") {
+-      RCLCPP_INFO(this->get_logger(), "Discovering video codec from MP4 file: %s", url_.c_str());
+-
+-      // Create a proper URI if file path is provided
+-      std::string uri = url_;
+-      if (uri.find("://") == std::string::npos) {
+-        // Assume it's a file path and convert to URI
+-        uri = "file://" + uri;
++    auto fallback_with_format = [this](const std::string & reason) {
++      // Parse extension from URL path (ignore URI scheme and query string)
++      std::string path = url_;
++      auto query_pos = path.find_first_of("?#");
++      if (query_pos != std::string::npos) {
++        path = path.substr(0, query_pos);
++      }
++      auto slash_pos = path.find_last_of('/');
++      std::string filename = (slash_pos == std::string::npos) ? path : path.substr(slash_pos + 1);
++      auto dot_pos = filename.find_last_of('.');
++      std::string extension = dot_pos == std::string::npos ? "" : filename.substr(dot_pos);
++      for (char & ch : extension) {
++        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+       }
+ 
+-      // Create a new discoverer with 2-second timeout
+-      GstDiscoverer * discoverer = gst_discoverer_new(2 * GST_SECOND, nullptr);
+-      if (!discoverer) {
+-        RCLCPP_ERROR(this->get_logger(), "Failed to create GstDiscoverer");
+-        return false;
++      // If discovery fails but file extension is mp4, switch container path to mp4 and keep user
++      // codec hint in pixel_format_.
++      if (extension == ".mp4") {
++        pixel_format_ = format_;
++        format_ = "mp4";
++        RCLCPP_WARN(this->get_logger(),
++            "Discovery failed (%s), fallback by extension '.mp4'. format=%s pixel_format=%s",
++            reason.c_str(), format_.c_str(), pixel_format_.c_str());
++        return true;
+       }
+ 
+-      // Attempt to discover the URI
+-      GError * error = nullptr;
+-      GstDiscovererInfo * info = gst_discoverer_discover_uri(discoverer, uri.c_str(), &error);
++      pixel_format_ = format_;
++      RCLCPP_WARN(this->get_logger(),
++          "Discovery failed (%s), fallback to configured format. format=%s pixel_format=%s",
++          reason.c_str(), format_.c_str(), pixel_format_.c_str());
++      return true;
++    };
+ 
+-      if (error) {
+-        RCLCPP_ERROR(this->get_logger(), "Discovery error: %s", error->message);
+-        g_error_free(error);
+-        gst_object_unref(discoverer);
+-        return false;
+-      }
++    RCLCPP_INFO(this->get_logger(), "Discovering video info from URI: %s", url_.c_str());
+ 
+-      if (!info) {
+-        RCLCPP_ERROR(this->get_logger(), "Failed to discover URI: %s", uri.c_str());
+-        gst_object_unref(discoverer);
+-        return false;
+-      }
++    // Create a proper URI if file path is provided
++    std::string uri = url_;
++    if (uri.find("://") == std::string::npos) {
++      // Assume it's a file path and convert to URI
++      uri = "file://" + uri;
++    }
+ 
+-      // Check if discovery result is valid
+-      GstDiscovererResult result = gst_discoverer_info_get_result(info);
+-      if (result != GST_DISCOVERER_OK && result != GST_DISCOVERER_MISSING_PLUGINS) {
+-        RCLCPP_ERROR(this->get_logger(), "Discovery failed: %d", result);
+-        gst_discoverer_info_unref(info);
+-        gst_object_unref(discoverer);
+-        return false;
+-      }
++    // Create a new discoverer with 2-second timeout
++    GstDiscoverer * discoverer = gst_discoverer_new(2 * GST_SECOND, nullptr);
++    if (!discoverer) {
++      return fallback_with_format("failed to create GstDiscoverer");
++    }
+ 
+-      // Extract video streams information
+-      GList * list = gst_discoverer_info_get_video_streams(info);
+-      if (!list) {
+-        RCLCPP_ERROR(this->get_logger(), "No video streams found in the file");
+-        gst_discoverer_info_unref(info);
+-        gst_object_unref(discoverer);
+-        return false;
+-      }
++    // Attempt to discover the URI
++    GError * error = nullptr;
++    GstDiscovererInfo * info = gst_discoverer_discover_uri(discoverer, uri.c_str(), &error);
++
++    if (error) {
++      std::string error_msg = error->message;
++      g_error_free(error);
++      gst_object_unref(discoverer);
++      return fallback_with_format(error_msg);
++    }
++
++    if (!info) {
++      gst_object_unref(discoverer);
++      return fallback_with_format("discoverer returned null info");
++    }
+ 
+-      bool found_stream = false;
+-      // Extract information from the first video stream
+-      for (GList * item = list; item != nullptr; item = item->next) {
+-        GstDiscovererStreamInfo * stream_info = GST_DISCOVERER_STREAM_INFO(item->data);
+-        if (GST_IS_DISCOVERER_VIDEO_INFO(stream_info)) {
+-          GstDiscovererVideoInfo * video_info = GST_DISCOVERER_VIDEO_INFO(stream_info);
+-
+-          // Get codec information from caps
+-          GstCaps * caps = gst_discoverer_stream_info_get_caps(stream_info);
+-          if (caps) {
+-            gchar * caps_str = gst_caps_to_string(caps);
+-            RCLCPP_INFO(this->get_logger(), "Video caps: %s", caps_str);
+-            g_free(caps_str);
+-
+-            // Extract codec from caps if possible
++    // Check if discovery result is valid
++    GstDiscovererResult result = gst_discoverer_info_get_result(info);
++    if (result != GST_DISCOVERER_OK && result != GST_DISCOVERER_MISSING_PLUGINS) {
++      gst_discoverer_info_unref(info);
++      gst_object_unref(discoverer);
++      return fallback_with_format("discoverer returned non-OK result");
++    }
++
++    // Extract video streams information
++    GList * list = gst_discoverer_info_get_video_streams(info);
++    if (!list) {
++      gst_discoverer_info_unref(info);
++      gst_object_unref(discoverer);
++      return fallback_with_format("no video streams found");
++    }
++
++    bool found_stream = false;
++    // Extract information from the first video stream
++    for (GList * item = list; item != nullptr; item = item->next) {
++      GstDiscovererStreamInfo * stream_info = GST_DISCOVERER_STREAM_INFO(item->data);
++      if (GST_IS_DISCOVERER_VIDEO_INFO(stream_info)) {
++        GstDiscovererVideoInfo * video_info = GST_DISCOVERER_VIDEO_INFO(stream_info);
++
++        // Get codec information from caps
++        GstCaps * caps = gst_discoverer_stream_info_get_caps(stream_info);
++        if (caps) {
++          gchar * caps_str = gst_caps_to_string(caps);
++          RCLCPP_INFO(this->get_logger(), "Video caps: %s", caps_str);
++          g_free(caps_str);
++
++          // For mp4 input, detect coded stream format into pixel_format_
++          if (format_ == "mp4") {
+             const GstStructure * structure = gst_caps_get_structure(caps, 0);
+             if (structure) {
+               const gchar * codec_name = gst_structure_get_name(structure);
+@@ -170,49 +199,44 @@ protected:
+                 RCLCPP_INFO(this->get_logger(), "Detected codec: %s", pixel_format_.c_str());
+               }
+             }
+-            gst_caps_unref(caps);
+           }
++          gst_caps_unref(caps);
++        }
+ 
+-          // Get resolution and framerate
+-          width_ = std::to_string(gst_discoverer_video_info_get_width(video_info));
+-          height_ = std::to_string(gst_discoverer_video_info_get_height(video_info));
++        // Get resolution and framerate
++        width_ = std::to_string(gst_discoverer_video_info_get_width(video_info));
++        height_ = std::to_string(gst_discoverer_video_info_get_height(video_info));
+ 
+-          gint fps_num = gst_discoverer_video_info_get_framerate_num(video_info);
+-          gint fps_denom = gst_discoverer_video_info_get_framerate_denom(video_info);
++        gint fps_num = gst_discoverer_video_info_get_framerate_num(video_info);
++        gint fps_denom = gst_discoverer_video_info_get_framerate_denom(video_info);
+ 
+-          // Avoid division by zero
+-          if (fps_denom > 0 && fps_num > 0) {
+-            auto framerate = std::to_string(fps_num) + "/" + std::to_string(fps_denom);
+-            auto fps = static_cast<float>(fps_num) / static_cast<float>(fps_denom);
+-            if (fps != fps_) {
+-              RCLCPP_WARN(
+-                  this->get_logger(), "Detected framerate: %s (%f fps)", framerate.c_str(), fps);
+-            }
++        // Avoid division by zero
++        if (fps_denom > 0 && fps_num > 0) {
++          auto framerate = std::to_string(fps_num) + "/" + std::to_string(fps_denom);
++          auto fps = static_cast<float>(fps_num) / static_cast<float>(fps_denom);
++          if (fps != fps_) {
++            RCLCPP_WARN(
++                this->get_logger(), "Detected framerate: %s (%f fps)", framerate.c_str(), fps);
+           }
+-
+-          RCLCPP_INFO(this->get_logger(), "Video properties: %sx%s @ %s fps", width_.c_str(),
+-              height_.c_str(), framerate_.c_str());
+-
+-          found_stream = true;
+-          break;  // We only need information from the first video stream
+         }
+-      }
+ 
+-      g_list_free(list);
+-      gst_discoverer_info_unref(info);
+-      gst_object_unref(discoverer);
++        RCLCPP_INFO(this->get_logger(), "Video properties: %sx%s @ %s fps", width_.c_str(),
++            height_.c_str(), framerate_.c_str());
+ 
+-      if (!found_stream) {
+-        RCLCPP_ERROR(this->get_logger(), "No valid video stream found in the file");
+-        return false;
++        found_stream = true;
++        break;  // We only need information from the first video stream
+       }
++    }
+ 
+-      RCLCPP_INFO(this->get_logger(), "Successfully discovered video information");
+-      return true;
++    g_list_free(list);
++    gst_discoverer_info_unref(info);
++    gst_object_unref(discoverer);
++
++    if (!found_stream) {
++      return fallback_with_format("no valid video stream found");
+     }
+ 
+-    // For non-MP4 formats, we assume the format is correctly specified
+-    RCLCPP_INFO(this->get_logger(), "Using specified format: %s", format_.c_str());
++    RCLCPP_INFO(this->get_logger(), "Successfully discovered video information");
+     return true;
+   }
+ 
+@@ -248,4 +272,4 @@ protected:
+ }  // namespace video
+ }  // namespace qrb_ros
+ 
+-#endif  // QRB_ROS_VIDEO_TEST_BASE_NODE_HPP_
+\ No newline at end of file
++#endif  // QRB_ROS_VIDEO_TEST_BASE_NODE_HPP_
+-- 
+2.34.1
+
