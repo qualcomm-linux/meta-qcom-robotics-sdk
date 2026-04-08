@@ -108,18 +108,18 @@ jobs:
           - name: qcom-robotics-distro-selinux
             yamlfile: ':ci/qcom-robotics-distro-selinux.yml'
         target:
-          - type: '+base'
+          - type: '_base'
             name: qcom-robotics-image
             yamlfile: ':ci/qcom-robotics-image.yml'
-          - type: '+full'
+          - type: '_full'
             name: qcom-robotics-proprietary-image
             yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
         kernel:
           - type: default
-            dirname: '+linux-qcom-next'
+            dirname: '_linux-qcom-next'
             yamlfile: ''
           - type: 6.18
-            dirname: '+linux-qcom-lts'
+            dirname: '_linux-qcom-lts'
             yamlfile: ':ci/linux-qcom-6.18.yml'
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:

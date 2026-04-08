@@ -20,9 +20,9 @@ jobs:
         distro:
           - name: qcom-robotics-distro
         target:
-          - type: '+full'
+          - type: '_full'
         kernel:
-          - dirname: '+linux-qcom-next'
+          - dirname: '_linux-qcom-next'
     steps:
       - uses: actions/checkout@v4
         with:
