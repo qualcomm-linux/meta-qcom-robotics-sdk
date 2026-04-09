@@ -59,6 +59,7 @@ EXTERNAL_OPENSOURCE = " \
     orbbec-camera \
     cartographer \
     cartographer-ros \
+    nav2-bringup \
 "
 
 ROS_GST_BRIDGE = " \
