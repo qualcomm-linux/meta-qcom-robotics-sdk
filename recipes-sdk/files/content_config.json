@@ -13,6 +13,22 @@
             "to": "qirp-samples/platform/"
         },
         {
+            "name": "ros-gst-bridge",
+            "to": "qirp-samples/platform/"
+        },
+        {
+            "name": "qrb-ros-benchmark",
+            "to": "qirp-samples/platform/"
+        },
+        {
+            "name": "qrb-ros-camera",
+            "to": "qirp-samples/platform/"
+        },
+        {
+            "name": "qrb-ros-nn-inference",
+            "to": "qirp-samples/platform/"
+        },
+        {
             "name": "simulation-sample-pick-and-place",
             "to": "qirp-samples/robotics"
         },
@@ -27,22 +43,6 @@
         {
             "name": "sample-face-detection",
             "to": "qirp-samples/ai_vision/"
-        },
-        {
-            "name": "ros-gst-bridge",
-            "to": "qirp-samples/platform/"
-        },
-        {
-            "name": "qrb-ros-benchmark",
-            "to": "qirp-samples/platform/"
-        },
-        {
-            "name": "rplidar-ros2",
-            "to": "qirp-samples/platform/"
-        },
-        {
-            "name": "qrb-ros-camera",
-            "to": "qirp-samples/platform/"
         }
       ],
       "scripts": [
