@@ -98,39 +98,48 @@ jobs:
                     
                     echo "🔎 Checking Run ID: $CURRENT_RUN_ID (Conclusion: $CURRENT_CONCLUSION)"
                     
-                    # Check if this run is successful
-                    if [ "$CURRENT_CONCLUSION" = "success" ]; then
+                    # Check if build-nightly task is successful (ignore test-nightly result)
+                    BUILD_NIGHTLY_STATS=$(gh api --paginate \
+                      -H "Accept: application/vnd.github+json" \
+                      -H "X-GitHub-Api-Version: 2022-11-28" \
+                      "/repos/$REPO/actions/runs/$CURRENT_RUN_ID/jobs?per_page=100" 2>/dev/null | \
+                      jq -r '[.jobs[]? | select(.name == "build-nightly" or (.name | startswith("build-nightly /"))) | .conclusion] as $c | "\($c | length) \($c | map(select(. == "success")) | length) \($c | map(select(. != "success")) | length)"')
+                    
+                    read -r BUILD_NIGHTLY_TOTAL BUILD_NIGHTLY_SUCCESS BUILD_NIGHTLY_NON_SUCCESS <<< "$BUILD_NIGHTLY_STATS"
+                    
+                    if [ "${BUILD_NIGHTLY_TOTAL:-0}" -gt 0 ] && [ "${BUILD_NIGHTLY_NON_SUCCESS:-0}" -eq 0 ]; then
                       RUN_ID="$CURRENT_RUN_ID"
                       RUN_NUMBER=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].run_number")
                       RUN_CREATED=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].created_at")
                       RUN_CONCLUSION="$CURRENT_CONCLUSION"
                       FOUND_SUCCESS=true
-                      echo "   ✅ Found successful run!"
+                      echo "   ✅ Found run with successful build-nightly task! ($BUILD_NIGHTLY_SUCCESS/$BUILD_NIGHTLY_TOTAL)"
                       break
                     else
-                      echo "   ⏭️  Skipping (conclusion: $CURRENT_CONCLUSION)"
+                      echo "   ⏭️  Skipping (build-nightly success: ${BUILD_NIGHTLY_SUCCESS:-0}/${BUILD_NIGHTLY_TOTAL:-0})"
                     fi
                   done
                   
                   echo ""
                   
                   if [ "$FOUND_SUCCESS" = true ]; then
-                    echo "🎉 Found successful workflow run"
+                    echo "🎉 Found workflow run with successful build-nightly task"
                     echo ""
                     echo "📋 Selected Workflow Run Details:"
                     echo "   Run Number: #$RUN_NUMBER"
                     echo "   Run ID: $RUN_ID"
                     echo "   Created: $RUN_CREATED"
-                    echo "   Conclusion: ✅ $RUN_CONCLUSION"
+                    echo "   Workflow Conclusion: $RUN_CONCLUSION"
+                    echo "   build-nightly: ✅ success"
                     break
                   else
-                    echo "⚠️  No successful runs found in the last $MAX_RUNS_TO_CHECK completed runs"
+                    echo "⚠️  No runs with successful build-nightly task found in the last $MAX_RUNS_TO_CHECK completed runs"
                     echo ""
                     echo "❌ FAIL LOG:"
                     echo "   Repository: $REPO"
                     echo "   Workflow: $WORKFLOW_FILE"
                     echo "   Checked: $MAX_RUNS_TO_CHECK most recent completed runs"
-                    echo "   Result: All runs failed or were cancelled"
+                    echo "   Result: build-nightly task was not successful in checked runs"
                     echo ""
                     echo "📊 Run conclusions:"
                     echo "$RUNS_JSON" | jq -r '.workflow_runs[] | "   Run #\(.run_number): \(.conclusion)"'
@@ -143,7 +152,7 @@ jobs:
                       echo "💡 Troubleshooting tips:"
                       echo "   1. Check workflow runs manually:"
                       echo "      https://github.com/$REPO/actions/workflows/$WORKFLOW_FILE"
-                      echo "   2. Verify the workflow is running successfully"
+                      echo "   2. Verify build-nightly task is successful"
                       echo "   3. Check if there are any infrastructure issues"
                       echo ""
                       exit 1
@@ -264,27 +273,24 @@ jobs:
             
             # Fetch ALL artifacts using --paginate (handles 500+ artifacts automatically)
             # Note: We capture both stdout and stderr for better error reporting
-            ARTIFACTS_JSON=$(gh api --paginate \
+            ARTIFACTS_PAGES=$(gh api --paginate \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "/repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100" \
-              --jq '[.artifacts[]]' 2>&1)
+              2>&1)
             
             EXIT_CODE=$?
             
             echo "🔍 Debug: API call exit code: $EXIT_CODE"
             
             if [ $EXIT_CODE -eq 0 ]; then
-              # Validate JSON - check if it's an array
-              if echo "$ARTIFACTS_JSON" | jq -e 'type == "array"' > /dev/null 2>&1; then
-                TOTAL_COUNT=$(echo "$ARTIFACTS_JSON" | jq 'length')
+              # Merge all paginated pages into a single artifacts array
+              if ARTIFACTS_JSON=$(echo "$ARTIFACTS_PAGES" | jq -c -s '{artifacts: [.[].artifacts[]?]}'); then
+                TOTAL_COUNT=$(echo "$ARTIFACTS_JSON" | jq '.artifacts | length')
                 
                 echo "✅ Successfully retrieved all artifacts"
                 echo "📊 Total artifacts: $TOTAL_COUNT"
                 echo ""
-                
-                # Wrap in object for consistency with rest of script
-                ARTIFACTS_JSON=$(echo "$ARTIFACTS_JSON" | jq '{artifacts: .}')
                 
                 # Extract artifact names
                 ALL_ARTIFACTS=$(echo "$ARTIFACTS_JSON" | jq -r '.artifacts[].name')
@@ -339,7 +345,7 @@ jobs:
               else
                 echo "⚠️  Invalid JSON response"
                 echo "Response preview:"
-                echo "$ARTIFACTS_JSON" | head -n 10
+                echo "$ARTIFACTS_PAGES" | head -n 10
               fi
             else
               echo "⚠️  API call failed with exit code: $EXIT_CODE"
@@ -371,31 +377,28 @@ jobs:
           echo "🔄 Fetching all artifacts with pagination..."
           
           # Use simpler jq expression that works with --paginate
-          ARTIFACTS_ARRAY=$(gh api --paginate \
+          ARTIFACTS_PAGES=$(gh api --paginate \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "/repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100" \
-            --jq '[.artifacts[]]' 2>&1)
+            2>&1)
           
           EXIT_CODE=$?
           
           if [ $EXIT_CODE -ne 0 ]; then
             echo "❌ Failed to fetch artifacts"
             echo "Error output:"
-            echo "$ARTIFACTS_ARRAY"
+            echo "$ARTIFACTS_PAGES"
             exit 1
           fi
           
-          # Validate it's a valid JSON array
-          if ! echo "$ARTIFACTS_ARRAY" | jq -e 'type == "array"' > /dev/null 2>&1; then
-            echo "❌ Invalid JSON response (not an array)"
+          # Merge all paginated pages into a single artifacts array
+          if ! ARTIFACTS_JSON=$(echo "$ARTIFACTS_PAGES" | jq -c -s '{artifacts: [.[].artifacts[]?]}'); then
+            echo "❌ Invalid JSON response while merging paginated artifacts"
             echo "Response preview:"
-            echo "$ARTIFACTS_ARRAY" | head -20
+            echo "$ARTIFACTS_PAGES" | head -20
             exit 1
           fi
-          
-          # Wrap in object for easier processing
-          ARTIFACTS_JSON=$(echo "$ARTIFACTS_ARRAY" | jq '{artifacts: .}')
           
           # Show total count
           TOTAL_COUNT=$(echo "$ARTIFACTS_JSON" | jq '.artifacts | length')
@@ -535,6 +538,16 @@ jobs:
 
       - name: "Install PyYAML"
         run: pip install --break-system-packages PyYAML
+
+      - name: Add Upstream Remote
+        run: |
+          if git remote get-url upstream > /dev/null 2>&1; then
+            git remote set-url upstream https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
+          else
+            git remote add upstream https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
+          fi
+          git fetch upstream main
+          git checkout -B main upstream/main
 
       - name: "Update repos from kas-build artifacts"
         id: merge-commit-id
@@ -772,12 +785,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Add Upstream Remote
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
-        run: |
-          git remote add upstream https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
-          git fetch upstream main
-
       - name: Create new branch for PR
         if: steps.merge-commit-id.outputs.has_updates == 'true'
         run: |
@@ -846,7 +853,7 @@ jobs:
           
           echo "📤 Creating PR from fork branch to upstream main..."
           
-          gh pr create \
+          PR_URL=$(gh pr create \
             --repo qualcomm-linux/meta-qcom-robotics-sdk \
             --head DotaIsMind:$BRANCH_NAME \
             --base main \
@@ -864,7 +871,7 @@ jobs:
           )" \
             --label automation \
             --assignee DotaIsMind \
-            --reviewer DotaIsMind \
+            --reviewer DotaIsMind)
           
           echo "✅ PR created: $PR_URL"
 
@@ -876,12 +883,14 @@ jobs:
         id: set-output
         if: always()
         run: |
-          # Check if merge was successful by checking if artifact was uploaded
-          if [ -f "ci/qcom-robotics-distro.yml" ]; then
-            echo "artifact_name=qcom-robotics-distro-merged-${{ github.run_number }}" >> $GITHUB_OUTPUT
+          # Mark workflow success from actual step result (avoid false positives)
+          if [ "${{ job.status }}" = "success" ]; then
             echo "success=true" >> $GITHUB_OUTPUT
             echo "✅ Workflow completed successfully"
+            if [ "${{ steps.merge-commit-id.outputs.has_updates }}" = "true" ]; then
+              echo "artifact_name=qcom-robotics-distro-merged-${{ github.run_number }}" >> $GITHUB_OUTPUT
+            fi
           else
             echo "success=false" >> $GITHUB_OUTPUT
-            echo "❌ Workflow failed - configuration file not found"
+            echo "❌ Workflow failed (job.status=${{ job.status }})"
           fi
