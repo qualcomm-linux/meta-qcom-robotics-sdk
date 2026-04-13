@@ -11,8 +11,8 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=b261acfe37cea70c4bed63dfe6ad1ff4"
 ROS_CN = "qrb_ros_docker"
 ROS_BPN = "qrb_ros_docker"
 
-SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_docker.git;protocol=https;branch=main"
-SRCREV = "93817ce895bd51b529c2df4a99dace05922b34c3"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_docker.git;protocol=https;branch=stable/1.0.0"
+SRCREV = "ec667658c0ad9c329fc19622dd65d336cd718f86"
 
 do_install() {
     install -d ${D}${datadir}/qrb_ros_docker/dockerfile
