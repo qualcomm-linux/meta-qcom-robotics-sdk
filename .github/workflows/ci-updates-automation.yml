@@ -98,39 +98,48 @@ jobs:
                     
                     echo "🔎 Checking Run ID: $CURRENT_RUN_ID (Conclusion: $CURRENT_CONCLUSION)"
                     
-                    # Check if this run is successful
-                    if [ "$CURRENT_CONCLUSION" = "success" ]; then
+                    # Check if build-nightly task is successful (ignore test-nightly result)
+                    BUILD_NIGHTLY_STATS=$(gh api --paginate \
+                      -H "Accept: application/vnd.github+json" \
+                      -H "X-GitHub-Api-Version: 2022-11-28" \
+                      "/repos/$REPO/actions/runs/$CURRENT_RUN_ID/jobs?per_page=100" 2>/dev/null | \
+                      jq -r '[.jobs[]? | select(.name == "build-nightly" or (.name | startswith("build-nightly /"))) | .conclusion] as $c | "\($c | length) \($c | map(select(. == "success")) | length) \($c | map(select(. != "success")) | length)"')
+                    
+                    read -r BUILD_NIGHTLY_TOTAL BUILD_NIGHTLY_SUCCESS BUILD_NIGHTLY_NON_SUCCESS <<< "$BUILD_NIGHTLY_STATS"
+                    
+                    if [ "${BUILD_NIGHTLY_TOTAL:-0}" -gt 0 ] && [ "${BUILD_NIGHTLY_NON_SUCCESS:-0}" -eq 0 ]; then
                       RUN_ID="$CURRENT_RUN_ID"
                       RUN_NUMBER=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].run_number")
                       RUN_CREATED=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].created_at")
                       RUN_CONCLUSION="$CURRENT_CONCLUSION"
                       FOUND_SUCCESS=true
-                      echo "   ✅ Found successful run!"
+                      echo "   ✅ Found run with successful build-nightly task! ($BUILD_NIGHTLY_SUCCESS/$BUILD_NIGHTLY_TOTAL)"
                       break
                     else
-                      echo "   ⏭️  Skipping (conclusion: $CURRENT_CONCLUSION)"
+                      echo "   ⏭️  Skipping (build-nightly success: ${BUILD_NIGHTLY_SUCCESS:-0}/${BUILD_NIGHTLY_TOTAL:-0})"
                     fi
                   done
                   
                   echo ""
                   
                   if [ "$FOUND_SUCCESS" = true ]; then
-                    echo "🎉 Found successful workflow run"
+                    echo "🎉 Found workflow run with successful build-nightly task"
                     echo ""
                     echo "📋 Selected Workflow Run Details:"
                     echo "   Run Number: #$RUN_NUMBER"
                     echo "   Run ID: $RUN_ID"
                     echo "   Created: $RUN_CREATED"
-                    echo "   Conclusion: ✅ $RUN_CONCLUSION"
+                    echo "   Workflow Conclusion: $RUN_CONCLUSION"
+                    echo "   build-nightly: ✅ success"
                     break
                   else
-                    echo "⚠️  No successful runs found in the last $MAX_RUNS_TO_CHECK completed runs"
+                    echo "⚠️  No runs with successful build-nightly task found in the last $MAX_RUNS_TO_CHECK completed runs"
                     echo ""
                     echo "❌ FAIL LOG:"
                     echo "   Repository: $REPO"
                     echo "   Workflow: $WORKFLOW_FILE"
                     echo "   Checked: $MAX_RUNS_TO_CHECK most recent completed runs"
-                    echo "   Result: All runs failed or were cancelled"
+                    echo "   Result: build-nightly task was not successful in checked runs"
                     echo ""
                     echo "📊 Run conclusions:"
                     echo "$RUNS_JSON" | jq -r '.workflow_runs[] | "   Run #\(.run_number): \(.conclusion)"'
@@ -143,7 +152,7 @@ jobs:
                       echo "💡 Troubleshooting tips:"
                       echo "   1. Check workflow runs manually:"
                       echo "      https://github.com/$REPO/actions/workflows/$WORKFLOW_FILE"
-                      echo "   2. Verify the workflow is running successfully"
+                      echo "   2. Verify build-nightly task is successful"
                       echo "   3. Check if there are any infrastructure issues"
                       echo ""
                       exit 1
