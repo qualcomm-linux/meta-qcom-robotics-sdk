@@ -1,123 +1,141 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
-
 header:
   version: 14
   includes:
-    - ci/qcom-distro.yml
-
+  - ci/qcom-distro.yml
 repos:
   meta-qcom-robotics-sdk:
-
   meta-qcom:
-      url: https://github.com/qualcomm-linux/meta-qcom
-      commit: 9e45d0d0bd6984e1feff5444b51888f30b40886a
+    url: https://github.com/qualcomm-linux/meta-qcom
+    commit: 74c257a314964866531b3b43761fe423420393da
   oe-core:
-      url: https://github.com/openembedded/openembedded-core
-      layers:
-          meta:
-      patches:
-          fix-BSD-license-missing:
-              repo: meta-qcom-robotics-sdk
-              path: patches/Initial-commit-of-license.patch
-      commit: e954a94b5b528b2430e8da331107d7d58287f89b
+    url: https://github.com/openembedded/openembedded-core
+    layers:
+      meta:
+    patches:
+      fix-BSD-license-missing:
+        repo: meta-qcom-robotics-sdk
+        path: patches/Initial-commit-of-license.patch
+    commit: f235ffc43c7783a84e1ac0dce8489fcba8354e12
   bitbake:
-      url: https://github.com/openembedded/bitbake
-      layers:
-          .: disabled
-      commit: 7fd4d9d10524ac798ba96057462ea77e6998b0ff
+    url: https://github.com/openembedded/bitbake
+    layers:
+      .: disabled
+    commit: 5d722b5d65e4eef7befe6376983385421e993f86
   meta-qcom-distro:
-      url: https://github.com/qualcomm-linux/meta-qcom-distro
-      branch: main
-      commit: 2a1f1df35573e691f49c961ce3e5159d31ee3fc3
+    url: https://github.com/qualcomm-linux/meta-qcom-distro
+    branch: main
+    commit: 4297bce9383ea57a822582ee23304216a10108fa
   meta-openembedded:
-      url: https://github.com/openembedded/meta-openembedded
-      layers:
-          meta-filesystems:
-          meta-gnome:
-          meta-multimedia:
-          meta-networking:
-          meta-oe:
-          meta-python:
-          meta-xfce:
-      commit: 6bc36f105c562e48b0feba2a026416d0942f2bd3
+    url: https://github.com/openembedded/meta-openembedded
+    layers:
+      meta-filesystems:
+      meta-gnome:
+      meta-multimedia:
+      meta-networking:
+      meta-oe:
+      meta-python:
+      meta-xfce:
+    commit: 96a803a50d55a455b0584d8a81168351d0f8c697
   meta-virtualization:
-      url: https://git.yoctoproject.org/meta-virtualization
-      branch: master
-      commit: f829fbfda0f14365235d48dbe2055121fbc0718c
+    url: https://git.yoctoproject.org/meta-virtualization
+    branch: master
+    commit: 4e6c583591c1da7e898254dd33eca5cc04c739a9
   meta-audioreach:
-      url: https://github.com/AudioReach/meta-audioreach
-      branch: master
-      commit: 09a96ccfdcdd5d580c9779ac8089da6f408538ff
+    url: https://github.com/AudioReach/meta-audioreach
+    branch: master
+    commit: 75402c8d1ea1203dcf3a63792161f7d5d93946bb
   meta-selinux:
-      branch: master
-      url: https://git.yoctoproject.org/meta-selinux
-      commit: d836d252e9cb1c7a8778063288a501fda2095932
+    branch: master
+    url: https://git.yoctoproject.org/meta-selinux
+    commit: 4904b87b12c51a68efc5b9cd45c7b519fdc48af1
   meta-updater:
-      branch: master
-      url: https://github.com/uptane/meta-updater
-      commit: f5eb3010d614c9a206ef05ff1c6a4ec1540ce6a8
+    branch: master
+    url: https://github.com/uptane/meta-updater
+    commit: bcea37a06cb8b17ddcd7f3209b4a3c5643fee4d5
   meta-security:
-      url: https://git.yoctoproject.org/meta-security
-      branch: master
-      layers:
-          .:
-          meta-tpm:
-      commit: 8028c573db6923525c2918724f2bd36d4a420e0b
-
+    url: https://git.yoctoproject.org/meta-security
+    branch: master
+    layers:
+      .:
+      meta-tpm:
+    commit: 8028c573db6923525c2918724f2bd36d4a420e0b
   meta-ros:
-      url: https://github.com/ros/meta-ros.git
-      branch: master
-      layers:
-          meta-ros-common:
-          meta-ros2:
-          meta-ros2-jazzy:
-      patches:
-          qcom-fixes1:
-              repo: meta-qcom-robotics-sdk
-              path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
-          qcom-fixes2:
-              repo: meta-qcom-robotics-sdk
-              path: patches/0002-jazzy-update-libdir-of-ompl.patch
-          qcom-fixes3:
-              repo: meta-qcom-robotics-sdk
-              path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
-          ament_cmake_py_fix:
-              repo:  meta-qcom-robotics-sdk
-              path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
-          qcom-fixes4:
-              repo: meta-qcom-robotics-sdk
-              path: patches/0001-fix-Update-LAYERSERIES_COMPAT-to-adapt-to-upstream-u.patch
-      commit: fceba46917fe9473e64534d972d3cf853aa7674d
-
+    url: https://github.com/ros/meta-ros.git
+    branch: master
+    layers:
+      meta-ros-common:
+      meta-ros2:
+      meta-ros2-jazzy:
+    patches:
+      qcom-fixes1:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
+      qcom-fixes2:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0002-jazzy-update-libdir-of-ompl.patch
+      qcom-fixes3:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
+      ament_cmake_py_fix:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
+      qcom-fixes4:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0001-fix-Update-LAYERSERIES_COMPAT-to-adapt-to-upstream-u.patch
+    commit: fceba46917fe9473e64534d972d3cf853aa7674d
 local_conf_header:
-  resource_limitation: |   
-    # Capture the count of cpu cores available from the host.
+  resource_limitation: '# Capture the count of cpu cores available from the host.
+
     CPU_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=9)}"
 
-    # Number of parallel threads make can run based on cpu cores with a max cap at 20.
+
+    # Number of parallel threads make can run based on cpu cores with a max cap at
+    20.
+
     THREAD_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=10)}"
 
+
     # Determines how many tasks bitbake should run in parallel.
+
     BB_NUMBER_THREADS ?= "${CPU_COUNT}"
 
+
     # Determines how many tasks bitbake should run in parallel during parsing.
+
     BB_NUMBER_PARSE_THREADS ?= "${CPU_COUNT}"
 
-    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new
+    tasks.
+
     BB_PRESSURE_MAX_CPU = "800000"
 
-    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new
+    tasks.
+
     BB_PRESSURE_MAX_IO = "800000"
 
-    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start
+    new tasks.
+
     BB_PRESSURE_MAX_MEMORY = "800000"
 
-    # Determines how many processes make should run in parallel when running compile tasks.
+
+    # Determines how many processes make should run in parallel when running compile
+    tasks.
+
     PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
-  libcamera_mask: |
-    # Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro libcamera recipe
+
+    '
+  libcamera_mask: '# Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro
+    libcamera recipe
+
     BBMASK .= "|^${TOPDIR}/meta-ros/meta-ros-common/recipes-multimedia/libcamera/.*"
+
     PREFERRED_VERSION_libcamera = "1:0.6.0"
 
+    '
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
