@@ -24,8 +24,8 @@ QUALCOMM_QRB_ROS = " \
     qrb-ros-transport-imu-type \
     qrb-ros-transport-point-cloud2-type \
     qrb-sensor-client \
-	qrb-ros-system-monitor \
-	qrb-ros-system-monitor-interfaces \
+    qrb-ros-system-monitor \
+    qrb-ros-system-monitor-interfaces \
     qrb-ros-docker \
     libqrc \
     libqrc-udriver \
