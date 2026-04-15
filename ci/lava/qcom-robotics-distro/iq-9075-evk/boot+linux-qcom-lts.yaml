@@ -3,7 +3,7 @@ actions:
     images:
       image:
         headers:
-          Authentication: Q_S3_TOKEN
+          Authorization: Q_S3_TOKEN
         url: "{{BUILD_DOWNLOAD_URL}}/qcom-robotics-distro_full_linux-qcom-lts/{{DEVICE_TYPE}}/qcom-robotics-proprietary-image-{{DEVICE_TYPE}}.rootfs.qcomflash.tar.gz"
     postprocess:
       docker:

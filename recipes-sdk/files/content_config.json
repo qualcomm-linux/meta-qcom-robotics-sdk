@@ -37,6 +37,10 @@
             "to": "qirp-samples/robotics"
         },
         {
+            "name": "sample-remote-assistant",
+            "to": "qirp-samples/robotics"
+        },
+        {
             "name": "sample-hrnet-pose-estimation",
             "to": "qirp-samples/ai_vision/"
         },
