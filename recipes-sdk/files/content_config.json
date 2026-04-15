@@ -43,7 +43,12 @@
         {
             "name": "qrb-ros-camera",
             "to": "qirp-samples/platform/"
+        },
+	{
+            "name": "sample-remote-assistant",
+            "to": "qirp-samples/robotics"
         }
+
       ],
       "scripts": [
         {
