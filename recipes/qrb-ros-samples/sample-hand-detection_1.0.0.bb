@@ -1,3 +1,7 @@
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_hand_detection/1.0.0"
+
+SRCREV = "26fe75ac6779c6e1e69a3334bc89d821580ed932"
+
 ROS_BUILD_TYPE = "ament_python"
 
 ROS_CN = "sample_hand_detection"
