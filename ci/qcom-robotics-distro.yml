@@ -6,7 +6,7 @@ repos:
   meta-qcom-robotics-sdk:
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: f14dfcaed14cc50af13e8483a147ef1d98c7c03a
+    commit: db253c136ea26bfb6caade9d319863dac516c363
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -24,7 +24,7 @@ repos:
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: dc4051f119c08e081dfa932567ee6d88f32d1c54
+    commit: 4297bce9383ea57a822582ee23304216a10108fa
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
