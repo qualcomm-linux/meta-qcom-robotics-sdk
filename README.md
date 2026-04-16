@@ -20,6 +20,8 @@ This will guide you through developing your first sample application. It explain
 
 **main**: Primary development branch. Contributors should develop submissions based on this branch, and submit pull requests to this branch.
 
+**wrynose**: Long-term support (LTS) branch based on the Yocto Project Wrynose release and the linux-qcom-6.18 LTS kernel. Use `linux-qcom-6.18.yml` instead of `linux-qcom-next.yml` when building on this branch.
+
 ## Usage
 
 As part of QIR, this project requires collaborative usage with other components. Detailed sample content will be provided in the future.
@@ -49,33 +51,53 @@ Here are the detailed steps:
 4. Clone meta-qcom-robotics-sdk layer
 
    ```
-   git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git -b main
+   git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
    ```
 
 5. Build using the KAS configuration for one of the supported boards
 
+   ```shell
+   kas build meta-qcom-robotics-sdk/ci/<MACHINE>.yml:meta-qcom-robotics-sdk/ci/<KERNEL>.yml:meta-qcom-robotics-sdk/ci/<TARGET>.yml
    ```
-   kas build meta-qcom-robotics-sdk/ci/<YOUR MACHINE NAME>.yml:meta-qcom-robotics-sdk/ci/<TARGET NAME>.yml
+   Supported machines, kernels and targets are listed below:
 
-   # For example, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro image, run the following command:
-   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml
+   | Machine Names | Kernel Names | Target Names |
+   | ------------ | ------------ | ------------ |
+   | iq-8275-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
+   | iq-9075-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
 
-   # For authorized registrants, to build for Qualcomm DragonwingTM IQ-9075 Evaluation Kit using robotics distro property image, run the following command: 
-   kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
-   ```
-   Supported machines and distributions are listed below:
-   | Machine Names | Target Names |
-   | ------------ | ------------ |
-   | iq-8275-evk | qcom-robotics-image, qcom-robotics-proprietary-image |
-   | iq-9075-evk | qcom-robotics-image, qcom-robotics-proprietary-image |
+   **Example** (machine: `iq-9075-evk`, branch: `main`):
+
+   - Open-source packages only — [qcom-robotics-image](recipes-products/images/qcom-robotics-image.bb):
+
+     ```shell
+     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/linux-qcom-next.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml
+     ```
+
+   - All packages, including proprietary — [qcom-robotics-proprietary-image](recipes-products/images/qcom-robotics-proprietary-image.bb):
+
+     ```shell
+     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/linux-qcom-next.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
+     ```
+   **Note**: If you works on `wrynose` branch, use `linux-qcom-6.18.yml` instead of `linux-qcom-next.yml`.
 
 6. The output image will be located in the follow path:
 
-   ```
+   ```shell
    build/tmp/deploy/images/<YOUR MACHINE NAME>/*.rootfs.qcomflash
    ```
 
-7. Please refer to the [Flash steps](https://github.com/qualcomm-linux/meta-qcom) to flash the image to the target device using the QDL tools.
+7. To generate the QIR SDK, run the `generate_qirp_sdk` task after the image build completes:
+
+   ```shell
+   kas build meta-qcom-robotics-sdk/ci/<MACHINE>.yml:meta-qcom-robotics-sdk/ci/<KERNEL>.yml:meta-qcom-robotics-sdk/ci/<TARGET>.yml -c generate_qirp_sdk
+   ```
+   The output QIR SDK will be located in the follow path:
+
+   ```shell
+   build/tmp/deploy/qirpsdk_artifacts/<YOUR MACHINE NAME>/qirp_sdk.tar.gz
+   ```
+8. Please refer to the [Flash steps](https://github.com/qualcomm-linux/meta-qcom) to flash the image to the target device using the QDL tools.
 
 ## Development
 
