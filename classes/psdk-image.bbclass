@@ -81,7 +81,7 @@ process_qir_samples() {
         source_dir="${DEPLOY_DIR}/sample_source_code/${name}"
         if [ -d "${source_dir}" ]; then
             bbnote "  Copying entire directory ${source_dir} to ${to_dir}/"
-            cp -rf "${source_dir}" "${to_dir}/"
+            cp -rf "${source_dir}" "${to_dir}/" 2>/dev/null || bbwarn "Failed to copy ${name}"
         else
             bbwarn "  Source directory ${source_dir} does not exist, skipping sample: $name"
         fi
@@ -293,6 +293,34 @@ python () {
                            ' {}:do_collect_rdepends'.format(pkg_group))
         
         bb.note("Added dependencies for {}: {}".format(pn, ", ".join(pkg_groups)))
+        
+        # Add dependencies on sample source code copy tasks
+        # Read content_config.json to get list of samples
+        import json
+        import os
+        
+        robotics_layer_dir = d.getVar("ROBIOTICS_LAYER_DIR")
+        config_file = os.path.join(robotics_layer_dir, "recipes-sdk/files/content_config.json")
+        
+        if os.path.exists(config_file):
+            try:
+                with open(config_file, 'r') as f:
+                    config_data = json.load(f)
+                
+                samples = config_data.get("samples", [])
+                sample_names = [sample.get("name") for sample in samples if sample.get("name")]
+                
+                if sample_names:
+                    bb.note("Adding dependencies on sample source copy tasks for: {}".format(", ".join(sample_names)))
+                    for sample_name in sample_names:
+                        d.appendVarFlag('do_generate_qirp_sdk', 'depends',
+                                       ' {}:do_copy_source_to_deploy'.format(sample_name))
+                else:
+                    bb.note("No samples found in content_config.json")
+            except Exception as e:
+                bb.warn("Failed to read or parse content_config.json: {}".format(str(e)))
+        else:
+            bb.warn("content_config.json not found at: {}".format(config_file))
 }
 
 SSTATETASKS += "do_generate_qirp_sdk "
