@@ -79,13 +79,12 @@ runs:
     - name: Kas build images
       shell: bash
       run: |
-        $KAS_CONTAINER build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }}
+        $KAS_CONTAINER shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} --command "\
+        bitbake ${{ inputs.target_name }} && bitbake ${{ inputs.target_name }} -c generate_qirp_sdk"
+        
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
         mv $KAS_WORK_DIR/build/buildchart.svg .
-
-        # Build qir-sdk
-        $KAS_CONTAINER build ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} --task generate_qirp_sdk
-
+       
     - uses: actions/upload-artifact@v6
       with:
         name: buildchart-${{ inputs.distro_name }}-${{ inputs.target_type }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
