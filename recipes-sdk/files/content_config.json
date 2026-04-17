@@ -35,18 +35,6 @@
         {
             "name": "simulation-sample-amr-simple-motion",
             "to": "qirp-samples/robotics"
-        },
-        {
-            "name": "sample-remote-assistant",
-            "to": "qirp-samples/robotics"
-        },
-        {
-            "name": "sample-hrnet-pose-estimation",
-            "to": "qirp-samples/ai_vision/"
-        },
-        {
-            "name": "sample-face-detection",
-            "to": "qirp-samples/ai_vision/"
         }
       ],
       "scripts": [

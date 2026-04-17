@@ -3,7 +3,10 @@ ROS_BUILD_TYPE = "ament_python"
 ROS_CN = "simulation_sample_amr_simple_motion"
 ROS_BPN = "simulation_sample_amr_simple_motion"
 
-S = "${UNPACKDIR}/${PN}-${PV}/robotics/${ROS_CN}"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-simulation_sample_amr_simple_motion/1.0.0"
+
+SRCREV = "253360c77d6d004ee997211ee7b1bcaefb01c2ae"
+
 
 ROS_BUILD_DEPENDS = " \
 "

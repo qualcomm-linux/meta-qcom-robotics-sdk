@@ -25,8 +25,6 @@ QUALCOMM_QRB_ROS = " \
 # If it is qrb ros sample, Please place all of them under this variable.
 # About qrb ros sample introduction, Please refer to https://github.com/qualcomm-qrb-ros/qrb_ros_samples.
 QRB_ROS_SAMPLE = " \
-    sample-hrnet-pose-estimation \
-    sample-face-detection \
     simulation-sample-pick-and-place \
 "
 
