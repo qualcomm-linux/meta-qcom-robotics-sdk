@@ -3,7 +3,10 @@ ROS_BUILD_TYPE = "ament_python"
 ROS_CN = "sample_resnet101"
 ROS_BPN = "sample_resnet101"
 
-S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_resnet101/1.0.1"
+
+SRCREV = "737c43783991977b97fb7e376e1257b0c2dbfcb6"
+
 
 ROS_BUILD_DEPENDS = " \
 "
