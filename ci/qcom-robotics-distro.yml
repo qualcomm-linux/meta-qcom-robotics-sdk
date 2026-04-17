@@ -6,7 +6,7 @@ repos:
   meta-qcom-robotics-sdk:
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: f14dfcaed14cc50af13e8483a147ef1d98c7c03a
+    commit: d18bf155e3a1285acda3103b1af35e012030ffc1
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -24,7 +24,7 @@ repos:
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: dc4051f119c08e081dfa932567ee6d88f32d1c54
+    commit: 4922e89af35622b4acf6618c0bdbe14470c775d5
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
@@ -35,7 +35,7 @@ repos:
       meta-oe:
       meta-python:
       meta-xfce:
-    commit: 96a803a50d55a455b0584d8a81168351d0f8c697
+    commit: d2e6069771e435231a220a8ecac20c0e7ceff037
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization
     branch: master
@@ -51,7 +51,7 @@ repos:
   meta-updater:
     branch: master
     url: https://github.com/uptane/meta-updater
-    commit: bcea37a06cb8b17ddcd7f3209b4a3c5643fee4d5
+    commit: 2f51f8d7fe658a49d0991ddd0d0af7ff1535c6b4
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     branch: master
