@@ -6,7 +6,7 @@ repos:
   meta-qcom-robotics-sdk:
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: f14dfcaed14cc50af13e8483a147ef1d98c7c03a
+    commit: 09463a58403b7fe3dbdf5c689f42f2acd436dd6b
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -15,7 +15,7 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: f235ffc43c7783a84e1ac0dce8489fcba8354e12
+    commit: 8c008f36d7af1e63cb3f4a2ba763efd1f1e5fe4d
   bitbake:
     url: https://github.com/openembedded/bitbake
     layers:
@@ -24,7 +24,7 @@ repos:
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: dc4051f119c08e081dfa932567ee6d88f32d1c54
+    commit: df48923e77aa9c5f3ddace8e01fa38963bc90c9b
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
@@ -35,7 +35,7 @@ repos:
       meta-oe:
       meta-python:
       meta-xfce:
-    commit: 96a803a50d55a455b0584d8a81168351d0f8c697
+    commit: d2e6069771e435231a220a8ecac20c0e7ceff037
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization
     branch: master
@@ -51,7 +51,7 @@ repos:
   meta-updater:
     branch: master
     url: https://github.com/uptane/meta-updater
-    commit: bcea37a06cb8b17ddcd7f3209b4a3c5643fee4d5
+    commit: d713c99a9ddace090c0efc0ed57022185daa6fb2
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     branch: master
