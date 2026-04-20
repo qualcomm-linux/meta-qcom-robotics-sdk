@@ -3,7 +3,9 @@ ROS_BUILD_TYPE = "ament_python"
 ROS_CN = "sample_object_detction"
 ROS_BPN = "sample_object_detction"
 
-S = "${WORKDIR}/git/ai_vision/${ROS_CN}"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_object_detection/1.0.0"
+
+SRCREV = "ba967b141d5421a28568b4ddae6c52ab1a59fc55"
 
 ROS_BUILD_DEPENDS = " \
 "
