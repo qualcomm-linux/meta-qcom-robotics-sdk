@@ -80,6 +80,7 @@ runs:
       shell: bash
       run: |
         $KAS_CONTAINER shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} --command "\
+        sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gfortran && \
         bitbake ${{ inputs.target_name }} && bitbake ${{ inputs.target_name }} -c generate_qirp_sdk"
         
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
