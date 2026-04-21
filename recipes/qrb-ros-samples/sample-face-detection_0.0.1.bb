@@ -1,9 +1,10 @@
 ROS_BUILD_TYPE = "ament_python"
 
 ROS_CN = "sample_face_detection"
-ROS_BPN = ""sample_face_detection""
+ROS_BPN = "sample_face_detection"
 
-S = "${UNPACKDIR}/${PN}-${PV}/ai_vision/${ROS_CN}"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_face_detection/1.0.1"
+SRCREV = "0e05cb6042debdeb23dcdc09ed6d46a7cb8dafd7"
 
 ROS_BUILD_DEPENDS = " \
 "
