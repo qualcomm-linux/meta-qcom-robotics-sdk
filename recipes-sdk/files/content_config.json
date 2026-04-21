@@ -35,6 +35,22 @@
         {
             "name": "simulation-sample-amr-simple-motion",
             "to": "qirp-samples/robotics"
+        },
+	{
+            "name": "sample-hand-detection",
+            "to": "qirp-samples/ai_vision"
+        },
+	{
+            "name": "sample-object-detection",
+            "to": "qirp-samples/ai_vision"
+        },
+	{
+            "name": "sample-object-segmentation",
+            "to": "qirp-samples/ai_vision"
+        },
+	{
+            "name": "sample-resnet101",
+            "to": "qirp-samples/ai_vision"
         }
       ],
       "scripts": [

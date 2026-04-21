@@ -1,7 +1,7 @@
 ROS_BUILD_TYPE = "ament_python"
 
-ROS_CN = "sample_object_detction"
-ROS_BPN = "sample_object_detction"
+ROS_CN = "sample_object_detection"
+ROS_BPN = "sample_object_detection"
 
 SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_object_detection/1.0.0"
 
