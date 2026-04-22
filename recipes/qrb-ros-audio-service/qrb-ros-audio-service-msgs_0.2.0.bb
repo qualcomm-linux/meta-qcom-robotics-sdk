@@ -2,8 +2,8 @@ inherit ros_distro_${ROS_DISTRO}
 inherit ros_component
 
 DESCRIPTION = "QRB ROS Audio Service msgs"
-AUTHOR           = "Ronghui Zhu <ronghuiz@qti.qualcomm.com>"
-ROS_AUTHOR       = "Ronghui Zhu"
+AUTHOR           = "Yuchao Pan <yuchpan@qti.qualcomm.com>"
+ROS_AUTHOR       = "Yuchao Pan"
 SECTION          = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://../../LICENSE;md5=86fcc2294062130b497ba0ffff9f82fc"
