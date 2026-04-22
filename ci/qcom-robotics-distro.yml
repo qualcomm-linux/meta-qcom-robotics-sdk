@@ -4,6 +4,7 @@ header:
   - ci/qcom-distro.yml
 repos:
   meta-qcom-robotics-sdk:
+    branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
     commit: fcce55a9439d2031092dc691263cd51eed813586
