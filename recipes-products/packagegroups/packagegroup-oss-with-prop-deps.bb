@@ -31,6 +31,7 @@ QRB_ROS_SAMPLE = " \
     sample-object-detection \
     sample-object-segmentation \
     sample-resnet101 \
+    sample-hrnet-pose-estimation \
 "
 
 # If you do not work within the above two organizations and are preparing to merge your code into the Qualcomm Linux Intelligence Robotics Image, 
