@@ -20,6 +20,7 @@ QUALCOMM_QRB_ROS = " \
     qrb-ros-colorspace-convert \
     qrb-ros-camera \
     qrb-ros-video \
+    qrb-ros-audio-service \
 "
 
 # If it is qrb ros sample, Please place all of them under this variable.

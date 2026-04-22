@@ -1,0 +1,48 @@
+From 00747de8358ec7bab4c07749f198d2da7bf7416b Mon Sep 17 00:00:00 2001
+From: Ronghui Zhu <ronghuiz@qti.qualcomm.com>
+Date: Tue, 21 Apr 2026 17:43:06 +0800
+Subject: [PATCH] fix: record volume too low
+
+Upstream-Status: Inappropriate [platform-specific workaround]
+
+---
+ .../include/qrb_audio_common_lib/audio_common.hpp            | 1 +
+ qrb_audio_common_lib/src/capture_stream.cpp                  | 5 +++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/qrb_audio_common_lib/include/qrb_audio_common_lib/audio_common.hpp b/qrb_audio_common_lib/include/qrb_audio_common_lib/audio_common.hpp
+index 2068c04..5ab31cb 100644
+--- a/qrb_audio_common_lib/include/qrb_audio_common_lib/audio_common.hpp
++++ b/qrb_audio_common_lib/include/qrb_audio_common_lib/audio_common.hpp
+@@ -26,6 +26,7 @@ namespace audio_common_lib
+ #define TIME_EVENT_USEC 50000
+ #define STREAM_VOL_MAX 100
+ #define STREAM_VOL_MIN 0
++#define RECORD_GAIN 8
+ 
+ #define LOG_ERROR (0x1)
+ #define LOG_INFO (0x2)
+diff --git a/qrb_audio_common_lib/src/capture_stream.cpp b/qrb_audio_common_lib/src/capture_stream.cpp
+index 0976971..f800338 100644
+--- a/qrb_audio_common_lib/src/capture_stream.cpp
++++ b/qrb_audio_common_lib/src/capture_stream.cpp
+@@ -64,7 +64,8 @@ int CaptureStream::start_stream()
+   buffer_attr.fragsize = buffer_attr.tlength = (uint32_t)-1;
+   buffer_attr.minreq = (uint32_t)-1;
+ 
+-  pa_cvolume_set(&volume, m_sample_spec->channels, PA_VOLUME_NORM * mvolume / STREAM_VOL_MAX);
++  pa_cvolume_set(&volume, m_sample_spec->channels, PA_VOLUME_NORM * mvolume / STREAM_VOL_MAX
++                * RECORD_GAIN);
+ 
+   if (pa_stream_connect_record(stream, /*device*/ nullptr, &buffer_attr, flags)) {
+     LOGE("pa_stream_connect_playback() failed: %s",
+@@ -180,4 +181,4 @@ void CaptureStream::stream_data_callback(pa_stream * stream, size_t length, void
+ }
+ 
+ }  // namespace audio_common_lib
+-}  // namespace qrb
+\ No newline at end of file
++}  // namespace qrb
+-- 
+2.34.1
+
