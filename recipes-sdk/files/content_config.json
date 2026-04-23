@@ -63,6 +63,10 @@
         {
             "name": "sample-depth-estimation",
             "to": "qirp-samples/ai_vision"
+        },
+        {
+            "name": "sample-face-detection",
+            "to": "qirp-samples/ai_vision"
         }
       ],
       "scripts": [
