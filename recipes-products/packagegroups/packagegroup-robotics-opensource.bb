@@ -50,6 +50,7 @@ QUALCOMM_QRB_ROS = " \
 QRB_ROS_SAMPLE = " \
     simulation-sample-amr-simple-motion \
     sample-remote-assistant \
+    simulation-sample-pick-and-place \
 "
 
 # If you do not work within the above two organizations and are preparing to merge your code into the Qualcomm Linux Intelligence Robotics Image,
