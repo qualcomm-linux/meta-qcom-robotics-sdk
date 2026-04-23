@@ -3,7 +3,8 @@ ROS_BUILD_TYPE = "ament_python"
 ROS_CN = "sample_hrnet_pose_estimation"
 ROS_BPN = "sample_hrnet_pose_estimation"
 
-S = "${UNPACKDIR}/${PN}-${PV}/ai_vision/${ROS_CN}"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_hrnet_pose_estimation/1.0.0"
+SRCREV = "c30b0c2f676d9ac94965c0bdcd7446a3531029dc"
 
 ROS_BUILD_DEPENDS = " \
 "
