@@ -30,6 +30,7 @@ QRB_ROS_SAMPLE = " \
     sample-object-detection \
     sample-object-segmentation \
     sample-resnet101 \
+    sample-apriltag \
     sample-depth-estimation \
     sample-hrnet-pose-estimation \
 "
