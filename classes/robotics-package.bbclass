@@ -57,14 +57,14 @@ do_copy_source_to_deploy() {
     # Copy all files from S directory
     if [ -d "${S}" ]; then
         bbnote "Copying source files from ${S} to ${dest_dir}"
-        cp -r "${S}/"* "${dest_dir}/" 2>/dev/null || true
+        cp -r "${S}/"* "${dest_dir}/"
     else
         bbwarn "Source directory ${S} does not exist, skipping source copy"
     fi
 }
 
 # Add task: copy source to deploy directory after patching
-addtask do_copy_source_to_deploy after do_patch before do_configure
+addtask do_copy_source_to_deploy after do_compile before do_package
 
 AUTO_LIBNAME_PKGS = ""
 

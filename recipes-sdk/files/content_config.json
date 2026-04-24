@@ -13,22 +13,6 @@
             "to": "qirp-samples/platform/"
         },
         {
-            "name": "simulation-sample-pick-and-place",
-            "to": "qirp-samples/robotics"
-        },
-        {
-            "name": "simulation-sample-amr-simple-motion",
-            "to": "qirp-samples/robotics"
-        },
-        {
-            "name": "sample-hrnet-pose-estimation",
-            "to": "qirp-samples/ai_vision/"
-        },
-        {
-            "name": "sample-face-detection",
-            "to": "qirp-samples/ai_vision/"
-        },
-        {
             "name": "ros-gst-bridge",
             "to": "qirp-samples/platform/"
         },
@@ -37,12 +21,52 @@
             "to": "qirp-samples/platform/"
         },
         {
-            "name": "rplidar-ros2",
+            "name": "qrb-ros-camera",
             "to": "qirp-samples/platform/"
         },
         {
-            "name": "qrb-ros-camera",
+            "name": "qrb-ros-nn-inference",
             "to": "qirp-samples/platform/"
+        },
+        {
+            "name": "simulation-sample-pick-and-place",
+            "to": "qirp-samples/robotics"
+        },
+        {
+            "name": "simulation-sample-amr-simple-motion",
+            "to": "qirp-samples/robotics"
+        },
+	      {
+            "name": "sample-hand-detection",
+            "to": "qirp-samples/ai_vision"
+        },
+	      {
+            "name": "sample-object-detection",
+            "to": "qirp-samples/ai_vision"
+        },
+	      {
+            "name": "sample-object-segmentation",
+            "to": "qirp-samples/ai_vision"
+        },
+	      {
+            "name": "sample-resnet101",
+            "to": "qirp-samples/ai_vision"
+        },
+        {
+            "name": "sample-hrnet-pose-estimation",
+            "to": "qirp-samples/ai_vision/"
+        },
+        {
+            "name": "sample-remote-assistant",
+            "to": "qirp-samples/robotics"
+        },
+        {
+            "name": "sample-depth-estimation",
+            "to": "qirp-samples/ai_vision"
+        },
+        {
+            "name": "sample-face-detection",
+            "to": "qirp-samples/ai_vision"
         }
       ],
       "scripts": [
