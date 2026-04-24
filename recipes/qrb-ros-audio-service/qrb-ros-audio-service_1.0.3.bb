@@ -4,8 +4,8 @@ inherit ros_insane_dev_so
 inherit pkgconfig
 
 DESCRIPTION = "QRB ROS Audio Service"
-AUTHOR = "Ronghui Zhu <ronghuiz@qti.qualcomm.com>"
-ROS_AUTHOR = "Ronghui Zhu"
+AUTHOR = "Yuchao Pan <yuchpan@qti.qualcomm.com>"
+ROS_AUTHOR = "Yuchao Pan"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://../LICENSE;md5=68c28a8a26024c85c589d0de638520b6"
