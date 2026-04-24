@@ -43,6 +43,8 @@ QUALCOMM_QRB_ROS = " \
     qrb-ros-amr \
     qrb-ros-follow-path \
     qrb-ros-nn-inference \
+    qrb-ros-cv-tensor-common-process \
+    qrb-ros-yolo-process \
 "
 
 # If it is qrb ros sample, Please place all of them under this variable.
