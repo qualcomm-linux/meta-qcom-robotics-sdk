@@ -7,7 +7,7 @@ repos:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: fcce55a9439d2031092dc691263cd51eed813586
+    commit: c31b161fc1f9ad63c85ffaf4a0b7b41a8a3aee9b
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -25,7 +25,7 @@ repos:
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: df48923e77aa9c5f3ddace8e01fa38963bc90c9b
+    commit: 5327a4c4154abb72cf3bee1f34f9beecf4e09331
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
@@ -59,7 +59,7 @@ repos:
     layers:
       .:
       meta-tpm:
-    commit: 8028c573db6923525c2918724f2bd36d4a420e0b
+    commit: 596b966a0d047c2f48cb768821558e918ae0c477
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
