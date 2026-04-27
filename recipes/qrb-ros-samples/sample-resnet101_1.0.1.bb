@@ -5,7 +5,7 @@ ROS_BPN = "sample_resnet101"
 
 SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_resnet101/1.0.1"
 
-SRCREV = "737c43783991977b97fb7e376e1257b0c2dbfcb6"
+SRCREV = "08aba6c417703a8906b039fc7e33183eb19688c1"
 
 
 ROS_BUILD_DEPENDS = " \
