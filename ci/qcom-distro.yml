@@ -41,10 +41,6 @@ repos:
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     branch: master
-    patches:
-      plain:
-        repo: meta-qcom
-        path: patches/0001-wic-wic-need-to-be-moved-to-files-wic-within-the-lay.patch
     layers:
       .:
       meta-tpm:
