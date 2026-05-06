@@ -1,7 +1,14 @@
 name: Build on PR
+run-name: "${{ github.base_ref }}: ${{ github.event.pull_request.title }}"
 
 on:
   pull_request:
+    branches:
+      - main
+      - wrynose
+    paths-ignore:
+      - '**/*.md'
+      - '.github/.markdownlint.yaml'
   workflow_dispatch:
     inputs:
       use_sstate:
@@ -14,6 +21,7 @@ permissions:
   pull-requests: write
   contents: read
   packages: read
+  actions: read
 
 jobs:
   event-file:
