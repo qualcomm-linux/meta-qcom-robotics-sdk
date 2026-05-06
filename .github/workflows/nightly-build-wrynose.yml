@@ -1,0 +1,54 @@
+name: Nightly Build (wrynose)
+
+on:
+  schedule:
+  # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
+  # so that build notification emails will be sent out properly.
+  # At 13:00 UTC everyday, will start after the nightly build of the main branch is finished. - picked a random "minute" as top of hour can be busy in github
+  - cron: "00 13 * * *"
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+  packages: read
+
+jobs:
+  # Resolve wrynose to a single SHA so all downstream jobs build the same commit,
+  # and so test results are attributed to the correct wrynose commit (not main's
+  # github.sha, which is what scheduled workflows expose by default).
+  resolve-ref:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.get-sha.outputs.sha }}
+    steps:
+      - name: Resolve wrynose SHA
+        id: get-sha
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(gh api repos/${{ github.repository }}/git/ref/heads/wrynose --jq '.object.sha')
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+
+  build-nightly:
+    needs: resolve-ref
+    uses: ./.github/workflows/build-yocto.yml
+    with:
+      git_ref: ${{ needs.resolve-ref.outputs.sha }}
+
+  test-nightly:
+    uses: ./.github/workflows/test.yml
+    needs: [resolve-ref, build-nightly]
+    secrets: inherit
+    with:
+      build_id: ${{ github.run_id }}
+
+  publish-test-results:
+    uses: ./.github/workflows/publish-results.yml
+    needs: [resolve-ref, test-nightly]
+    secrets: inherit
+    with:
+      workflow_id: ${{ github.run_id }}
+      event_name: ${{ github.event_name }}
+      event_file: ${{ github.event_path }}
+      commit: ${{ needs.resolve-ref.outputs.sha }}
