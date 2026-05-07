@@ -1,6 +1,7 @@
 name: Nightly Build
+run-name: "Nightly Build (${{ github.ref_name }})"
 
-on:
+on: 
   schedule:
   # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
   # so that build notification emails will be sent out properly.

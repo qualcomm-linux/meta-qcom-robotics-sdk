@@ -24,7 +24,7 @@ env:
 
 jobs:
   kas-setup:
-    
+    if: github.repository_owner == 'qualcomm-linux'    
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: Setting up kas-container
@@ -36,6 +36,8 @@ jobs:
           chmod +x ${KAS_CONTAINER}
 
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Run kas lock
         run: |
@@ -59,6 +61,8 @@ jobs:
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       # qcom-robotics-distro.yml used special commit id, so we need to fetch it again
       # - name: Download kas lockfile
@@ -85,11 +89,11 @@ jobs:
 
       - name: Run Yocto patchreview
         run: |
-          # ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
+          ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
 
   compile:
     needs: [kas-setup, yocto-run-checks]
-    
+    if: github.repository_owner == 'qualcomm-linux'    
     runs-on: [self-hosted, qcom-u2404, amd64]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
@@ -124,6 +128,8 @@ jobs:
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Run kas build
         uses: ./.github/actions/compile
