@@ -7,7 +7,7 @@ repos:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: c31b161fc1f9ad63c85ffaf4a0b7b41a8a3aee9b
+    commit: 67ab87d208a4445406b3a49f7a6d67b4f92557bb
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -16,16 +16,16 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: 8c008f36d7af1e63cb3f4a2ba763efd1f1e5fe4d
+    commit: 42fa856a00ac16b2a7a83d7ecfa60a5be192b16c
   bitbake:
     url: https://github.com/openembedded/bitbake
     layers:
       .: disabled
-    commit: 5d722b5d65e4eef7befe6376983385421e993f86
+    commit: cb28befc56d201cace72d70891e731b955fb567f
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: 5327a4c4154abb72cf3bee1f34f9beecf4e09331
+    commit: 219bc5170374b0bfc128e2558819658c77d6d586
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
@@ -40,7 +40,7 @@ repos:
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization
     branch: master
-    commit: 4e6c583591c1da7e898254dd33eca5cc04c739a9
+    commit: 052241689a0c419d13e15e83e7ad65dd16fc8ffd
   meta-audioreach:
     url: https://github.com/AudioReach/meta-audioreach
     branch: master
@@ -48,18 +48,18 @@ repos:
   meta-selinux:
     branch: master
     url: https://git.yoctoproject.org/meta-selinux
-    commit: 4904b87b12c51a68efc5b9cd45c7b519fdc48af1
+    commit: f7306d7af4425553684a860df6f6d0ee66efba31
   meta-updater:
     branch: master
     url: https://github.com/uptane/meta-updater
-    commit: d713c99a9ddace090c0efc0ed57022185daa6fb2
+    commit: 7fbd0d7d73d4e252ee31e5260e547cbf17945a82
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     branch: master
     layers:
       .:
       meta-tpm:
-    commit: 596b966a0d047c2f48cb768821558e918ae0c477
+    commit: bd6927e1dfc19b2b9619da85e03fb06b6fb6dc03
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
