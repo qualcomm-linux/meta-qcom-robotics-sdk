@@ -8,6 +8,10 @@ on:
         required: false
         default: "true"
         type: string
+      git_ref:
+        required: false
+        type: string
+        default: ""
     outputs:
       artifacts_url:
         description: "URL to retrieve build artifacts"
@@ -24,7 +28,6 @@ env:
 
 jobs:
   kas-setup:
-    
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: Setting up kas-container
@@ -36,6 +39,9 @@ jobs:
           chmod +x ${KAS_CONTAINER}
 
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.git_ref }}
 
       - name: Run kas lock
         run: |
@@ -59,6 +65,9 @@ jobs:
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.git_ref }}
 
       # qcom-robotics-distro.yml used special commit id, so we need to fetch it again
       # - name: Download kas lockfile
@@ -85,11 +94,12 @@ jobs:
 
       - name: Run Yocto patchreview
         run: |
-          # ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
+          ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
 
   compile:
     needs: [kas-setup, yocto-run-checks]
-    
+
+    if: github.repository_owner == 'qualcomm-linux'
     runs-on: [self-hosted, qcom-u2404, amd64]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
@@ -124,6 +134,9 @@ jobs:
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.git_ref }}
 
       - name: Run kas build
         uses: ./.github/actions/compile
@@ -142,6 +155,7 @@ jobs:
 
   publish_summary:
     needs: compile
+    if: ${{ always() && github.repository_owner == 'qualcomm-linux' }}
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: 'Download build URLs'
