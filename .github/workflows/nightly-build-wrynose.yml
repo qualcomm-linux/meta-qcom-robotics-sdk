@@ -1,0 +1,25 @@
+name: Nightly Build Dispatcher (wrynose)
+
+on:
+  schedule:
+  # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
+  # so that build notification emails will be sent out properly.
+  # At 23:22 UTC everyday - picked a random "minute" as top of hour can be busy in github
+  - cron: "00 12 * * *"   # daily job - pick a random "minute"  - top of hour can be busy in github
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+  packages: read
+  actions: write
+
+jobs:
+  trigger-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Nightly Build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run --repo ${{ github.repository }} --ref wrynose nightly-build.yml

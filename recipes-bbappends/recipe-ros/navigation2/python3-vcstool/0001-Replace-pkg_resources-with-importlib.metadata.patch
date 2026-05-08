@@ -3,6 +3,8 @@ From: Jie Yu <yuji@qti.qualcomm.com>
 Date: Thu, 9 Apr 2026 11:04:23 +0800
 Subject: [PATCH] Replace pkg_resources with importlib.metadata
 Upstream-Status: Pending
+
+Signed-off-by: Jie Yu <yuji@qti.qualcomm.com>
 ---
  vcstool/commands/help.py | 9 +++++----
  1 file changed, 5 insertions(+), 4 deletions(-)
