@@ -7,6 +7,13 @@ on:
   # At 23:22 UTC everyday - picked a random "minute" as top of hour can be busy in github
   - cron: "00 12 * * *"   # daily job - pick a random "minute"  - top of hour can be busy in github
 
+  workflow_dispatch:
+    inputs:
+      use_sstate:
+        description: "Use SSTATE cache"
+        required: false
+        default: "true"
+
 permissions:
   checks: write
   pull-requests: write
