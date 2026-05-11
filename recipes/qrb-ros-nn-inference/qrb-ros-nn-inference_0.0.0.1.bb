@@ -1,5 +1,5 @@
 inherit ros_distro_${ROS_DISTRO} pkgconfig
-inherit ros_component robotics-package
+inherit ros_component
 
 DESCRIPTION = "Package for performing neural network model inference"
 AUTHOR = "Na Song <nasong@qti.qualcomm.com>"
@@ -63,5 +63,4 @@ S = "${UNPACKDIR}/${BPN}-${PV}/${ROS_CN}"
 
 ROS_BUILD_TYPE = "ament_cmake"
 inherit ros_${ROS_BUILD_TYPE}
-
 inherit robotics-package
