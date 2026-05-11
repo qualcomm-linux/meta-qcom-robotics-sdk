@@ -36,7 +36,11 @@
             "name": "simulation-sample-amr-simple-motion",
             "to": "qirp-samples/robotics"
         },
-	      {
+        {
+            "name": "sample-apriltag",
+            "to": "qirp-samples/robotics"
+        },
+        {
             "name": "sample-hand-detection",
             "to": "qirp-samples/ai_vision"
         },
