@@ -1,6 +1,4 @@
-inherit ros_distro_${ROS_DISTRO}
-inherit ros_component robotics-package pkgconfig
-inherit pkgconfig cmake
+inherit ros_distro_${ROS_DISTRO} ros_component robotics-package pkgconfig
 
 LICENSE  = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
@@ -30,8 +28,6 @@ ROS_BUILDTOOL_DEPENDS = " \
     ament-cmake-auto-native \
 "
 
-DEPENDS = "${CAMERA_ROS2_NODE_DEPENDS} ${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS}"
-
 ROS_EXEC_DEPENDS = " \
     rclcpp \
     rclcpp-components \
@@ -56,12 +52,13 @@ ROS_EXPORT_DEPENDS = " \
 "
 ROS_BUILDTOOL_EXPORT_DEPENDS = ""
 
-DEPENDS += "pkgconfig-native"
 DEPENDS = "${CAMERA_ROS2_NODE_DEPENDS} ${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS}"
 DEPENDS += "${ROS_EXPORT_DEPENDS} ${ROS_BUILDTOOL_EXPORT_DEPENDS} ${ROS_TEST_DEPENDS}"
+DEPENDS += "pkgconfig-native"
 
 EXTRA_OECMAKE  += "-DSYSROOT_INCDIR=${RECIPE_SYSROOT}/usr/include"
 EXTRA_OECMAKE  += "-DSYSROOT_LIBDIR=${RECIPE_SYSROOT}/usr/lib"
+EXTRA_OECMAKE  += " -DBUILD_TESTING=ON"
 
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
@@ -70,6 +67,4 @@ inherit ros_${ROS_BUILD_TYPE}
 
 FILES:${PN} += " \
     ${pkg_dest}${includedir} "
-
-EXTRA_OECMAKE:append = " -DBUILD_TESTING=ON"
 
