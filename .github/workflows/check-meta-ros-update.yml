@@ -167,14 +167,14 @@ jobs:
             printf 'Pulls in upstream meta-ros changes. Patch compatibility has not been\n'
             printf 'verified automatically; manual review is required.\n\n'
             printf '## TODO\n\n'
-            printf '- [ ] Verify that the following patches still apply cleanly:\n'
+            printf '%s\n' '- [ ] Verify that the following patches still apply cleanly:'
             PATCHES=$(find patches -name '*.patch' -type f 2>/dev/null | sort)
             if [ -n "$PATCHES" ]; then
               echo "$PATCHES" | while IFS= read -r patch; do
                 printf '  - `%s`\n' "$patch"
               done
             else
-              printf '  - (no patches found)\n'
+              printf '%s\n' '  - (no patches found)'
             fi
           } > /tmp/pr-body.md
 
