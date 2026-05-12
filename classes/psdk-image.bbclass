@@ -20,15 +20,14 @@
 #
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
 SDK_PN = "qirp-sdk"
-SDK_VERSION = "2.4.0"
-OSS_CHANNEL_FLAG = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-robotics-extras', 'false', 'true', d)}"
+SDK_VERSION ?= "2.4.0"
 
 # Collect the standard SDK toolchain and copy it into the SDK's toolchain/
 # directory. If no matching toolchain is found, the task only emits a warning.
 # Function: process_toolchain
 process_toolchain() {
     bbnote "Processing toolchain..."
-    if ls ${TOOLCHAIN_PATH}/* | xargs -n1 basename | grep ${TOOLCHAIN_OUTPUTNAME} >/dev/null 2>&1; then
+    if find "${TOOLCHAIN_PATH}" -maxdepth 1 -name "${TOOLCHAIN_OUTPUTNAME}*" | grep -q .; then
         bbnote "Standard SDK Toolchain found in ${TOOLCHAIN_PATH}, copy to ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain/"
         install -d ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain
         find ${TOOLCHAIN_PATH} -type f -name "${TOOLCHAIN_OUTPUTNAME}*" -exec cp {} ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/toolchain/ \;
@@ -74,7 +73,6 @@ process_qir_samples() {
         bbnote "  Processing sample: $name"
         bbnote "  Target directory: $to_dir"
         
-        # mkdir ${to_dir}
         install -d "${to_dir}"
         
         # Copy ${source_dir} to ${to_dir}
@@ -105,7 +103,7 @@ process_qir_samples() {
 
     # Process sample.json
     SAMPLE_JSON="${ROBIOTICS_LAYER_DIR}/recipes-sdk/files/samples.json"
-    if [ -n "$SAMPLE_JSON" ] && [ -f "$SAMPLE_JSON" ]; then
+    if [ -f "$SAMPLE_JSON" ]; then
         # Ensure target directory exists
         install -d ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/qirp-samples/
         cp "$SAMPLE_JSON" ${QIRP_SSTATE_IN_DIR}/${SDK_PN}/qirp-samples/
