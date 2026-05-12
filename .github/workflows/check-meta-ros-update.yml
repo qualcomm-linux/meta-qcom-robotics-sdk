@@ -61,18 +61,14 @@ jobs:
       - name: Check for existing open PR for this commit
         if: steps.check.outputs.needed == 'true'
         id: existing
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           branch="chore/update-meta-ros-${{ steps.latest.outputs.short }}"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
-          count=$(gh pr list \
-            --repo qualcomm-linux/meta-qcom-robotics-sdk \
-            --state open \
-            --head "jiaxshi:$branch" \
-            --json number \
-            --jq 'length')
+          # Use unauthenticated REST API to avoid SAML SSO requirement on qualcomm-linux org
+          count=$(curl -s \
+            "https://api.github.com/repos/qualcomm-linux/meta-qcom-robotics-sdk/pulls?state=open&head=jiaxshi:${branch}&per_page=1" \
+            | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")
           echo "count=$count" >> "$GITHUB_OUTPUT"
 
       - name: Update meta-ros commit in yml
