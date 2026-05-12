@@ -33,14 +33,13 @@ python do_collect_rdepends() {
     """
     import os
     
-    d = d  # bitbake data object
     pn = d.getVar("PN")
     
     bb.note("Collecting RDEPENDS for packagegroup: {}".format(pn))
     
     # Get RDEPENDS
     rdepends_var = 'RDEPENDS:{}'.format(pn)
-    rdepends = d.getVar(rdepends_var, True) or ""
+    rdepends = d.getVar(rdepends_var) or ""
     
     if not rdepends:
         bb.warn("RDEPENDS for {} is empty (will be added later)".format(pn))
