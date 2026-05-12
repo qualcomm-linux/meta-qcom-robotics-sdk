@@ -1,0 +1,190 @@
+name: Check meta-ros updates
+
+on:
+  schedule:
+    - cron: "22 10 5 * *"   # monthly - 5th day at 10:22 UTC
+  workflow_dispatch:
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-24.04
+    # Only run in the fork, not if someone else forks this repo
+    if: github.repository_owner == 'jiaxshi'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current meta-ros commit from yml
+        id: current
+        run: |
+          commit=$(python3 - <<'EOF'
+          import re
+          with open('ci/qcom-robotics-distro.yml') as f:
+              lines = f.readlines()
+          in_section = False
+          for line in lines:
+              if re.match(r'^  meta-ros:', line):
+                  in_section = True
+              elif in_section and re.match(r'^  \S', line):
+                  in_section = False
+              if in_section and re.match(r'^    commit:', line):
+                  print(line.split(':', 1)[1].strip())
+                  break
+          EOF
+          )
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+
+      - name: Get latest meta-ros commit from upstream master
+        id: latest
+        run: |
+          commit=$(git ls-remote https://github.com/ros/meta-ros.git refs/heads/master refs/heads/main | head -1 | cut -f1)
+          if [ -z "$commit" ]; then
+            echo "ERROR: could not find master or main branch on meta-ros upstream" >&2
+            exit 1
+          fi
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "short=${commit:0:8}" >> "$GITHUB_OUTPUT"
+
+      - name: Check if update is needed
+        id: check
+        run: |
+          if [ "${{ steps.current.outputs.commit }}" = "${{ steps.latest.outputs.commit }}" ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "meta-ros is already up to date at ${{ steps.current.outputs.commit }}"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+            echo "Update available: ${{ steps.current.outputs.commit }} -> ${{ steps.latest.outputs.commit }}"
+          fi
+
+      - name: Check for existing open PR for this commit
+        if: steps.check.outputs.needed == 'true'
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          branch="chore/update-meta-ros-${{ steps.latest.outputs.short }}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+          count=$(gh pr list \
+            --repo qualcomm-linux/meta-qcom-robotics-sdk \
+            --state open \
+            --head "jiaxshi:$branch" \
+            --json number \
+            --jq 'length')
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Update meta-ros commit in yml
+        if: steps.check.outputs.needed == 'true' && steps.existing.outputs.count == '0'
+        env:
+          NEW_COMMIT: ${{ steps.latest.outputs.commit }}
+        run: |
+          python3 - <<'EOF'
+          import os, re
+
+          path = 'ci/qcom-robotics-distro.yml'
+          new_commit = os.environ['NEW_COMMIT']
+
+          with open(path) as f:
+              lines = f.readlines()
+
+          in_section = False
+          updated = False
+          result = []
+          for line in lines:
+              if re.match(r'^  meta-ros:', line):
+                  in_section = True
+              elif in_section and re.match(r'^  \S', line):
+                  in_section = False
+              if in_section and not updated and re.match(r'^    commit:', line):
+                  line = f'    commit: {new_commit}\n'
+                  updated = True
+              result.append(line)
+
+          if not updated:
+              raise SystemExit('ERROR: meta-ros commit line not found in yml')
+
+          with open(path, 'w') as f:
+              f.writelines(result)
+
+          print(f'Updated meta-ros commit to {new_commit}')
+          EOF
+
+      - name: Commit and push update branch
+        if: steps.check.outputs.needed == 'true' && steps.existing.outputs.count == '0'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OLD="${{ steps.current.outputs.commit }}"
+          NEW="${{ steps.latest.outputs.commit }}"
+          SHORT="${{ steps.latest.outputs.short }}"
+          BRANCH="${{ steps.existing.outputs.branch }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+
+          {
+            echo "chore(ci): update meta-ros to $SHORT"
+            echo ""
+            echo "Motivation: meta-ros upstream has new commits on the master branch."
+            echo "Previous commit: $OLD"
+            echo "New commit: $NEW"
+            echo ""
+            echo "Impact: Pulls in upstream meta-ros changes. Patch compatibility has not"
+            echo "been verified automatically; manual review is required."
+            echo ""
+            echo "TODO: Verify that the following patches still apply cleanly:"
+            PATCHES=$(find patches -name '*.patch' -type f 2>/dev/null | sort)
+            if [ -n "$PATCHES" ]; then
+              echo "$PATCHES" | sed 's/^/- /'
+            else
+              echo "- (no patches found)"
+            fi
+          } > /tmp/commit-msg.txt
+
+          git add ci/qcom-robotics-distro.yml
+          git commit -F /tmp/commit-msg.txt
+          git push origin "$BRANCH"
+
+      - name: Create pull request to upstream
+        if: steps.check.outputs.needed == 'true' && steps.existing.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          OLD="${{ steps.current.outputs.commit }}"
+          NEW="${{ steps.latest.outputs.commit }}"
+          SHORT="${{ steps.latest.outputs.short }}"
+          BRANCH="${{ steps.existing.outputs.branch }}"
+
+          {
+            printf '## Summary\n\n'
+            printf 'Update `meta-ros` commit hash to the latest upstream `master`.\n\n'
+            printf '| | Commit |\n|---|---|\n'
+            printf '| **Previous** | `%s` |\n' "$OLD"
+            printf '| **New** | `%s` |\n\n' "$NEW"
+            printf '## Motivation\n\n'
+            printf 'meta-ros upstream has new commits on the master branch. This update\n'
+            printf 'pulls in the latest upstream changes.\n\n'
+            printf '## Impact\n\n'
+            printf 'Pulls in upstream meta-ros changes. Patch compatibility has not been\n'
+            printf 'verified automatically; manual review is required.\n\n'
+            printf '## TODO\n\n'
+            printf '- [ ] Verify that the following patches still apply cleanly:\n'
+            PATCHES=$(find patches -name '*.patch' -type f 2>/dev/null | sort)
+            if [ -n "$PATCHES" ]; then
+              echo "$PATCHES" | while IFS= read -r patch; do
+                printf '  - `%s`\n' "$patch"
+              done
+            else
+              printf '  - (no patches found)\n'
+            fi
+          } > /tmp/pr-body.md
+
+          gh pr create \
+            --repo qualcomm-linux/meta-qcom-robotics-sdk \
+            --head "jiaxshi:$BRANCH" \
+            --base main \
+            --title "chore(ci): update meta-ros to $SHORT" \
+            --body-file /tmp/pr-body.md
