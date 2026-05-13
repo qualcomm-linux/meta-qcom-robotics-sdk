@@ -142,7 +142,9 @@ jobs:
 
           git add ci/qcom-robotics-distro.yml
           git commit -F /tmp/commit-msg.txt
-          git push origin "$BRANCH"
+          # Force-push: remote may have a stale branch from a prior run whose PR
+          # was closed without merging; this branch is bot-managed so forcing is safe.
+          git push origin "$BRANCH" --force
 
       - name: Create pull request to upstream
         if: steps.check.outputs.needed == 'true' && steps.existing.outputs.count == '0'
