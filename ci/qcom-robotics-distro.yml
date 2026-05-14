@@ -43,7 +43,6 @@ repos:
     commit: 335045d3fb440cbb6de0716ffd7dd043bbd3f6ad
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization
-    branch: master
     commit: 052241689a0c419d13e15e83e7ad65dd16fc8ffd
   meta-audioreach:
     url: https://github.com/AudioReach/meta-audioreach
@@ -57,7 +56,6 @@ repos:
     commit: 7fbd0d7d73d4e252ee31e5260e547cbf17945a82
   meta-security:
     url: https://git.yoctoproject.org/meta-security
-    branch: master
     layers:
       .:
       meta-tpm:
