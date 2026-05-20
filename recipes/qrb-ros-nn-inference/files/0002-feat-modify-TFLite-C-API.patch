@@ -1,0 +1,65 @@
+From 8c2e902f2b5bd585a3dc8e4b33f50c3d5bd6df0f Mon Sep 17 00:00:00 2001
+From: Na Song <nasong@qti.qualcomm.com>
+Date: Mon, 18 May 2026 17:23:44 +0800
+Subject: [PATCH] feat: modify TFLite C API
+
+Upstream-Status: Pending
+
+Signed-off-by: Na Song <nasong@qti.qualcomm.com>
+---
+ .../qnn_delegate_inference.cpp                | 21 ++++++++++---------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/qrb_inference_manager/src/qnn_delegate_inference/qnn_delegate_inference.cpp b/qrb_inference_manager/src/qnn_delegate_inference/qnn_delegate_inference.cpp
+index d41206b..87bfd07 100644
+--- a/qrb_inference_manager/src/qnn_delegate_inference/qnn_delegate_inference.cpp
++++ b/qrb_inference_manager/src/qnn_delegate_inference/qnn_delegate_inference.cpp
+@@ -122,14 +122,14 @@ StatusCode QnnDelegateInference::inference_execute(const std::vector<uint8_t> &
+     return StatusCode::FAILURE;
+   }
+ 
+-  if (input_tensor_data.size() != input_tensor->bytes) {
+-    QRB_ERROR("The size of input tensor should be ", input_tensor->bytes, ", but receive ",
+-        input_tensor_data.size(), "byte");
++  if (input_tensor_data.size() != TfLiteTensorByteSize(input_tensor)) {
++    QRB_ERROR("The size of input tensor should be ", TfLiteTensorByteSize(input_tensor),
++        ", but receive ", input_tensor_data.size(), "byte");
+     return StatusCode::FAILURE;
+   }
+ 
+   TfLiteTensorCopyFromBuffer(
+-      input_tensor, input_tensor_data.data(), input_tensor_data.size() * sizeof(float));
++      input_tensor, input_tensor_data.data(), TfLiteTensorByteSize(input_tensor));
+ 
+   if (TfLiteStatus::kTfLiteOk != TfLiteInterpreterInvoke(interpreter_)) {
+     QRB_ERROR("TFLite invoke fail!");
+@@ -146,13 +146,14 @@ StatusCode QnnDelegateInference::inference_execute(const std::vector<uint8_t> &
+       return StatusCode::FAILURE;
+     }
+ 
+-    output_tensor.output_tensor_name = result_tensor->name;
++    output_tensor.output_tensor_name = TfLiteTensorName(result_tensor);
+ 
+-    output_tensor.output_tensor_data = std::vector<uint8_t>(result_tensor->bytes);
+-    memcpy(output_tensor.output_tensor_data.data(), result_tensor->data.f, result_tensor->bytes);
++    size_t out_bytes = TfLiteTensorByteSize(result_tensor);
++    output_tensor.output_tensor_data = std::vector<uint8_t>(out_bytes);
++    memcpy(output_tensor.output_tensor_data.data(), TfLiteTensorData(result_tensor), out_bytes);
+ 
+-    for (auto j = 0; j < result_tensor->dims->size; j++) {
+-      output_tensor.output_tensor_shape.emplace_back(result_tensor->dims->data[j]);
++    for (int32_t j = 0; j < TfLiteTensorNumDims(result_tensor); j++) {
++      output_tensor.output_tensor_shape.emplace_back(TfLiteTensorDim(result_tensor, j));
+     }
+ 
+     this->output_tensor_.emplace_back(output_tensor);
+@@ -166,4 +167,4 @@ const std::vector<OutputTensor> QnnDelegateInference::get_output_tensors()
+   return std::move(this->output_tensor_);
+ }
+ 
+-}  // namespace qrb::inference_mgr
+\ No newline at end of file
++}  // namespace qrb::inference_mgr
+-- 
+2.34.1
+
