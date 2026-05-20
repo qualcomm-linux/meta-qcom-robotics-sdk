@@ -49,6 +49,7 @@ INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_nn_inference.git;protocol=https;branch=stable/1.0.0;subdir=${BPN}-${PV} \
            file://0001-feat-replace-tflite-Cpp-API-to-C-API.patch;striplevel=2 \
+           file://0002-feat-modify-TFLite-C-API.patch;striplevel=2 \
 "
 SRCREV = "8fe767525171346fa00797c8eef1585746b299a9"
 S = "${UNPACKDIR}/${BPN}-${PV}/${ROS_CN}"
