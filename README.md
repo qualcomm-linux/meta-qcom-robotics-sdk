@@ -1,6 +1,6 @@
 ## Slack Integration Test
 
-Testing GitHub → Slack integration.
+Testing GitHub → Slack integration
 
 # Welcome to the Qualcomm Intelligent Robotics SDK (QIR SDK)
 
