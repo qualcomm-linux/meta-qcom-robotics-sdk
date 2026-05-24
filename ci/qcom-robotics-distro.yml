@@ -10,7 +10,7 @@ repos:
     branch: wrynose
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: a26a3832f5f803138ab143ec94fcea256bcb8b93
+    commit: 3a0689ca2daa66a926aedc5f18cddbd52be0360f
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -29,7 +29,7 @@ repos:
   meta-qcom-distro:
     branch: wrynose
     url: https://github.com/qualcomm-linux/meta-qcom-distro
-    commit: e70ea44ded665bdd9814fd8de8ae8e5bcfac4e30
+    commit: 28d693526c0bd518a2443302e2c870f8844593a4
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
