@@ -107,10 +107,12 @@ jobs:
         distro:
           - name: qcom-robotics-distro
             yamlfile: ':ci/qcom-robotics-distro.yml'
-          - name: qcom-robotics-distro-sota
-            yamlfile: ':ci/qcom-robotics-distro-sota.yml'
-          - name: qcom-robotics-distro-selinux
-            yamlfile: ':ci/qcom-robotics-distro-selinux.yml'
+          - name: qcom-robotics-distro-catchall
+            yamlfile: ':ci/qcom-robotics-distro-catchall.yml'
+          - name: debug
+            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/debug.yml'
+          - name: performance
+            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/performance.yml'
         target:
           - type: '_base'
             name: qcom-robotics-image
