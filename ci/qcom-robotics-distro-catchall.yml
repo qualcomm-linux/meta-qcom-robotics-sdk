@@ -7,7 +7,3 @@ header:
 
 distro: qcom-distro-catchall
 
-target:
-  - qcom-robotics-image
-  - qcom-robotics-proprietary-image
-  - qcom-robotics-container-orchestration-image
