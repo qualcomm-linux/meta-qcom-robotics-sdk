@@ -3,6 +3,6 @@
 header:
   version: 14
   includes:
-  - ci/qcom-robotics-distro.yml
+   - ci/qcom-distro.yml
 
-distro: qcom-robotics-distro-sota
+distro: qcom-distro-kvm
