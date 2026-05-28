@@ -113,10 +113,12 @@ jobs:
         distro:
           - name: qcom-robotics-distro
             yamlfile: ':ci/qcom-robotics-distro.yml'
-          - name: qcom-robotics-distro-sota
-            yamlfile: ':ci/qcom-robotics-distro-sota.yml'
-          - name: qcom-robotics-distro-selinux
-            yamlfile: ':ci/qcom-robotics-distro-selinux.yml'
+          - name: qcom-robotics-distro-catchall
+            yamlfile: ':ci/qcom-robotics-distro-catchall.yml'
+          - name: debug
+            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/debug.yml'
+          - name: performance
+            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/performance.yml'
         target:
           - type: '_base'
             name: qcom-robotics-image
@@ -125,12 +127,13 @@ jobs:
             name: qcom-robotics-proprietary-image
             yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
         kernel:
-          - type: default
-            dirname: '_linux-qcom-next'
-            yamlfile: ''
           - type: 6.18
-            dirname: '_linux-qcom-lts'
-            yamlfile: ':ci/linux-qcom-6.18.yml'
+            dirname: "_linux-qcom-6.18"
+            yamlfile: ":ci/linux-qcom-6.18.yml"
+          - type: rt-6.18-distro-kvm
+            dirname: "_linux-qcom-rt-6.18_qcom-distro-kvm"
+            yamlfile: ":ci/linux-qcom-rt-6.18.yml:ci/qcom-distro-kvm.yml"
+
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v6

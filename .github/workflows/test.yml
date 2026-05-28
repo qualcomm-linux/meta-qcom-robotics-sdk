@@ -22,7 +22,7 @@ jobs:
         target:
           - type: '_full'
         kernel:
-          - dirname: '_linux-qcom-next'
+          - dirname: '_linux-qcom-6.18'
     steps:
       - uses: actions/checkout@v4
         with:

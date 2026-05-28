@@ -3,6 +3,7 @@
 header:
   version: 14
   includes:
-  - ci/qcom-robotics-distro.yml
+   - ci/qcom-robotics-distro.yml
 
-distro: qcom-robotics-distro-selinux
+distro: qcom-distro-catchall
+
