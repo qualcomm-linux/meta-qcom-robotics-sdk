@@ -124,9 +124,7 @@ jobs:
           - type: default
             dirname: '_linux-qcom-next'
             yamlfile: ''
-          - type: 6.18
-            dirname: '_linux-qcom-lts'
-            yamlfile: ':ci/linux-qcom-6.18.yml'
+
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v6
