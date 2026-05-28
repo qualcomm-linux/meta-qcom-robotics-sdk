@@ -78,7 +78,7 @@ repos:
       ament_cmake_py_fix:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
-    commit: eae6fa810b457c512861efa0d826abab707fa642
+    commit: 8f6f2c0db06275bc851c01a28daed806adab3a26
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
 
