@@ -63,8 +63,8 @@ Here are the detailed steps:
 
    | Machine Names | Kernel Names | Target Names |
    | ------------ | ------------ | ------------ |
-   | iq-8275-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
-   | iq-9075-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
+   | iq-8275-evk | linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
+   | iq-9075-evk | linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
 
    **Example** (machine: `iq-9075-evk`, branch: `wrynose`):
 
