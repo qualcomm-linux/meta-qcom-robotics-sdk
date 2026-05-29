@@ -51,7 +51,7 @@ Here are the detailed steps:
 4. Clone meta-qcom-robotics-sdk layer
 
    ```
-   git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
+   git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git -b wrynose
    ```
 
 5. Build using the KAS configuration for one of the supported boards
@@ -66,18 +66,18 @@ Here are the detailed steps:
    | iq-8275-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
    | iq-9075-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
 
-   **Example** (machine: `iq-9075-evk`, branch: `main`):
+   **Example** (machine: `iq-9075-evk`, branch: `wrynose`):
 
    - Open-source packages only — [qcom-robotics-image](recipes-products/images/qcom-robotics-image.bb):
 
      ```shell
-     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/linux-qcom-next.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml
+     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml
      ```
 
    - All packages, including proprietary — [qcom-robotics-proprietary-image](recipes-products/images/qcom-robotics-proprietary-image.bb):
 
      ```shell
-     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/linux-qcom-next.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
+     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
      ```
    **Note**: If you works on `wrynose` branch, use `linux-qcom-6.18.yml` instead of `linux-qcom-next.yml`.
 
