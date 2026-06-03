@@ -13,10 +13,6 @@
             "to": "qirp-samples/platform/"
         },
         {
-            "name": "ros-gst-bridge",
-            "to": "qirp-samples/platform/"
-        },
-        {
             "name": "qrb-ros-benchmark",
             "to": "qirp-samples/platform/"
         },
@@ -72,7 +68,7 @@
       "scripts": [
         {
             "from_local":"qrb_ros_samples_scripts/qrb_ros_system_monitor/scripts",
-            "to": "qirp-samples/platform/qrb-ros-system-monitor/"
+            "to": "qirp-samples/platform/qrb_ros_system_monitor/"
         }
       ]
 }
