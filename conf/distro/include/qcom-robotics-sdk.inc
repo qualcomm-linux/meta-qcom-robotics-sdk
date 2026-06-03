@@ -37,7 +37,21 @@ ROS_SDK_TARGET_PACKAGES:append = "${@bb.utils.contains('DISTRO_FEATURES', 'ros2-
 
 TOOLCHAIN_TARGET_TASK:remove = "qirp-sdk"
 
-# Add default packages from meta-ros ros-sdk.inc
-TOOLCHAIN_HOST_TASK:append = " ${ROS_SDK_HOST_PACKAGES}"
+# Avoid buildtools-tarball recipe packages the host *.armv8_2a.rpm for do_populate_sdk task
+TOOLCHAIN_TARGET_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_TARGET_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"
 
-TOOLCHAIN_TARGET_TASK:append = " ${ROS_SDK_TARGET_PACKAGES}"
+TOOLCHAIN_HOST_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_HOST_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"
+
+# esdk fix for populate_sdk_ext:
+# 1. BB_SETSCENE_ENFORCE_IGNORE_TASKS: The inner eSDK build uses %:* to allow
+#    all BUILD TARGET tasks to run from scratch, but this expands only to the
+#    specific targets (qcom-robotics-proprietary-image, esp-qcom-image, etc.).
+#    Dependency recipes like packagegroup-robotics-opensource are NOT targets,
+#    so their tasks (e.g. do_collect_rdepends from rdepends-collector.bbclass)
+#    are not covered and fail with "setscene ignore_tasks".
+#    Fix: add *:do_collect_rdepends to allow it to run from scratch.
+BB_SETSCENE_ENFORCE_IGNORE_TASKS:append = " *:do_collect_rdepends"
+# 2. create-spdx: SPDX image tasks have different unihashes in inner build
+#    (due to TMPDIR rename) and trigger do_collect_rdepends via dependency
+#    chain. Disabling create-spdx in the inner build removes these tasks.
+ESDK_CLASS_INHERIT_DISABLE:append = " create-spdx"
