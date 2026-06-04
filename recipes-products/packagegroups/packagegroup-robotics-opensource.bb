@@ -61,6 +61,7 @@ EXTERNAL_OPENSOURCE = " \
     ${ROS_GST_BRIDGE} \
     rplidar-ros2 \
     orbbec-camera \
+    xsens-mti-ros2-driver \
     cartographer \
     cartographer-ros \
     nav2-bringup \
