@@ -69,6 +69,7 @@ process_qir_samples() {
     
     jq -c '.samples[]' $CONFIG_FILE | while read line; do
         name=$(echo $line | jq -r '.name')
+        ros_pkg_name=$(echo $line | jq -r '.name' | tr '-' '_')
         to_dir="${QIRP_SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
         bbnote "  Processing sample: $name"
@@ -80,8 +81,8 @@ process_qir_samples() {
         # Copy ${source_dir} to ${to_dir}
         source_dir="${DEPLOY_DIR}/sample_source_code/${name}"
         if [ -d "${source_dir}" ]; then
-            bbnote "  Copying entire directory ${source_dir} to ${to_dir}/"
-            cp -rf "${source_dir}" "${to_dir}/" 2>/dev/null || bbwarn "Failed to copy ${name}"
+            bbnote "  Copying entire directory ${source_dir} to ${to_dir}/${ros_pkg_name}"
+            cp -rf "${source_dir}" "${to_dir}/${ros_pkg_name}" 2>/dev/null || bbwarn "Failed to copy ${name}"
         else
             bbwarn "  Source directory ${source_dir} does not exist, skipping sample: $name"
         fi
