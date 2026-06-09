@@ -4,5 +4,7 @@ header:
   version: 14
   includes:
    - ci/qcom-distro.yml
-
-distro: qcom-distro-kvm
+   
+local_conf_header:
+  kvm: |
+        MACHINE_FEATURES:append = " kvm"

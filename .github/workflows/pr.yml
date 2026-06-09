@@ -37,3 +37,4 @@ jobs:
     uses: ./.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
+      profile: pr

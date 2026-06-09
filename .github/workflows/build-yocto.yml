@@ -3,6 +3,10 @@ name: Build Yocto
 on:
   workflow_call:
     inputs:
+      profile:
+        required: false
+        type: string
+        default: "full" # values: pr | full
       use_sstate:
         description: "Use SSTATE cache"
         required: false
@@ -145,6 +149,7 @@ jobs:
         uses: ./.github/actions/compile
         id: compile_kas
         with:
+          enabled: ${{inputs.profile != 'pr' || (matrix.distro.name != 'debug' && matrix.distro.name != 'performance')}}
           machine: ${{matrix.machine}}
           distro_yaml: ${{matrix.distro.yamlfile}}
           distro_name: ${{matrix.distro.name}}
@@ -159,7 +164,7 @@ jobs:
   publish_summary:
     needs: compile
     if: ${{ always() && github.repository_owner == 'qualcomm-linux' }}
-    runs-on: [self-hosted, qcom-u2404, amd64]
+    runs-on: ubuntu-latest
     steps:
       - name: 'Download build URLs'
         uses: actions/download-artifact@v7
