@@ -1,0 +1,51 @@
+# This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+# Copyright (c) 2026 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+From 0000000000000000000000000000000000000002 Mon Sep 17 00:00:00 2001
+From: Claude Code <noreply@anthropic.com>
+Date: Wed Jun 10 2026 18:00:00 +0000
+Subject: [PATCH] Fix miniglog/real-glog header conflict in cartographer-ros
+
+When find_package(cartographer) is called, it pulls in
+usr/include/ceres/internal/miniglog as an INTERFACE_INCLUDE_DIRECTORY
+on the cartographer imported target. miniglog defines google::LogSeverity,
+INFO, WARNING, ERROR, FATAL as plain `const int` values.
+When ros_log_sink.cpp later includes <glog/log_severity.h> (which declares
+them as an enum), GCC sees both in the same TU and reports redeclaration
+errors.
+
+Fix: after find_package(cartographer), strip the miniglog directory
+from the cartographer imported target's INTERFACE_INCLUDE_DIRECTORIES.
+The cartographer library was compiled with miniglog and does not need
+it re-exported to consumers that also link real glog.
+
+Upstream-Status: Inappropriate [platform specific - ceres miniglog conflict]
+Signed-off-by: Claude Code <noreply@anthropic.com>
+---
+ cartographer_ros/CMakeLists.txt | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/cartographer_ros/CMakeLists.txt b/cartographer_ros/CMakeLists.txt
+index 2b3cad0..4f8c100 100644
+--- a/cartographer_ros/CMakeLists.txt
++++ b/cartographer_ros/CMakeLists.txt
+@@ -38,6 +38,18 @@ find_package(geometry_msgs REQUIRED)
+ find_package(absl REQUIRED)
+ find_package(PCL REQUIRED COMPONENTS common)
+ find_package(nav_msgs REQUIRED)
++
++# Remove the miniglog include path that ceres exports via the cartographer
++# imported target. When real glog is also in scope (as it is in this package),
++# miniglog's glog/logging.h conflicts with <glog/log_severity.h>: both define
++# google::LogSeverity, INFO, WARNING, ERROR, FATAL but as incompatible types.
++if(TARGET cartographer)
++  get_target_property(_carto_incs cartographer INTERFACE_INCLUDE_DIRECTORIES)
++  if(_carto_incs)
++    list(FILTER _carto_incs EXCLUDE REGEX "miniglog")
++    set_target_properties(cartographer PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_carto_incs}")
++  endif()
++endif()
++
+ find_package(pcl_conversions REQUIRED)
+ find_package(rclcpp REQUIRED)
+ find_package(rosbag2_cpp REQUIRED)
