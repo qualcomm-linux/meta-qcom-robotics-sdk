@@ -18,6 +18,15 @@
 #   collects runtime packages for the final QIRP SDK archive.
 
 PACKAGEGROUP_LIST_DIR = "${DEPLOY_DIR}/packagegroup-lists"
+# add private staging
+PACKAGEGROUP_LIST_STAGING_DIR = "${WORKDIR}/packagegroup-lists-staging"
+
+# register sstate tasks
+SSTATETASKS += "do_collect_rdepends"
+# task write to private staging dir
+do_collect_rdepends[sstate-inputdirs] = "${PACKAGEGROUP_LIST_STAGING_DIR}"
+# recover from sstate dir
+do_collect_rdepends[sstate-outputdirs] = "${PACKAGEGROUP_LIST_DIR}"
 
 # Add task: collect RDEPENDS after packagegroup build
 addtask do_collect_rdepends after do_package_write before do_build
@@ -48,7 +57,11 @@ python do_collect_rdepends() {
         rdepends = ""
     
     # Create directory
-    list_dir = d.getVar("PACKAGEGROUP_LIST_DIR")
+    # list_dir = d.getVar("PACKAGEGROUP_LIST_DIR")
+
+    # Write to private stagdir instead of DEPLOY_DIR
+    list_dir = d.getVar("PACKAGEGROUP_LIST_STAGING_DIR")
+
     os.makedirs(list_dir, exist_ok=True)
     
     # Write to file
