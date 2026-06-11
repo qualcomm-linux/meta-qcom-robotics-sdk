@@ -120,15 +120,28 @@ B = "${UNPACKDIR}/${BP}"
 PATCH_DIR = "${UNPACKDIR}/${BP}"
 do_patch() {
     cd ${PATCH_DIR}
+    # Reset to clean state in case of retry (sigdata change causes re-run on dirty tree)
+    git reset --hard HEAD
+    git clean -fd
     git apply ${UNPACKDIR}/0001-Add-qrb-slam-feature.patch
     git apply ${UNPACKDIR}/0001-add-launch-file-for-gazebo-sim.patch
     git apply ${UNPACKDIR}/0001_fix_glog_time_message_error.patch
+
+    # Strip miniglog include from ceres and cartographer imported targets.
+    # CeresTargets.cmake sets INTERFACE_INCLUDE_DIRECTORIES to include
+    # ceres/internal/miniglog which conflicts with real <glog/log_severity.h>.
+    sed -i '/^find_package(nav_msgs REQUIRED)$/a \\nforeach(_tgt cartographer ceres Ceres::ceres Ceres::Ceres ceres::ceres)\n  if(TARGET ${_tgt})\n    get_target_property(_incs ${_tgt} INTERFACE_INCLUDE_DIRECTORIES)\n    if(_incs)\n      list(FILTER _incs EXCLUDE REGEX "miniglog")\n      set_target_properties(${_tgt} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_incs}")\n    endif()\n  endif()\nendforeach()' ${PATCH_DIR}/cartographer_ros/CMakeLists.txt
 }
 
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
 
 ROS_BUILD_TYPE = "ament_cmake"
+
+# glog 0.7+ requires GLOG_USE_GLOG_EXPORT to be defined before including
+# glog/logging.h so that export.h is pulled in and GLOG_EXPORT/GLOG_NO_EXPORT
+# are defined. Without this the compiler errors out with "not included correctly".
+CXXFLAGS:append = " -DGLOG_USE_GLOG_EXPORT"
 
 do_package_qa[noexec] = "1"
 
