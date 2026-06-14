@@ -18,13 +18,13 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: 42fa856a00ac16b2a7a83d7ecfa60a5be192b16c
+    commit: 06dd66e6220e5ce4ed4b9af4d8231ae5f0a8ce80
   bitbake:
     url: https://github.com/openembedded/bitbake
     branch: '2.18'
     layers:
       .: disabled
-    commit: a2dd9be788274d9c7280be5b1be5eb5c3990cf54
+    commit: 22021758e66737bcf68dfd2b74adc6a0cb1d42d9
   meta-qcom-distro:
     branch: wrynose
     url: https://github.com/qualcomm-linux/meta-qcom-distro
@@ -38,26 +38,26 @@ repos:
       meta-oe:
       meta-python:
       meta-xfce:
-    commit: 335045d3fb440cbb6de0716ffd7dd043bbd3f6ad
+    commit: 9af4488d46cb4fd4c0d2d64820c86225ebd6ac71
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization
-    commit: 052241689a0c419d13e15e83e7ad65dd16fc8ffd
+    commit: 959a211fbba059689a1c3a1b24fe0abb9224281a
   meta-audioreach:
     url: https://github.com/AudioReach/meta-audioreach
     branch: master
-    commit: 75402c8d1ea1203dcf3a63792161f7d5d93946bb
+    commit: aeb4ca3af42ab593497647c8ed98807c18495b16
   meta-selinux:
     url: https://git.yoctoproject.org/meta-selinux
-    commit: f7306d7af4425553684a860df6f6d0ee66efba31
+    commit: 1ba26da4b9bec3f102bd831efe0db00c7d61f7f2
   meta-updater:
     url: https://github.com/uptane/meta-updater
-    commit: 7fbd0d7d73d4e252ee31e5260e547cbf17945a82
+    commit: 7f5eef0421e966234230ee8f4e4a93e3fc8e3ac6
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     layers:
       .:
       meta-tpm:
-    commit: 596b966a0d047c2f48cb768821558e918ae0c477
+    commit: c0d1d6200e7a84c39fb940cb1f22aad4b0b3d808
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
