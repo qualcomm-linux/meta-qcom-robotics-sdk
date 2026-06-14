@@ -1,0 +1,106 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Fix <fix@fix.fix>
+Date: Tue, 10 Jun 2026 00:00:00 +0000
+Subject: [PATCH] Fix build errors caused by ceres miniglog
+
+ceres is compiled with the miniglog stub which lacks several glog
+macros.  The stub is exported as a public include directory by the
+Ceres CMake imported target, shadowing the real glog headers.
+
+Changes:
+1. cmake/functions.cmake: drop -Werror=return-type.  miniglog's
+   LOG(FATAL) terminates via abort() in the destructor, which GCC
+   cannot see — every non-void function ending with LOG(FATAL) fires
+   "control reaches end of non-void function".
+2. motion_filter.cc, imu_based_pose_extrapolator.cc: replace
+   LOG_IF_EVERY_N (not in miniglog) with LOG_IF.
+3. ordered_multi_queue.cc: replace LOG_EVERY_N (not in miniglog)
+   with LOG.
+4. rigid_transform.cc: replace CHECK_NEAR (not in miniglog) with
+   CHECK_LE on absolute difference.
+
+Upstream-Status: Inappropriate [platform specific]
+Signed-off-by: Fix <fix@fix.fix>
+---
+ cartographer/mapping/internal/imu_based_pose_extrapolator.cc | 2 +-
+ cartographer/mapping/internal/motion_filter.cc               | 2 +-
+ cartographer/sensor/internal/ordered_multi_queue.cc          | 5 ++---
+ cartographer/transform/rigid_transform.cc                    | 2 +-
+ cmake/functions.cmake                                        | 1 -
+ 5 files changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/cartographer/mapping/internal/imu_based_pose_extrapolator.cc b/cartographer/mapping/internal/imu_based_pose_extrapolator.cc
+index 4e0a950..a59a218 100644
+--- a/cartographer/mapping/internal/imu_based_pose_extrapolator.cc
++++ b/cartographer/mapping/internal/imu_based_pose_extrapolator.cc
+@@ -349,7 +349,7 @@ ImuBasedPoseExtrapolator::ExtrapolatePosesWithGravity(
+   // Solve.
+   ceres::Solver::Summary summary;
+   ceres::Solve(solver_options_, &problem, &summary);
+-  LOG_IF_EVERY_N(INFO, !fix_gravity, 20) << "Gravity was: " << gravity_constant;
++  LOG_IF(INFO, !fix_gravity) << "Gravity was: " << gravity_constant;
+
+   const auto gravity_estimate = nodes.back().ToRigid().rotation();
+
+diff --git a/cartographer/mapping/internal/motion_filter.cc b/cartographer/mapping/internal/motion_filter.cc
+index 715b040..908e63e 100644
+--- a/cartographer/mapping/internal/motion_filter.cc
++++ b/cartographer/mapping/internal/motion_filter.cc
+@@ -39,7 +39,7 @@ MotionFilter::MotionFilter(const proto::MotionFilterOptions& options)
+
+ bool MotionFilter::IsSimilar(const common::Time time,
+                              const transform::Rigid3d& pose) {
+-  LOG_IF_EVERY_N(INFO, num_total_ >= 500, 500)
++  LOG_IF(INFO, num_total_ >= 500)
+       << "Motion filter reduced the number of nodes to "
+       << 100. * num_different_ / num_total_ << "%.";
+   ++num_total_;
+diff --git a/cartographer/sensor/internal/ordered_multi_queue.cc b/cartographer/sensor/internal/ordered_multi_queue.cc
+index 26c8ee1..7127f77 100644
+--- a/cartographer/sensor/internal/ordered_multi_queue.cc
++++ b/cartographer/sensor/internal/ordered_multi_queue.cc
+@@ -64,8 +64,7 @@ void OrderedMultiQueue::Add(const QueueKey& queue_key,
+                             std::unique_ptr<Data> data) {
+   auto it = queues_.find(queue_key);
+   if (it == queues_.end()) {
+-    LOG_EVERY_N(WARNING, 1000)
+-        << "Ignored data for queue: '" << queue_key << "'";
++    LOG(WARNING) << "Ignored data for queue: '" << queue_key << "'";
+     return;
+   }
+   it->second.queue.Push(std::move(data));
+@@ -152,7 +151,7 @@ void OrderedMultiQueue::CannotMakeProgress(const QueueKey& queue_key) {
+   blocker_ = queue_key;
+   for (auto& entry : queues_) {
+     if (entry.second.queue.Size() > kMaxQueueSize) {
+-      LOG_EVERY_N(WARNING, 60) << "Queue waiting for data: " << queue_key;
++      LOG(WARNING) << "Queue waiting for data: " << queue_key;
+       return;
+     }
+   }
+diff --git a/cartographer/transform/rigid_transform.cc b/cartographer/transform/rigid_transform.cc
+index 64a37c8..28ffbd1 100644
+--- a/cartographer/transform/rigid_transform.cc
++++ b/cartographer/transform/rigid_transform.cc
+@@ -55,7 +55,7 @@ transform::Rigid3d FromDictionary(common::LuaParameterDictionary* dictionary) {
+                                       rotation_dictionary->GetDouble("x"),
+                                       rotation_dictionary->GetDouble("y"),
+                                       rotation_dictionary->GetDouble("z"));
+-    CHECK_NEAR(rotation.norm(), 1., 1e-9);
++    CHECK_LE(std::abs(rotation.norm() - 1.), 1e-9);
+     return transform::Rigid3d(translation, rotation);
+   } else {
+     const std::vector<double> rotation =
+diff --git a/cmake/functions.cmake b/cmake/functions.cmake
+--- a/cmake/functions.cmake
++++ b/cmake/functions.cmake
+@@ -89,7 +89,6 @@ macro(google_initialize_cartographer_project)
+     google_add_flag(GOOG_CXX_FLAGS "-Werror=format-security")
+     google_add_flag(GOOG_CXX_FLAGS "-Werror=missing-braces")
+     google_add_flag(GOOG_CXX_FLAGS "-Werror=reorder")
+-    google_add_flag(GOOG_CXX_FLAGS "-Werror=return-type")
+     google_add_flag(GOOG_CXX_FLAGS "-Werror=switch")
+
+     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+--
+2.34.1
