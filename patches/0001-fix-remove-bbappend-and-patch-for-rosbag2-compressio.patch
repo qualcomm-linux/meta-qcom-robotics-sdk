@@ -1,0 +1,109 @@
+From b98b396056e7e5749095151af30a7fddb070d7ca Mon Sep 17 00:00:00 2001
+From: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+Date: Wed, 17 Jun 2026 15:44:03 +0800
+Subject: [PATCH] fix: remove bbappend and patch for
+ rosbag2-compression-zstd_0.26.10-2
+
+The patch removed dependency of zstd which makes ros2bag cannot work
+with zstd format.
+
+Signed-off-by: Jiaxing Shi <jiaxshi@qti.qualcomm.com>
+---
+ ...s.txt-drop-dependency-on-zstd_vendor.patch | 68 -------------------
+ ...osbag2-compression-zstd_0.26.10-2.bbappend |  9 ---
+ 2 files changed, 77 deletions(-)
+ delete mode 100644 meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd/0001-CMakeLists.txt-drop-dependency-on-zstd_vendor.patch
+ delete mode 100644 meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd_0.26.10-2.bbappend
+
+diff --git a/meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd/0001-CMakeLists.txt-drop-dependency-on-zstd_vendor.patch b/meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd/0001-CMakeLists.txt-drop-dependency-on-zstd_vendor.patch
+deleted file mode 100644
+index bdbba67d2..000000000
+--- a/meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd/0001-CMakeLists.txt-drop-dependency-on-zstd_vendor.patch
++++ /dev/null
+@@ -1,68 +0,0 @@
+-From 60d575bc2f4bc060fb0dfcadb1ffdc55cd293d3b Mon Sep 17 00:00:00 2001
+-From: Martin Jansa <martin.jansa@lge.com>
+-Date: Fri, 26 Jun 2020 07:30:46 -0700
+-Subject: [PATCH] CMakeLists.txt: drop dependency on zstd_vendor
+-
+-* zstd should be good enough
+-
+-Upstream-Status: Pending
+-
+-Signed-off-by: Martin Jansa <martin.jansa@lge.com>
+-
+----
+- CMakeLists.txt | 31 +++++++++++++++++++++++--------
+- 1 file changed, 23 insertions(+), 8 deletions(-)
+-
+-Index: git/CMakeLists.txt
+-===================================================================
+---- git.orig/CMakeLists.txt
+-+++ git/CMakeLists.txt
+-@@ -24,8 +24,8 @@ endif()
+- find_package(ament_cmake REQUIRED)
+- find_package(pluginlib REQUIRED)
+- find_package(rosbag2_compression REQUIRED)
+--find_package(zstd_vendor REQUIRED)
+--find_package(zstd REQUIRED)
+-+find_package(PkgConfig REQUIRED)
+-+pkg_check_modules(ZSTD libzstd REQUIRED)
+- 
+- add_library(${PROJECT_NAME} SHARED
+-   src/rosbag2_compression_zstd/compression_utils.cpp
+-@@ -37,7 +37,6 @@ target_include_directories(${PROJECT_NAM
+-   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+- target_link_libraries(${PROJECT_NAME}
+-   rosbag2_compression::rosbag2_compression
+--  zstd::zstd
+- )
+- target_compile_definitions(${PROJECT_NAME} PRIVATE ROSBAG2_COMPRESSION_ZSTD_BUILDING_DLL)
+- pluginlib_export_plugin_description_file(rosbag2_compression plugin_description.xml)
+-@@ -60,9 +59,26 @@ ament_export_libraries(${PROJECT_NAME})
+- # Export modern CMake targets
+- ament_export_targets(export_${PROJECT_NAME})
+- 
+--# order matters here, first vendor, then zstd
+--ament_export_dependencies(rosbag2_compression zstd_vendor zstd)
+--
+-+# don't export zstd as we don't provide zstd from zstd-vendor and rosbag2-{py,transport} would fail with:
+-+# CMake Error at TOPDIR/tmp-glibc/work/raspberrypi4-webos-linux-gnueabi/rosbag2-py/0.6.0-1-r0/recipe-sysroot/usr/share/rosbag2_compression/cmake/ament_cmake_export_dependencies-extras.cmake:21 (find_package):
+-+#   By not providing "Findzstd.cmake" in CMAKE_MODULE_PATH this project has
+-+#   asked CMake to find a package configuration file provided by "zstd", but
+-+#   CMake did not find one.
+-+#
+-+#   Could not find a package configuration file provided by "zstd" with any of
+-+#   the following names:
+-+#
+-+#     zstdConfig.cmake
+-+#     zstd-config.cmake
+-+#
+-+#   Add the installation prefix of "zstd" to CMAKE_PREFIX_PATH or set
+-+#   "zstd_DIR" to a directory containing one of the above files.  If "zstd"
+-+#   provides a separate development package or SDK, be sure it has been
+-+#   installed.
+-+# Call Stack (most recent call first):
+-+#   TOPDIR/tmp-glibc/work/raspberrypi4-webos-linux-gnueabi/rosbag2-py/0.6.0-1-r0/recipe-sysroot/usr/share/rosbag2_compression/cmake/rosbag2_compressionConfig.cmake:41 (include)
+-+#   CMakeLists.txt:21 (find_package)
+-+ament_export_dependencies(pluginlib rcpputils rcutils rosbag2_cpp rosbag2_storage)
+- 
+- if(BUILD_TESTING)
+-   find_package(ament_cmake_gmock REQUIRED)
+diff --git a/meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd_0.26.10-2.bbappend b/meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd_0.26.10-2.bbappend
+deleted file mode 100644
+index 60f28ad9f..000000000
+--- a/meta-ros2-jazzy/recipes-bbappends/rosbag2/rosbag2-compression-zstd_0.26.10-2.bbappend
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# Copyright (c) 2020 LG Electronics, Inc.
+-
+-FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
+-SRC_URI += "file://0001-CMakeLists.txt-drop-dependency-on-zstd_vendor.patch"
+-
+-# PN package in zstd-vendor is empty and not created, remove runtime dependency on it
+-ROS_EXEC_DEPENDS:remove = "zstd-vendor"
+-
+-inherit pkgconfig
+-- 
+2.34.1
+
