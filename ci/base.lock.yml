@@ -1,0 +1,26 @@
+header:
+    version: 14
+overrides:
+    repos:
+        oe-core:
+            commit: 06dd66e6220e5ce4ed4b9af4d8231ae5f0a8ce80
+        meta-lts-mixins:
+            commit: 348a9eaaf3991e2329d0cef14dce23fabaef9191
+        bitbake:
+            commit: 22021758e66737bcf68dfd2b74adc6a0cb1d42d9
+        meta-arm:
+            commit: d3b55902fb9963978be90d6f283296de456b4b63
+        meta-openembedded:
+            commit: 9af4488d46cb4fd4c0d2d64820c86225ebd6ac71
+        meta-virtualization:
+            commit: 959a211fbba059689a1c3a1b24fe0abb9224281a
+        meta-audioreach:
+            commit: 6ae81980821608396386ca74c549e27f459ab6bc
+        meta-selinux:
+            commit: 1ba26da4b9bec3f102bd831efe0db00c7d61f7f2
+        meta-updater:
+            commit: 7f5eef0421e966234230ee8f4e4a93e3fc8e3ac6
+        meta-security:
+            commit: c0d1d6200e7a84c39fb940cb1f22aad4b0b3d808
+        meta-dpdk:
+            commit: c4e58978ce61c47c2f54206e07f9ad46be2ed257
