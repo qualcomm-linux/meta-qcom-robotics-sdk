@@ -20,9 +20,11 @@ QUALCOMM_QRB_ROS = " \
     ocr-service \
     lib-mem-dmabuf \
     dmabuf-transport \
+    dmabuf-transport-test \
     qrb-ros-transport-image-type \
     qrb-ros-transport-imu-type \
     qrb-ros-transport-point-cloud2-type \
+    qrb-ros-transport-test \
     qrb-sensor-client \
     qrb-ros-system-monitor \
     qrb-ros-system-monitor-interfaces \
