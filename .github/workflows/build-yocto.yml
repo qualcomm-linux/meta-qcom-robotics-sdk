@@ -93,7 +93,7 @@ jobs:
 
   compile:
     needs: [kas-setup, yocto-run-checks]
-    if: github.repository_owner == 'qualcomm-linux'    
+    if: github.repository_owner == 'qualcomm-linux'
     runs-on: [self-hosted, qcom-u2404, amd64]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
@@ -132,6 +132,7 @@ jobs:
           persist-credentials: false
 
       - name: Run kas build
+        if: inputs.profile != 'pr' || (matrix.distro.name != 'debug' && matrix.distro.name != 'performance')
         uses: ./.github/actions/compile
         id: compile_kas
         with:
