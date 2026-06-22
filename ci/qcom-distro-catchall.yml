@@ -5,6 +5,9 @@ header:
   includes:
    - ci/qcom-distro.yml
 
-local_conf_header:
-  kvm: |
-        MACHINE_FEATURES:append = " kvm"
+distro: qcom-distro-catchall
+
+target:
+  - qcom-multimedia-image
+  - qcom-multimedia-proprietary-image
+  - qcom-container-orchestration-image

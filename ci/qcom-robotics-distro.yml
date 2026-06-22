@@ -18,7 +18,6 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: wrynose
@@ -40,8 +39,8 @@ repos:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
       remove-rosbag2-compressionn-zstd-bbappend:
-       repo: meta-qcom-robotics-sdk
-       path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
+        repo: meta-qcom-robotics-sdk
+        path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
     commit: 7e5153fb3dae940cfaa2d823df651bbb1f768c79
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
