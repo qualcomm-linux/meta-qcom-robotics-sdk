@@ -1,5 +1,5 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Fix <fix@fix.fix>
+From: Teng Fan <tengf@qti.qualcomm.com>
 Date: Tue, 10 Jun 2026 00:00:00 +0000
 Subject: [PATCH] Fix build errors caused by ceres miniglog
 
@@ -20,7 +20,7 @@ Changes:
    CHECK_LE on absolute difference.
 
 Upstream-Status: Inappropriate [platform specific]
-Signed-off-by: Fix <fix@fix.fix>
+Signed-off-by: Teng Fan <tengf@qti.qualcomm.com>
 ---
  cartographer/mapping/internal/imu_based_pose_extrapolator.cc | 2 +-
  cartographer/mapping/internal/motion_filter.cc               | 2 +-

@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 From 0000000000000000000000000000000000000002 Mon Sep 17 00:00:00 2001
-From: Claude Code <noreply@anthropic.com>
+From: Teng Fan <tengf@qti.qualcomm.com>
 Date: Wed Jun 10 2026 18:00:00 +0000
 Subject: [PATCH] Fix miniglog/real-glog header conflict in cartographer-ros
 
@@ -20,7 +20,7 @@ The cartographer library was compiled with miniglog and does not need
 it re-exported to consumers that also link real glog.
 
 Upstream-Status: Inappropriate [platform specific - ceres miniglog conflict]
-Signed-off-by: Claude Code <noreply@anthropic.com>
+Signed-off-by: Teng Fan <tengf@qti.qualcomm.com>
 ---
  cartographer_ros/CMakeLists.txt | 12 ++++++++++++
  1 file changed, 12 insertions(+)
