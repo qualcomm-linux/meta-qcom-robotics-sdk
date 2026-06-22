@@ -5,5 +5,5 @@ header:
   includes:
    - ci/qcom-robotics-distro.yml
 
-distro: qcom-distro-catchall
+distro: qcom-robotics-distro-catchall
 
