@@ -65,3 +65,5 @@ RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
 SRC_URI = "git://github.com/qualcomm-qrb-ros/dmabuf_transport.git;protocol=https;branch=dmabuf_transport_test"
 SRCREV = "b99aed729956575c6880057cea7ee99dbbf0f054"
+S = "${UNPACKDIR}/${PN}-${PV}"
+

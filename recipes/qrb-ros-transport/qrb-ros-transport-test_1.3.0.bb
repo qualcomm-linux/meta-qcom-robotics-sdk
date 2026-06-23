@@ -11,7 +11,7 @@ DESCRIPTION = "Test for QRB ROS transport"
 AUTHOR = "Peng Wang <penwang@qti.qualcomm.com>"
 ROS_AUTHOR = "Peng Wang"
 SECTION = "devel"
-LICENSE = "BSD-3-Clause"
+LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://../LICENSE;md5=86fcc2294062130b497ba0ffff9f82fc"
 
 ROS_CN = "qrb_ros_transport_test"
