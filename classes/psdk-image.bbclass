@@ -20,7 +20,7 @@
 #
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
 SDK_PN = "qirp-sdk"
-SDK_VERSION = "2.4.0"
+SDK_VERSION = "2.7.0"
 OSS_CHANNEL_FLAG = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qcom-robotics-extras', 'false', 'true', d)}"
 
 # Collect the standard SDK toolchain and copy it into the SDK's toolchain/
