@@ -7,7 +7,7 @@ repos:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: dda85722983cdaae76e9cddfc6b0b774bd102dd1
+    commit: f5845938ddb0d97c58ecfbd8e83653ed28b793cb
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -25,7 +25,7 @@ repos:
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: 0c4abc5bfe2a1470b8f15c09ce5371e7ce333276
+    commit: 1f9b451adb2324042f36d78bdd1d1a1e49e19359
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
@@ -44,15 +44,15 @@ repos:
   meta-audioreach:
     url: https://github.com/AudioReach/meta-audioreach
     branch: master
-    commit: 263007cb243b9b6bf0b85619fa0daf7eeb9eca38
+    commit: c80ebf5be5cc47a1bab1acb4b1987c8cd8b48218
   meta-selinux:
     branch: master
     url: https://git.yoctoproject.org/meta-selinux
-    commit: 1ba26da4b9bec3f102bd831efe0db00c7d61f7f2
+    commit: 1c30b4eddcef9e0594dd15c15e1f675e2a0c93a2
   meta-updater:
     branch: master
     url: https://github.com/uptane/meta-updater
-    commit: 7f5eef0421e966234230ee8f4e4a93e3fc8e3ac6
+    commit: f0e1ccafaa877d2781ed953236981dac57439dc8
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     branch: master
