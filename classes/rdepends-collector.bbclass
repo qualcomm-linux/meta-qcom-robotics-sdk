@@ -17,7 +17,8 @@
 #   The generated *.list files are consumed by psdk-image.bbclass when it
 #   collects runtime packages for the final QIRP SDK archive.
 
-PACKAGEGROUP_LIST_DIR = "${DEPLOY_DIR}/packagegroup-lists"
+# Include ${MACHINE} to avoid sstate manifest conflicts across machines
+PACKAGEGROUP_LIST_DIR = "${DEPLOY_DIR}/packagegroup-lists/${MACHINE}"
 # add private staging
 PACKAGEGROUP_LIST_STAGING_DIR = "${WORKDIR}/packagegroup-lists-staging"
 
@@ -30,69 +31,56 @@ do_collect_rdepends[sstate-outputdirs] = "${PACKAGEGROUP_LIST_DIR}"
 
 # Add task: collect RDEPENDS after packagegroup build
 addtask do_collect_rdepends after do_package_write before do_build
-do_collect_rdepends[vardeps] = "RDEPENDS"
+# Use RDEPENDS:${PN} so hash changes when per-package deps change
+do_collect_rdepends[vardeps] = "RDEPENDS:${PN}"
 
 # Function: do_collect_rdepends
 # Collect direct runtime dependencies from the current packagegroup and write
 # them into ${PACKAGEGROUP_LIST_DIR}/${PN}.list for later SDK packaging use.
 python do_collect_rdepends() {
-    """
-    Collect packagegroup RDEPENDS and write to file
-    Only collects direct RDEPENDS, not dependencies of dependencies
-    """
     import os
-    
-    d = d  # bitbake data object
+
     pn = d.getVar("PN")
-    
+
     bb.note("Collecting RDEPENDS for packagegroup: {}".format(pn))
-    
-    # Get RDEPENDS
-    rdepends_var = 'RDEPENDS:{}'.format(pn)
-    rdepends = d.getVar(rdepends_var, True) or ""
-    
-    if not rdepends:
+
+    # Get RDEPENDS — use explode_deps to correctly strip version constraints
+    rdepends_raw = d.getVar("RDEPENDS:{}".format(pn)) or ""
+
+    if not rdepends_raw:
         bb.warn("RDEPENDS for {} is empty (will be added later)".format(pn))
-        # Create file even if empty, so content can be added later
-        rdepends = ""
-    
-    # Create directory
-    # list_dir = d.getVar("PACKAGEGROUP_LIST_DIR")
 
-    # Write to private stagdir instead of DEPLOY_DIR
+    # explode_deps returns a list of bare package names, version constraints removed
+    packages = bb.utils.explode_deps(rdepends_raw)
+
+    # Write to private staging dir instead of DEPLOY_DIR
     list_dir = d.getVar("PACKAGEGROUP_LIST_STAGING_DIR")
-
     os.makedirs(list_dir, exist_ok=True)
-    
-    # Write to file
+
     list_file = os.path.join(list_dir, "{}.list".format(pn))
-    
-    # Remove old list file before creating new one
-    # This ensures we start fresh each time
+
+    # Remove old list file before creating new one to ensure a fresh result
     if os.path.exists(list_file):
         bb.note("Removing old list file: {}".format(list_file))
         os.remove(list_file)
-    
+
     with open(list_file, 'w') as f:
-        # One package per line, remove whitespace
-        for pkg in rdepends.split():
-            pkg_clean = pkg.strip()
-            if pkg_clean:
-                f.write("{}\n".format(pkg_clean))
-        
-        # The qirp-sdk, as a separate main package, needs to be included in all images. Please refer to qirp-sdk.bb
+        for pkg in packages:
+            f.write("{}\n".format(pkg))
+
+        # The qirp-sdk, as a separate main package, needs to be included in all images.
+        # Please refer to qirp-sdk.bb
         f.write("{}\n".format("qirp-sdk"))
 
-    package_count = len(rdepends.split())
-    bb.note("Wrote {} packages to {}".format(package_count, list_file))
+    bb.note("Wrote {} packages to {}".format(len(packages), list_file))
 }
 
 # Function: do_clean_rdepends
-# Remove the generated dependency list directory during cleanall so stale
+# Remove only this recipe's generated list file during cleanall so stale
 # package lists are not reused by later builds.
-# Cleanup task
 addtask do_clean_rdepends before do_cleanall
 
 do_clean_rdepends() {
-    rm -rf ${PACKAGEGROUP_LIST_DIR}
+    rm -f ${PACKAGEGROUP_LIST_DIR}/${PN}.list
+    rm -f ${PACKAGEGROUP_LIST_STAGING_DIR}/${PN}.list
 }
