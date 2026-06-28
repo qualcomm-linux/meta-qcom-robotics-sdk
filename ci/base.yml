@@ -14,6 +14,13 @@ repos:
 
   oe-core:
     url: https://github.com/openembedded/openembedded-core
+    patches:
+      kern-tools-conditional-deps:
+        repo: meta-qcom
+        path: patches/oe-core/0001-kern-tools-bump-SRCREV-for-conditional-depends-on-X-.patch
+      fix-igt-pause:
+        repo: meta-qcom
+        path: patches/oe-core/0001-igt-gpu-tools-fix-build-on-non-x86-platforms.patch
     layers:
       meta:
 
