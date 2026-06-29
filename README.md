@@ -1,6 +1,6 @@
 # Welcome to the Qualcomm Intelligent Robotics SDK (QIR SDK)
 
-The Qualcomm® Intelligent Robotics(QIR) SDK is a collection of components that enable you to develop robotic features on Qualcomm platforms. This SDK is applicable to the Qualcomm Linux releases.
+The [Qualcomm® Intelligent Robotics(QIR) SDK](https://dragonwingdocs.qualcomm.com/SDKs/QIR-SDK-2.0/qualcomm-intelligent-robotics-sdk-documentation) is a collection of components that enable you to develop robotic features on Qualcomm platforms. This SDK is applicable to the Qualcomm Linux releases.
 
 The QIR SDK provides the following:
 - Reference code in Robot Operating System (ROS) packages to develop robotic applications.
@@ -16,88 +16,106 @@ This will guide you through developing your first sample application. It explain
 - Generate customized images and QIR SDK.
 - Provide a Gazebo simulation environment for testing and debugging robotic applications.
 
-## Branches
+## Supported Branches/Tag
 
-**main**: Primary development branch. Contributors should develop submissions based on this branch, and submit pull requests to this branch.
-
-**wrynose**: Long-term support (LTS) branch based on the Yocto Project Wrynose release and the linux-qcom-6.18 LTS kernel. Use `linux-qcom-6.18.yml` instead of `linux-qcom-next.yml` when building on this branch.
+| Branches/Tag | Description |
+|--------|-------------|
+| **main branch** | Primary development branch. Base your contributions here and submit pull requests against it. |
+| **wrynose branch** | LTS branch based on Yocto Project 6.0, used by Qualcomm Linux 2.x. |
+| **release tag** | Stable release snapshot, see the [tags page](https://github.com/qualcomm-linux/meta-qcom-robotics-sdk/releases). |
+| **All stable branches up until styhead** | Stable branches based on previous Yocto Project LTS releases. |
 
 ## Usage
 
-As part of QIR, this project requires collaborative usage with other components. Detailed sample content will be provided in the future.
+QIR SDK is a multi-component project. This guide walks you through building an image that includes `meta-qcom` and `ros-core` content, which can then be flashed to one of the supported devices below.
 
-Here, we provide some compile or develop commands to help develop more efficiently.
+### Supported Devices
 
-After following this guide, you will compile an image that includes meta-qcom and ros-core content.
-And you can flash the image to the following devices to start your work.
+| Hardware | Quick Start Guide | Access |
+|----------|-------------------|--------|
+| Qualcomm Dragonwing IQ-9075 Evaluation Kit | [Quick Start Guide](https://dragonwingdocs.qualcomm.com/Linux/devices/iq9075-evk/device-overview) | Public |
+| Qualcomm Dragonwing IQ-8275 Evaluation Kit | [Quick Start Guide](https://dragonwingdocs.qualcomm.com/Linux/devices/iq8275-evk/device-overview) | Public |
 
-| Hardware                                               | Document                                                     | Access level |
-| ------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
-| Qualcomm DragonwingTM IQ-9075 Evaluation Kit           | [Quick Start Guide](https://docs.qualcomm.com/bundle/publicresource/topics/80-70022-263) | Public       |
-| Qualcomm® IQ-8 Beta Evaluation Kit                     | [Quick Start Guide](https://docs.qualcomm.com/bundle/80-70017-263/resource/80-70017-263.pdf) | Authorized   |
+## Getting Started
 
-Here are the detailed steps:
+### Prerequisites
 
-1. Please refer to the [Yocto Project Reference Manual](https://docs.yoctoproject.org/ref-manual/system-requirements.html) to set up your Yocto Project build environment.
+- Please refer to the [Yocto Project Reference Manual](https://docs.yoctoproject.org/ref-manual/system-requirements.html)
+to set up your Yocto Project build environment.
 
-2. Please follow the instructions below for a KAS-based build. The KAS tool offers an easy way to setup bitbake based projects. For more details, visit the [KAS documentation](https://kas.readthedocs.io/en/latest/index.html).
+- Please follow the instructions below for a KAS-based build. The KAS tool offers
+an easy way to setup bitbake based projects. For more details, visit the
+[KAS documentation](https://kas.readthedocs.io/en/latest/index.html).
+Install kas tool:
 
-3. Install kas tool
+    ```bash
+    sudo pip3 install kas
+    ```
+### Quick Build
 
-   ```
-   sudo pip3 install kas
-   ```
+1. Clone meta-qcom-robotics-sdk layer
 
-4. Clone meta-qcom-robotics-sdk layer
+    ```bash
+    git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk -b <Supported Branches/Tag>
+    ```
 
-   ```
-   git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
-   ```
+2. Supported kas configurations
+         <table>
+      <thead>
+         <tr>
+            <th align="center" valign="top">MACHINE configuration<br /></th>
+            <th align="center" valign="top">DISTRO configuration<br /></th>
+            <th align="center" valign="top">TARGET image recipe<br /></th>
+         </tr>
+      </thead>
+      <tbody>
+         <tr>
+            <td align="left">
+               <ul>
+                  <li><code>iq-8275-evk</code></li>
+                  <li><code>iq-9075-evk</code></li>
+               </ul>
+            </td>
+            <td align="left">
+               <ul>
+                  <li><code>qcom-robotics-distro</code></li>
+                  <li><code>qcom-robotics-distro-catchall</code></li>
+               </ul>
+            </td>
+            <td align="left">
+               <ul>
+                  <li><code>qcom-robotics-image</code></li>
+                  <li><code>qcom-robotics-proprietary-image</code></li>
+               </ul>
+            </td>
+         </tr>
+      </tbody>
+      </table>
 
-5. Build using the KAS configuration for one of the supported boards
+  3. Build Command(Example):<**MACHINE**: iq-9075-evk, **DISTRO**: qcom-robotics-distro>
 
-   ```shell
-   kas build meta-qcom-robotics-sdk/ci/<MACHINE>.yml:meta-qcom-robotics-sdk/ci/<KERNEL>.yml:meta-qcom-robotics-sdk/ci/<TARGET>.yml
-   ```
-   Supported machines, kernels and targets are listed below:
+   - To build the robotics image based on open-source components, use the `qcom-robotics-image` target:
 
-   | Machine Names | Kernel Names | Target Names |
-   | ------------ | ------------ | ------------ |
-   | iq-8275-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
-   | iq-9075-evk | linux-qcom-next, linux-qcom-6.18 | qcom-robotics-image, qcom-robotics-proprietary-image |
-
-   **Example** (machine: `iq-9075-evk`, branch: `main`):
-
-   - Open-source packages only — [qcom-robotics-image](recipes-products/images/qcom-robotics-image.bb):
-
-     ```shell
-     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/linux-qcom-next.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml
+     ```bash IQ-9075-EVK
+     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml
      ```
 
-   - All packages, including proprietary — [qcom-robotics-proprietary-image](recipes-products/images/qcom-robotics-proprietary-image.bb):
+   - To build the robotics image with features in the Qualcomm proprietary components, use the `qcom-robotics-proprietary-image` target:
 
-     ```shell
-     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/linux-qcom-next.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
+     ```bash IQ-9075-EVK
+     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
      ```
-   **Note**: If you works on `wrynose` branch, use `linux-qcom-6.18.yml` instead of `linux-qcom-next.yml`.
 
-6. The output image will be located in the follow path:
+For more details, please refer to the [Qualcomm Linux Documentation — Build with GitHub Actions](https://dragonwingdocs.qualcomm.com/SDKs/QIR-SDK-2.0/build-with-git-hub-workflow). 
 
-   ```shell
-   build/tmp/deploy/images/<YOUR MACHINE NAME>/*.rootfs.qcomflash
-   ```
+### Flash the Image
 
-7. To generate the QIR SDK, run the `generate_qirp_sdk` task after the image build completes:
+- Please refer to the [Qualcomm Linux Documentation — Flash the Robotics Image](https://dragonwingdocs.qualcomm.com/SDKs/QIR-SDK-2.0/flash-the-robotics-image).
 
-   ```shell
-   kas build meta-qcom-robotics-sdk/ci/<MACHINE>.yml:meta-qcom-robotics-sdk/ci/<KERNEL>.yml:meta-qcom-robotics-sdk/ci/<TARGET>.yml -c generate_qirp_sdk
-   ```
-   The output QIR SDK will be located in the follow path:
+### Use Prebuilt Artifacts
 
-   ```shell
-   build/tmp/deploy/qirpsdk_artifacts/<YOUR MACHINE NAME>/qirp_sdk.tar.gz
-   ```
-8. Please refer to the [Flash steps](https://github.com/qualcomm-linux/meta-qcom) to flash the image to the target device using the QDL tools.
+Prebuilt artifacts are available from the
+[Qualcomm Linux Documentation — Download Prebuilt Packages](https://dragonwingdocs.qualcomm.com/SDKs/QIR-SDK-2.0/download-the-prebuilt-packages).
 
 ## Development
 
