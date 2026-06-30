@@ -7,7 +7,7 @@ repos:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: f5845938ddb0d97c58ecfbd8e83653ed28b793cb
+    commit: e4d25b56f874bf6d9fbea55fe51952b7b3dcbaad
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -16,50 +16,11 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: 31edc0b82a3dc7b1dd0338da4a8d0d8f5a1dc138
-  bitbake:
-    url: https://github.com/openembedded/bitbake
-    layers:
-      .: disabled
-    commit: 797b0a348d7426d03459e577feacd3488fdeee47
+    commit: 5b718f4c044147dfa0742caacbc20133ead53f10
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: 1f9b451adb2324042f36d78bdd1d1a1e49e19359
-  meta-openembedded:
-    url: https://github.com/openembedded/meta-openembedded
-    layers:
-      meta-filesystems:
-      meta-gnome:
-      meta-multimedia:
-      meta-networking:
-      meta-oe:
-      meta-python:
-      meta-xfce:
-    commit: 39321ae90b64e8f2bd890a2957a5f80e74d4de30
-  meta-virtualization:
-    url: https://git.yoctoproject.org/meta-virtualization
-    branch: master
-    commit: 022f4356d4a9b389f51472d40a9330aa59f6bb9a
-  meta-audioreach:
-    url: https://github.com/AudioReach/meta-audioreach
-    branch: master
-    commit: c80ebf5be5cc47a1bab1acb4b1987c8cd8b48218
-  meta-selinux:
-    branch: master
-    url: https://git.yoctoproject.org/meta-selinux
-    commit: 1c30b4eddcef9e0594dd15c15e1f675e2a0c93a2
-  meta-updater:
-    branch: master
-    url: https://github.com/uptane/meta-updater
-    commit: f0e1ccafaa877d2781ed953236981dac57439dc8
-  meta-security:
-    url: https://git.yoctoproject.org/meta-security
-    branch: master
-    layers:
-      .:
-      meta-tpm:
-    commit: 226839ac408223f8041cde1b1d8b762d6fbc8050
+    commit: 0a35adc4080bb692c454fe24caf56e2b7c1a867d
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
