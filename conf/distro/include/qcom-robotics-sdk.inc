@@ -40,4 +40,4 @@ TOOLCHAIN_TARGET_TASK:remove = "qirp-sdk"
 # Add default packages from meta-ros ros-sdk.inc
 TOOLCHAIN_HOST_TASK:append = " ${ROS_SDK_HOST_PACKAGES}"
 
-TOOLCHAIN_TARGET_TASK:append = " ${ROS_SDK_TARGET_PACKAGES}"
+TOOLCHAIN_HOST_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_HOST_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"

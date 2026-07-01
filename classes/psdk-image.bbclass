@@ -18,6 +18,8 @@
 # Typical usage:
 #   Used by robotics image recipes such as qcom-robotics-image to create a releasable QIRP SDK bundle.
 #
+ROBOTICS_PACKAGEGROUP_LIST_DIR = "${DEPLOY_DIR}/packagegroup-lists/${MACHINE}"
+
 TOOLCHAIN_PATH = "${DEPLOY_DIR}/sdk"
 SDK_PN = "qirp-sdk"
 SDK_VERSION = "2.7.0"
@@ -138,20 +140,17 @@ process_runtime() {
         fi
     done
 
-    # Determine which packagegroup list files to read
-    PACKAGEGROUP_LIST_DIR="${DEPLOY_DIR}/packagegroup-lists"
-    
     if echo "${PN}" | grep -q proprietary; then
         # Proprietary image: three packagegroups
         LIST_FILES=" \
-            ${PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-opensource.list \
-            ${PACKAGEGROUP_LIST_DIR}/packagegroup-oss-with-prop-deps.list \
-            ${PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-proprietary.list \
+            ${ROBOTICS_PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-opensource.list \
+            ${ROBOTICS_PACKAGEGROUP_LIST_DIR}/packagegroup-oss-with-prop-deps.list \
+            ${ROBOTICS_PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-proprietary.list \
         "
         bbnote "Processing proprietary image with 3 packagegroup lists"
     else
         # Open-source image: one packagegroup
-        LIST_FILES="${PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-opensource.list"
+        LIST_FILES="${ROBOTICS_PACKAGEGROUP_LIST_DIR}/packagegroup-robotics-opensource.list"
         bbnote "Processing open-source image with 1 packagegroup list"
     fi
     
