@@ -51,3 +51,6 @@ TOOLCHAIN_HOST_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_HOST_PACKAGES') or ''
 #    are not covered and fail with "setscene ignore_tasks".
 #    Fix: add *:do_collect_rdepends to allow it to run from scratch.
 BB_SETSCENE_ENFORCE_IGNORE_TASKS:append = " *:do_collect_rdepends"
+
+PREFERRED_VERSION_linux-firmware = "20260622"
+
