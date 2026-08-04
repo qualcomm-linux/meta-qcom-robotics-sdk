@@ -41,3 +41,8 @@ TOOLCHAIN_TARGET_TASK:remove = "qirp-sdk"
 TOOLCHAIN_HOST_TASK:append = " ${ROS_SDK_HOST_PACKAGES}"
 
 TOOLCHAIN_TARGET_TASK:append = " ${ROS_SDK_TARGET_PACKAGES}"
+
+# kernel-devsrc's RPM auto-generated Requires:/bin/sed must be satisfied in the
+# SDK target sysroot. sed provides /bin/sed (via RPROVIDES for usrmerge compat)
+# but is not in the image. Add it explicitly to the SDK target package set.
+TOOLCHAIN_TARGET_TASK:append = " sed"

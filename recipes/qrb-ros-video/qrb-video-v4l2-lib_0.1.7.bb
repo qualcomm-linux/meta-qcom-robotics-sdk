@@ -13,6 +13,7 @@ DEPENDS = "glog gflags"
 
 SRC_URI = "git://github.com/quic-qrb-ros/qrb_ros_video.git;protocol=https;branch=stable/0.1.7 \
            file://0001-fix-make-glog-integration-with-cmake-28.patch;striplevel=2 \
+           file://0001-fix-decoder-defer-output-port-setup-until-source-res.patch;striplevel=2 \
           "
 
 SRCREV = "3b94a5f4ec6cc498fe4161d010f44f5393030173"
