@@ -11,3 +11,9 @@ local_conf_header:
     FIRMWARE_COMPRESSION:qcom-armv8a = "zst"
     # Workaround needed due https://bugzilla.yoctoproject.org/show_bug.cgi?id=16010
     PACKAGE_CLASSES = "package_rpm"
+  git-dl: |
+    # Shared git clone dirs get corrupted when jobs on different hosts
+    # update them concurrently: keep them job-local and share history
+    # through the atomically written git2_*.tar.gz tarballs in DL_DIR.
+    GITDIR = "${TMPDIR}/git2"
+    BB_GENERATE_MIRROR_TARBALLS = "1"
