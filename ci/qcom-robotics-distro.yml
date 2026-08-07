@@ -2,12 +2,19 @@ header:
   version: 14
   includes:
   - ci/qcom-distro.yml
+defaults:
+  repos:
+    branch: master
 repos:
   meta-qcom-robotics-sdk:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: d2dda53767a99880287691c2d8ea1e1dd6f81ae2
+    commit: a1978c6c3e4f6e5fd0cd90dfbea3f130210818f8
+  meta-qcom-distro:
+    url: https://github.com/qualcomm-linux/meta-qcom-distro
+    branch: main
+    commit: 5a9bc8bf794cd857ad1986d4c73341ad98b42c48
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -17,49 +24,6 @@ repos:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
     commit: 31edc0b82a3dc7b1dd0338da4a8d0d8f5a1dc138
-  bitbake:
-    url: https://github.com/openembedded/bitbake
-    layers:
-      .: disabled
-    commit: 797b0a348d7426d03459e577feacd3488fdeee47
-  meta-qcom-distro:
-    url: https://github.com/qualcomm-linux/meta-qcom-distro
-    branch: main
-    commit: e3a82c893760632b89ad0918265ab2bf82f2ed8a
-  meta-openembedded:
-    url: https://github.com/openembedded/meta-openembedded
-    layers:
-      meta-filesystems:
-      meta-gnome:
-      meta-multimedia:
-      meta-networking:
-      meta-oe:
-      meta-python:
-      meta-xfce:
-    commit: 39321ae90b64e8f2bd890a2957a5f80e74d4de30
-  meta-virtualization:
-    url: https://git.yoctoproject.org/meta-virtualization
-    branch: master
-    commit: 022f4356d4a9b389f51472d40a9330aa59f6bb9a
-  meta-audioreach:
-    url: https://github.com/AudioReach/meta-audioreach
-    branch: master
-    commit: c80ebf5be5cc47a1bab1acb4b1987c8cd8b48218
-  meta-selinux:
-    branch: master
-    url: https://git.yoctoproject.org/meta-selinux
-    commit: 1c30b4eddcef9e0594dd15c15e1f675e2a0c93a2
-  meta-updater:
-    branch: master
-    url: https://github.com/uptane/meta-updater
-    commit: f0e1ccafaa877d2781ed953236981dac57439dc8
-  meta-security:
-    url: https://git.yoctoproject.org/meta-security
-    branch: master
-    layers:
-      .:
-      meta-tpm:
-    commit: 226839ac408223f8041cde1b1d8b762d6fbc8050
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
@@ -130,13 +94,6 @@ local_conf_header:
     PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
 
     '
-  libcamera_mask: '# Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro
-    libcamera recipe
 
-    BBMASK .= "|^${TOPDIR}/meta-ros/meta-ros-common/recipes-multimedia/libcamera/.*"
-
-    PREFERRED_VERSION_libcamera = "1:0.6.0"
-
-    '
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
