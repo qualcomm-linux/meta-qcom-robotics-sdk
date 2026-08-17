@@ -46,3 +46,7 @@ TOOLCHAIN_TARGET_TASK:append = " ${ROS_SDK_TARGET_PACKAGES}"
 # SDK target sysroot. sed provides /bin/sed (via RPROVIDES for usrmerge compat)
 # but is not in the image. Add it explicitly to the SDK target package set.
 TOOLCHAIN_TARGET_TASK:append = " sed"
+
+# protobuf-camx recipe was removed from meta-qcom; replace with nativesdk-protobuf-compiler
+TOOLCHAIN_HOST_TASK:remove = "nativesdk-protobuf-camx-compiler"
+TOOLCHAIN_HOST_TASK:append = " nativesdk-protobuf-compiler"
