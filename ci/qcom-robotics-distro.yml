@@ -43,7 +43,7 @@ repos:
       remove-rosbag2-compressionn-zstd-bbappend:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
-    commit: c671acf8a948e22a614a6d6d1dcf18bdf4113df5
+    commit: f4a5e4800a90ae435b5437d895ea4cd894fad53a
   meta-qcom-distro:
     commit: 55aae963e53a82c637fcd4f9ed58108252b0346c
 local_conf_header:
