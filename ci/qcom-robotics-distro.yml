@@ -47,7 +47,7 @@ repos:
       remove-rosbag2-compressionn-zstd-bbappend:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
-    commit: 7c0bded4f8b2962ff1a0e6e74cb622c06f5255ce
+    commit: 434d966635cc18ffeb176d18d5531e4155c57bd2
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
 
