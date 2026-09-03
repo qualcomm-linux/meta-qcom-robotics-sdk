@@ -17,4 +17,4 @@ SCRIPT=${SCRIPT#$TOPDIR/}
 # on ci the kas-container is not on the default path
 KAS_CONTAINER=${KAS_CONTAINER:-$(which kas-container)}
 
-exec $KAS_CONTAINER shell $TOPDIR/ci/base.yml --command "/repo/$SCRIPT /repo /work"
+exec $KAS_CONTAINER shell $TOPDIR/ci/base.yml:$TOPDIR/ci/qcom-distro.yml:$TOPDIR/ci/qcom-robotics-distro.yml --command "/repo/$SCRIPT /repo /work"

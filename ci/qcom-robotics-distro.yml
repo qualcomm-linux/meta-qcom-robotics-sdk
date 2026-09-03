@@ -101,4 +101,7 @@ local_conf_header:
 
     '
 distro: qcom-robotics-ros2-jazzy
-target: qcom-robotics-image
+
+target:
+  - qcom-robotics-image
+  - qcom-robotics-proprietary-image
