@@ -23,7 +23,7 @@ SDK_PN = "qirp-sdk"
 
 # The proprietary image produces a separate SDK bundle, so give it its own name
 # to keep it from overwriting the open-source one in the deploy directory.
-SDK_PN:pn-qcom-robotics-proprietary-image = "qirp-sdk-proprietary"
+SDK_PN:pn-qcom-robotics-proprietary-image = "qirp-proprietary-sdk"
 
 SDK_VERSION = "2.8.0"
 
