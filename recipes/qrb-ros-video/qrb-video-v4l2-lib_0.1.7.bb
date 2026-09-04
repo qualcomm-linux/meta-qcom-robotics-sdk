@@ -11,12 +11,9 @@ PV = "0.1.7"
 
 DEPENDS = "glog gflags"
 
-SRC_URI = "git://github.com/quic-qrb-ros/qrb_ros_video.git;protocol=https;branch=stable/0.1.7 \
-           file://0001-fix-make-glog-integration-with-cmake-28.patch;striplevel=2 \
-           file://0001-fix-decoder-defer-output-port-setup-until-source-res.patch;striplevel=2 \
-          "
+SRC_URI = "git://github.com/quic-qrb-ros/qrb_ros_video.git;protocol=https;branch=stable/0.1.7"
 
-SRCREV = "bc8382c11a0022a385a41518ea1a431415b78f7d"
+SRCREV = "706839334db5247bcb3aee240c46c74b146ba0af"
 S = "${UNPACKDIR}/${BP}/qrb_video_v4l2_lib"
 
 EXTRA_OECMAKE:append = " -DBUILD_TESTING=OFF"
