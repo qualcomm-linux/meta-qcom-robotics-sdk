@@ -51,3 +51,7 @@ TOOLCHAIN_TARGET_TASK:append = " \
 # protobuf-camx recipe was removed from meta-qcom; replace with nativesdk-protobuf-compiler
 TOOLCHAIN_HOST_TASK:remove = "nativesdk-protobuf-camx-compiler"
 TOOLCHAIN_HOST_TASK:append = " nativesdk-protobuf-compiler"
+# Avoid buildtools-tarball recipe packages the host *.armv8_2a.rpm for do_populate_sdk task
+TOOLCHAIN_TARGET_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_TARGET_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"
+
+TOOLCHAIN_HOST_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_HOST_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"

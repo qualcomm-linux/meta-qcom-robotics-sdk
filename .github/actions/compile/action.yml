@@ -1,10 +1,14 @@
 name: Run kas for a specific build configuration
+description: "Runs a kas build for a specific machine, distro, and target configuration"
 inputs:
   machine:
+    description: "The target machine to build for (e.g. qcs9100-ride-sx)"
     required: true
   distro_yaml:
+    description: "Path to the distro YAML file"
     required: true
   distro_name:
+    description: "Name of the distro to build"
     required: true
   target_type:
     description: "Type of the target to build (e.g. base, full)"
@@ -16,12 +20,16 @@ inputs:
     description: "Name of the target to build"
     required: true
   kernel_yaml:
+    description: "Path to the kernel YAML file"
     required: true
   kernel_dirname:
+    description: "Directory name of the kernel"
     required: true
   cache_dir:
+    description: "Path to the shared cache directory (downloads + sstate)"
     required: true
   use_sstate:
+    description: "Whether to use the sstate cache (set to false for a full rebuild)"
     required: false
     default: "true"
 outputs:
