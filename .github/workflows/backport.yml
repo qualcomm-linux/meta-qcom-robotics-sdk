@@ -25,7 +25,9 @@ jobs:
 
       - name: Collect notification recipients
         id: recipients
-        if: failure()
+        # korthout/backport-action exits 0 even on cherry-pick failure; use its
+        # was_successful output to detect the failure instead of if: failure().
+        if: steps.backport.outputs.was_successful == 'false'
         env:
           GH_TOKEN: ${{ secrets.SDK_LAYER_TOKEN }}
           FALLBACK_EMAILS: ${{ secrets.BACKPORT_NOTIFY_EMAILS }}
@@ -55,7 +57,7 @@ jobs:
           echo "emails=${emails}" >> "$GITHUB_OUTPUT"
 
       - name: Send backport failure notification
-        if: failure() && steps.recipients.result == 'success' && steps.recipients.outputs.emails != ''
+        if: steps.backport.outputs.was_successful == 'false' && steps.recipients.result == 'success' && steps.recipients.outputs.emails != ''
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
