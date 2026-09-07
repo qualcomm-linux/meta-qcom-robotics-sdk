@@ -12,7 +12,7 @@ ROS_CN = "simulation_remote_assistant"
 ROS_BPN = "simulation_remote_assistant"
 
 SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-simulation_remote_assistant/1.0.0"
-SRCREV = "b7fd87ee8ccf773a05647cde96a6ea22217f8ef5"
+SRCREV = "8ec124c7ffa2804360b7fd5bbd84a440cf1117e1"
 
 ROS_BUILD_DEPENDS = " \
    python3-setuptools-native \

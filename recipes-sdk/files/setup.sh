@@ -3,12 +3,32 @@
 
 #!/bin/bash
 
+# Recovery / repair:
+#   - Toolchain and runtime installs are tracked independently via completion
+#     marker files (.toolchain_setup_done / .runtime_setup_done). Simply
+#     re-running "source ./setup.sh" after an interrupted run (Ctrl-C,
+#     timeout, disk full, etc.) will detect whichever step never finished,
+#     wipe its partial install dir, and redo just that step.
+#   - To force a full clean reinstall from scratch: run
+#     "source ./setup.sh uninstall" then "source ./setup.sh" again.
+
 THIS_SCRIPT=$(readlink -f ${BASH_SOURCE[0]})
 scriptdir="$(dirname "${THIS_SCRIPT}")"
 export SDK_TOP_DIR=$scriptdir
 cd $SDK_TOP_DIR
-#create toolchain dir
-if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
+
+TOOLCHAIN_INSTALL_DIR="$SDK_TOP_DIR/toolchain/install_dir"
+TOOLCHAIN_DONE_MARKER="$TOOLCHAIN_INSTALL_DIR/.toolchain_setup_done"
+RUNTIME_INSTALL_DIR="$SDK_TOP_DIR/runtime/qirp-sdk/install-dir"
+RUNTIME_DONE_MARKER="$RUNTIME_INSTALL_DIR/.runtime_setup_done"
+
+#install toolchain. Completion is tracked by a marker file (not just
+#directory existence) so an interrupted install is detected and redone.
+if [ ! -f "$TOOLCHAIN_DONE_MARKER" ];then
+    if [ -d "$TOOLCHAIN_INSTALL_DIR" ]; then
+        echo "Found incomplete toolchain install, cleaning up: $TOOLCHAIN_INSTALL_DIR"
+        rm -rf "$TOOLCHAIN_INSTALL_DIR"
+    fi
     #check dependencys
     missing_tools=""
     for tool in zstd rpm2cpio cpio; do
@@ -24,48 +44,105 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     fi
     #Install toolchain
     search_dir="toolchain"
-    mkdir toolchain/install_dir
-    for file in $search_dir/*.sh; do
-        echo $file
-        ./"$file" -d $SDK_TOP_DIR/toolchain/install_dir -y
+    mkdir -p toolchain/install_dir
+    toolchain_scripts=("$search_dir"/*.sh)
+    if [ ! -e "${toolchain_scripts[0]}" ]; then
+        echo "[ERROR] No toolchain installer script found in $SDK_TOP_DIR/$search_dir (expected *.sh)."
+        rm -rf "$TOOLCHAIN_INSTALL_DIR"
+        return 1
+    fi
+    for file in "${toolchain_scripts[@]}"; do
+        echo "$file"
+        ./"$file" -d "$SDK_TOP_DIR/toolchain/install_dir" -y
+        if [ $? -ne 0 ]; then
+            echo "[ERROR] Toolchain installer failed: $file"
+            rm -rf "$TOOLCHAIN_INSTALL_DIR"
+            return 1
+        fi
     done
+    touch "$TOOLCHAIN_DONE_MARKER"
+fi
 
-    export search_dir=$SDK_TOP_DIR/toolchain/install_dir/environment*linux
-    for file in $search_dir;do
-        echo $file
-        . "$file"
-    done
+#source toolchain environment unconditionally (needed below even when
+#toolchain install was already complete and the block above was skipped)
+env_scripts=("$SDK_TOP_DIR"/toolchain/install_dir/environment*linux)
+if [ ! -e "${env_scripts[0]}" ]; then
+    echo "[ERROR] No toolchain environment script found under $SDK_TOP_DIR/toolchain/install_dir (expected environment*linux)."
+    return 1
+fi
+for file in "${env_scripts[@]}"; do
+    echo "$file"
+    . "$file"
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to source toolchain environment script: $file"
+        return 1
+    fi
+done
 
+#install runtime. Completion is tracked independently from the toolchain so
+#a retry after an interrupted run redoes only whichever part never finished.
+if [ ! -f "$RUNTIME_DONE_MARKER" ]; then
+    if [ -d "$RUNTIME_INSTALL_DIR" ]; then
+        echo "Found incomplete runtime install, cleaning up: $RUNTIME_INSTALL_DIR"
+        rm -rf "$RUNTIME_INSTALL_DIR"
+    fi
+    rm -rf "$SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir"
 
     #unpack qirp-sdk tarball into runtime/qirp-sdk
     search_dir="runtime"
-    cd $search_dir
-    if [ ! -d "qirp-sdk " ];then
+    if ! cd "$SDK_TOP_DIR/$search_dir"; then
+        echo "[ERROR] Runtime directory not found: $SDK_TOP_DIR/$search_dir"
+        return 1
+    fi
+    if [ ! -d "qirp-sdk" ];then
         mkdir -p qirp-sdk
     fi
-    for file in *tar.gz; do
-        echo $file
+    tarballs=(*tar.gz)
+    if [ ! -e "${tarballs[0]}" ]; then
+        echo "[ERROR] No qirp-sdk tarball (*tar.gz) found in $SDK_TOP_DIR/$search_dir"
+        cd "$SDK_TOP_DIR"
+        return 1
+    fi
+    for file in "${tarballs[@]}"; do
+        echo "$file"
         tar -zxvf "$file" -C qirp-sdk
+        if [ $? -ne 0 ]; then
+            echo "[ERROR] Failed to extract tarball: $file"
+            cd "$SDK_TOP_DIR"
+            return 1
+        fi
     done
 
     #install runtime/packages qirp packages
     ipk_pkgs=$(ls $SDK_TOP_DIR/runtime/qirp-sdk/packages/*.ipk 2>/dev/null)
     rpm_pkgs=$(ls $SDK_TOP_DIR/runtime/qirp-sdk/packages/*.rpm 2>/dev/null)
 
-    if [ ! -d "$SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir" ]; then
-        mkdir $SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir
+    if [ -z "$ipk_pkgs" ] && [ -z "$rpm_pkgs" ]; then
+        echo "[ERROR] No .ipk or .rpm packages found in $SDK_TOP_DIR/runtime/qirp-sdk/packages"
+        cd "$SDK_TOP_DIR"
+        return 1
     fi
-    if [ ! -d "$SDK_TOP_DIR/runtime/qirp-sdk/install-dir" ]; then
-        mkdir $SDK_TOP_DIR/runtime/qirp-sdk/install-dir
-    fi
+
+    mkdir -p $SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir
+    mkdir -p "$RUNTIME_INSTALL_DIR"
 
     cd $SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir
 
     # install ipk packages
     for pkg in $ipk_pkgs; do
         echo "install ipk pkg $pkg ...   "
-        ar -x $pkg
+        ar -x "$pkg"
+        if [ $? -ne 0 ]; then
+            echo "[ERROR] Failed to extract ipk package: $pkg"
+            cd "$SDK_TOP_DIR"
+            return 1
+        fi
         tar -I zstd -xvf data.tar.zst -C $SDK_TOP_DIR/runtime/qirp-sdk/install-dir
+        if [ $? -ne 0 ]; then
+            echo "[ERROR] Failed to unpack data.tar.zst from ipk package: $pkg"
+            cd "$SDK_TOP_DIR"
+            return 1
+        fi
         rm -rf $SDK_TOP_DIR/runtime/qirp-sdk/tmp-dir/*
     done
 
@@ -73,10 +150,20 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
     for pkg in $rpm_pkgs; do
         echo "install rpm pkg $pkg ...   "
         rpm2cpio $pkg | cpio -idmv -D $SDK_TOP_DIR/runtime/qirp-sdk/install-dir
+        if [ ${PIPESTATUS[0]} -ne 0 ] || [ ${PIPESTATUS[1]} -ne 0 ]; then
+            echo "[ERROR] Failed to install rpm package: $pkg"
+            cd "$SDK_TOP_DIR"
+            return 1
+        fi
     done
 
 
     rsync -av $SDK_TOP_DIR/runtime/qirp-sdk/install-dir/ $SDK_TOP_DIR/toolchain/install_dir/sysroots/armv8-2a-qcom-linux/
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to merge runtime install-dir into toolchain sysroot"
+        cd "$SDK_TOP_DIR"
+        return 1
+    fi
     # comment this line due to qirp-sdk install path change from opt/qcom/qirp-sdk to /
     #rsync $SDK_TOP_DIR/toolchain/install_dir/sysroots/armv8-2a-qcom-linux/opt/qcom/qirp-sdk/* $SDK_TOP_DIR/toolchain/install_dir/sysroots/armv8-2a-qcom-linux/
     cd $SDK_TOP_DIR
@@ -90,6 +177,7 @@ if [ ! -d "$SDK_TOP_DIR/toolchain/install_dir" ];then
          fi
      fi
 
+    touch "$RUNTIME_DONE_MARKER"
      echo "setup qirp sysroot done!"
 
 fi
@@ -143,12 +231,32 @@ function build_docker_image(){
         echo "Docker container $CONTAINER_NAME already exists."
     fi
     DOCKER_SCRIPTS=$(find $SDK_TOP_DIR/runtime/qirp-sdk/install-dir -name "qirp-setup.sh")
+    if [ -z "$DOCKER_SCRIPTS" ]; then
+        echo "[ERROR] qirp-setup.sh not found under $SDK_TOP_DIR/runtime/qirp-sdk/install-dir"
+        return 1
+    fi
 
     docker cp $DOCKER_SCRIPTS $CONTAINER_NAME:/home
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to copy qirp-setup.sh into container $CONTAINER_NAME"
+        return 1
+    fi
     #docker exec $CONTAINER_NAME /bin/bash -c "sed -i '/curl -sSL/,+8d' /home/qirp-setup.sh "
     docker exec $CONTAINER_NAME /bin/bash /home/qirp-setup.sh
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] qirp-setup.sh failed inside container $CONTAINER_NAME"
+        return 1
+    fi
     docker commit $CONTAINER_NAME $DOCKER_IMAGE_NAME
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to commit container $CONTAINER_NAME to image $DOCKER_IMAGE_NAME"
+        return 1
+    fi
     docker save $DOCKER_IMAGE_NAME | gzip > $SDK_TOP_DIR/runtime/$DOCKER_IMAGE_NAME.tar.gz
+    if [ ${PIPESTATUS[0]} -ne 0 ] || [ ${PIPESTATUS[1]} -ne 0 ]; then
+        echo "[ERROR] Failed to save docker image $DOCKER_IMAGE_NAME to $SDK_TOP_DIR/runtime/$DOCKER_IMAGE_NAME.tar.gz"
+        return 1
+    fi
 }
 DIR=$SDK_TOP_DIR/qirp-samples
 config_file="config.yaml"
@@ -218,10 +326,21 @@ function download_ai_model(){
         fi
 
         echo "sudo chmod +x /usr/local/bin/yq"
+        echo "[ERROR] yq is required to parse sample config files. Install it first."
+        return 1
+    fi
+
+    if [ ! -d "$DIR" ]; then
+        echo "[WARN] Sample directory not found: $DIR. Skipping AI model download."
+        return 0
     fi
 
     #read config file
     conf=$(find "$DIR" -type f -name $config_file)
+    if [ -z "$conf" ]; then
+        echo "[WARN] No $config_file found under $DIR. Skipping AI model download."
+        return 0
+    fi
     for file in $conf; do
         model=()
         model_label=()
@@ -237,7 +356,15 @@ function download_ai_model(){
             mkdir $sample_dir/model
         fi
         download_model  $try_times  $sample_dir
+        if [ $? -ne 0 ]; then
+            echo "[ERROR] Failed to download required models for $file"
+            return 1
+        fi
         download_model_label $try_times $sample_dir
+        if [ $? -ne 0 ]; then
+            echo "[ERROR] Failed to download required model labels for $file"
+            return 1
+        fi
     done
 }
 
@@ -320,28 +447,38 @@ setup_qirp_ros_env() {
 }
 #install or uninstall qirp
 if [ "$1" == "uninstall" ]; then
-    if [ -d "toolchain/install_dir" ]; then
+    if [ -d "toolchain/install_dir" ] || [ -d "runtime/qirp-sdk" ]; then
         rm -rf toolchain/install_dir
         rm -rf runtime/qirp*/*
     fi
     echo "uninstall qirp sdk "
 else
+    #Verify toolchain and runtime completeness independently before reporting
+    #success. Missing either marker means an earlier step did not finish
+    #(e.g. this source was interrupted); re-run "source ./setup.sh" to resume
+    #(it only redoes the incomplete step(s)), or run
+    #"source ./setup.sh uninstall" first to force a full clean reinstall.
+    if [ ! -f "$TOOLCHAIN_DONE_MARKER" ] || [ ! -f "$RUNTIME_DONE_MARKER" ]; then
+        echo "Setup did not complete: toolchain or runtime install is missing/incomplete."
+        echo "Re-run 'source ./setup.sh' to resume, or 'source ./setup.sh uninstall' then retry for a clean reinstall."
+        return 1
+    fi
+
     #run sdk env setup
-    export search_dir=$SDK_TOP_DIR/toolchain/install_dir/environment*linux
-    for file in $search_dir;do
-        . "$file"
-    done
   # Select the Python interpreter used to detect the version.
   # Prefer the SDK native Python if available; otherwise fall back to system python3.
     setup_qirp_ros_env
-    download_ai_model
-    if [[ $? -eq 0 ]]; then
-        echo " "
-        echo "Setup QIRP Cross Compile Successfully"
-    else
-        echo "something error. please fix it first"
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to set up QIRP ROS environment (see above for details)."
         return 1
     fi
+    download_ai_model
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to download AI models required for samples (see above for details)."
+        return 1
+    fi
+    echo " "
+    echo "Setup QIRP Cross Compile Successfully"
 
 fi
 

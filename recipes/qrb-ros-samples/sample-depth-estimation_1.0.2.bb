@@ -9,7 +9,7 @@ ROS_BPN = "sample_depth_estimation"
 
 SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-sample_depth_estimation/1.0.0"
 
-SRCREV = "315c7813ffed90222fbf7230f1ae2f85bdaf9613"
+SRCREV = "8365d9e72837e74eccae1778c5b6253b5bc37660"
 
 ROS_BUILD_DEPENDS = " \
 "

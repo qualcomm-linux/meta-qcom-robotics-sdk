@@ -1,25 +1,31 @@
 inherit ros_distro_${ROS_DISTRO}
 inherit ros_component
 inherit ros_insane_dev_so
-inherit pkgconfig
 
-DESCRIPTION = "A ROS package which provides video hardware acceleration capabilities on Qualcomm platform"
-AUTHOR = "Jean Xiao <jianxiao@qti.qualcomm.com>"
-ROS_AUTHOR = "Jean Xiao"
+ROS_BUILD_TYPE = "ament_cmake"
+
+inherit ros_${ROS_BUILD_TYPE}
+inherit robotics-package
+
+DESCRIPTION = "Test for QRB ROS transport"
+AUTHOR = "Peng Wang <penwang@qti.qualcomm.com>"
+ROS_AUTHOR = "Peng Wang"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://../LICENSE;md5=86fcc2294062130b497ba0ffff9f82fc"
 
-ROS_CN = "qrb_ros_video"
-ROS_BPN = "qrb_ros_video"
+ROS_CN = "qrb_ros_transport_test"
+ROS_BPN = "qrb_ros_transport_test"
 
 ROS_BUILD_DEPENDS = " \
     rclcpp \
+    rclcpp-components \
     sensor-msgs \
-    lib-mem-dmabuf \
     qrb-ros-transport-image-type \
-    qrb-video-v4l2-lib \
-    gstreamer1.0-plugins-base \
+    qrb-ros-transport-imu-type \
+    qrb-ros-transport-point-cloud2-type \
+    pcl \
+    pcl-conversions \
 "
 
 ROS_BUILDTOOL_DEPENDS = " \
@@ -34,28 +40,27 @@ ROS_BUILDTOOL_EXPORT_DEPENDS = ""
 
 ROS_EXEC_DEPENDS = " \
     rclcpp \
+    rclcpp-components \
     sensor-msgs \
-    lib-mem-dmabuf \
     qrb-ros-transport-image-type \
-    qrb-video-v4l2-lib \
-    gstreamer1.0-plugins-base \
+    qrb-ros-transport-imu-type \
+    qrb-ros-transport-point-cloud2-type \
+    pcl \
+    pcl-conversions \
 "
 
 ROS_TEST_DEPENDS = " \
     ament-lint-auto \
     ament-lint-common \
-    ament-cmake-copyright \
-    ament-cmake-cpplint \
     ament-cmake-lint-cmake \
     ament-cmake-uncrustify \
     ament-cmake-xmllint \
     ament-cmake-cppcheck-native \
     ament-cmake-flake8-native \
     ament-cmake-pep257-native \
-    ament-lint-cmake-native \
     ament-uncrustify-native \
+    ament-lint-cmake-native \
     ament-xmllint-native \
-    rclcpp-components \
 "
 
 DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS}"
@@ -63,17 +68,6 @@ DEPENDS += "${ROS_EXPORT_DEPENDS} ${ROS_BUILDTOOL_EXPORT_DEPENDS} ${ROS_TEST_DEP
 
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
 
-SRC_URI = "git://github.com/quic-qrb-ros/qrb_ros_video.git;protocol=https;branch=stable/0.1.7 \
-           file://0002-fix-test-add-mp4-extension-fallback-when-discoverer-fail-29.patch;striplevel=2 \
-           "
-SRCREV = "bc8382c11a0022a385a41518ea1a431415b78f7d"
-S = "${UNPACKDIR}/${BP}/qrb_ros_video"
-PV = "0.1.7"
-
-ROS_BUILD_TYPE = "ament_cmake"
-
-inherit ros_${ROS_BUILD_TYPE}
-
-EXTRA_OECMAKE:append = " -DBUILD_TESTING=ON"
-
-inherit robotics-package
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_transport.git;protocol=https;branch=stable/1.3.0"
+SRCREV = "72642db004e4cf58208c72733dd8da6d74339d58"
+S = "${UNPACKDIR}/${PN}-${PV}/qrb_ros_transport_test"

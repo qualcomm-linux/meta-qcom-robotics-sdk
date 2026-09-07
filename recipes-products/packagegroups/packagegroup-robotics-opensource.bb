@@ -20,9 +20,11 @@ QUALCOMM_QRB_ROS = " \
     ocr-service \
     lib-mem-dmabuf \
     dmabuf-transport \
+    dmabuf-transport-test \
     qrb-ros-transport-image-type \
     qrb-ros-transport-imu-type \
     qrb-ros-transport-point-cloud2-type \
+    qrb-ros-transport-test \
     qrb-sensor-client \
     qrb-ros-system-monitor \
     qrb-ros-system-monitor-interfaces \
@@ -58,9 +60,9 @@ QRB_ROS_SAMPLE = " \
 # If you do not work within the above two organizations and are preparing to merge your code into the Qualcomm Linux Intelligence Robotics Image,
 # please place it in the following variable.
 EXTERNAL_OPENSOURCE = " \
-    ${ROS_GST_BRIDGE} \
     rplidar-ros2 \
     orbbec-camera \
+    xsens-mti-ros2-driver \
     cartographer \
     cartographer-ros \
     nav2-bringup \

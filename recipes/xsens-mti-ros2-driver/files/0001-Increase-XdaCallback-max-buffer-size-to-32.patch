@@ -1,0 +1,34 @@
+# This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From: Weijie Shen <weijshen@qti.qualcomm.com>
+Date: Thu, 23 Jul 2026 00:00:00 +0800
+Subject: [PATCH] Increase XdaCallback default max buffer size to 32
+
+Raise the XdaCallback default maxBufferSize from 5 to 32 so that more
+inbound XDA data packets can be queued before the consumer drains them.
+This reduces the chance of dropped IMU packets at higher output data
+rates.
+
+Upstream-Status: Pending
+Signed-off-by: Weijie Shen <weijshen@qti.qualcomm.com>
+---
+ include/xdacallback.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/xdacallback.h b/include/xdacallback.h
+index d5eeb17..3ecfb28 100644
+--- a/include/xdacallback.h
++++ b/include/xdacallback.h
+@@ -49,7 +49,7 @@ struct XsDevice;
+ class XdaCallback : public XsCallback
+ {
+ public:
+-	XdaCallback(rclcpp::Node::SharedPtr node, size_t maxBufferSize = 5);
++	XdaCallback(rclcpp::Node::SharedPtr node, size_t maxBufferSize = 32);
+ 	virtual ~XdaCallback() throw();
+ 
+ 	RosXsDataPacket next(const std::chrono::milliseconds &timeout);
+-- 
+2.34.1

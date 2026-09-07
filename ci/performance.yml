@@ -2,5 +2,5 @@ header:
   version: 14
 
 local_conf_header:
-  cmdline: |
-    KERNEL_CMDLINE_EXTRA:append = " quiet"
+  cmdline-perf: |
+    KERNEL_CMDLINE_EXTRA:append = " quiet systemd.tty.term.console=linux"

@@ -2,12 +2,19 @@ header:
   version: 14
   includes:
   - ci/qcom-distro.yml
+defaults:
+  repos:
+    branch: master
 repos:
   meta-qcom-robotics-sdk:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: 155d915e37a6e86ef0e2968b46b270a47ee602fb
+    commit: 36d23fedc4c84f2dee486857fc917f866506d047
+  meta-qcom-distro:
+    url: https://github.com/qualcomm-linux/meta-qcom-distro
+    branch: main
+    commit: 0fadc6b05fbacbbf11d0ff2b35f12491e196ba24
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -16,50 +23,7 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: 3724b93538d3acbec9f48d4c524b51d166071708
-  bitbake:
-    url: https://github.com/openembedded/bitbake
-    layers:
-      .: disabled
-    commit: 2b47c2fc40b753e260b63ec419edfd1f85adff90
-  meta-qcom-distro:
-    url: https://github.com/qualcomm-linux/meta-qcom-distro
-    branch: main
-    commit: 6a5225cca91f1a9e8fa69376f582dcaab4f33b35
-  meta-openembedded:
-    url: https://github.com/openembedded/meta-openembedded
-    layers:
-      meta-filesystems:
-      meta-gnome:
-      meta-multimedia:
-      meta-networking:
-      meta-oe:
-      meta-python:
-      meta-xfce:
-    commit: 335045d3fb440cbb6de0716ffd7dd043bbd3f6ad
-  meta-virtualization:
-    url: https://git.yoctoproject.org/meta-virtualization
-    branch: master
-    commit: 022f4356d4a9b389f51472d40a9330aa59f6bb9a
-  meta-audioreach:
-    url: https://github.com/AudioReach/meta-audioreach
-    branch: master
-    commit: 132bba376dbcc0caac4749d42437617f586936a1
-  meta-selinux:
-    branch: master
-    url: https://git.yoctoproject.org/meta-selinux
-    commit: 1ba26da4b9bec3f102bd831efe0db00c7d61f7f2
-  meta-updater:
-    branch: master
-    url: https://github.com/uptane/meta-updater
-    commit: a8af24357121dc8614fd98f234b73d55005b0cc9
-  meta-security:
-    url: https://git.yoctoproject.org/meta-security
-    branch: master
-    layers:
-      .:
-      meta-tpm:
-    commit: 9265f142f3890df2d00d71d13b19e95a082707ed
+    commit: 62d2381bdee1cebb5924f8594f8a9994083d4f7d
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
@@ -80,7 +44,10 @@ repos:
       ament_cmake_py_fix:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
-    commit: 8f6f2c0db06275bc851c01a28daed806adab3a26
+      remove-rosbag2-compressionn-zstd-bbappend:
+        repo: meta-qcom-robotics-sdk
+        path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
+    commit: 7c0bded4f8b2962ff1a0e6e74cb622c06f5255ce
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
 
@@ -125,14 +92,6 @@ local_conf_header:
     tasks.
 
     PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
-
-    '
-  libcamera_mask: '# Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro
-    libcamera recipe
-
-    BBMASK .= "|^${TOPDIR}/meta-ros/meta-ros-common/recipes-multimedia/libcamera/.*"
-
-    PREFERRED_VERSION_libcamera = "1:0.6.0"
 
     '
 distro: qcom-robotics-ros2-jazzy

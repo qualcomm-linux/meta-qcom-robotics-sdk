@@ -14,6 +14,10 @@ repos:
 
   oe-core:
     url: https://github.com/openembedded/openembedded-core
+    patches:
+      fix-igt-pause:
+        repo: meta-qcom
+        path: patches/oe-core/0001-igt-gpu-tools-fix-build-on-non-x86-platforms.patch
     layers:
       meta:
 
@@ -55,6 +59,14 @@ local_conf_header:
     EXTRA_IMAGE_FEATURES += "allow-empty-password empty-root-password allow-root-login"
     IMAGE_ROOTFS_EXTRA_SPACE = "307200"
     WATCHDOG_RUNTIME_SEC:pn-systemd = "30"
+  os-release: |
+    # Record a build identifier in /etc/os-release. Defaults to a clearly
+    # marked local value; CI overrides BUILD_ID with the run id via the
+    # generated ci/build-id.yml fragment (see .github/workflows/compile.yml).
+    # Use a weak assignment so the CI override wins regardless of how kas
+    # orders the merged local.conf fragments.
+    OS_RELEASE_FIELDS:append = " BUILD_ID"
+    BUILD_ID ?= "local-${DATETIME}"
 
 machine: unset
 

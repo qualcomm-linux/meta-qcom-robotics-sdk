@@ -1,0 +1,149 @@
+From b5c6485be8b6f8224766e4661efeab2488c0741f Mon Sep 17 00:00:00 2001
+From: Jean Xiao <jianxiao@qti.qualcomm.com>
+Date: Thu, 9 Jul 2026 19:06:08 +0800
+Subject: [PATCH] fix(decoder): defer output port setup until source resolution
+ is known
+
+Decoder output resolution isn't known until the driver reports it via
+V4L2_EVENT_SOURCE_CHANGE. Introduce V4l2Codec::startPort(bool) as a per-port
+hook so V4l2Decoder can skip output setup until the first source
+change, while encoders keep the original behavior unchanged.
+
+Upstream-Status: Submitted [https://github.com/qualcomm-qrb-ros/qrb_ros_video/pull/33]
+
+Signed-off-by: Jean Xiao <jianxiao@qti.qualcomm.com>
+---
+ qrb_video_v4l2_lib/include/v4l2/V4l2Codec.hpp  |  2 ++
+ .../include/v4l2/V4l2Decoder.hpp               |  6 ++++--
+ qrb_video_v4l2_lib/src/v4l2/V4l2Codec.cpp      | 15 +++++++++++----
+ qrb_video_v4l2_lib/src/v4l2/V4l2Decoder.cpp    | 18 ++++++++++++------
+ 4 files changed, 29 insertions(+), 12 deletions(-)
+
+diff --git a/qrb_video_v4l2_lib/include/v4l2/V4l2Codec.hpp b/qrb_video_v4l2_lib/include/v4l2/V4l2Codec.hpp
+index 91f3a71..a4290e0 100644
+--- a/qrb_video_v4l2_lib/include/v4l2/V4l2Codec.hpp
++++ b/qrb_video_v4l2_lib/include/v4l2/V4l2Codec.hpp
+@@ -150,6 +150,8 @@ protected:
+ 
+   virtual bool stopStreaming(bool port);
+ 
++  virtual bool startPort(bool input);
++
+   friend class EventHandler;
+ 
+   template <typename T>
+diff --git a/qrb_video_v4l2_lib/include/v4l2/V4l2Decoder.hpp b/qrb_video_v4l2_lib/include/v4l2/V4l2Decoder.hpp
+index 23f9ae1..8304341 100644
+--- a/qrb_video_v4l2_lib/include/v4l2/V4l2Decoder.hpp
++++ b/qrb_video_v4l2_lib/include/v4l2/V4l2Decoder.hpp
+@@ -32,11 +32,13 @@ public:
+ protected:
+   void setCodecFormat();
+ 
+-  bool reconfigurePort(bool input) override;
++  bool startPort(bool input) override;
+ 
+-  bool reconfigureOutput();
++  bool reconfigurePort(bool input) override;
+ 
+   bool drain() override;
++
++  bool outputPortStarted = false;
+ };
+ 
+ }  // namespace qrb::video_v4l2
+diff --git a/qrb_video_v4l2_lib/src/v4l2/V4l2Codec.cpp b/qrb_video_v4l2_lib/src/v4l2/V4l2Codec.cpp
+index 2a492b5..d7042ff 100644
+--- a/qrb_video_v4l2_lib/src/v4l2/V4l2Codec.cpp
++++ b/qrb_video_v4l2_lib/src/v4l2/V4l2Codec.cpp
+@@ -122,8 +122,7 @@ bool V4l2Codec::start()
+ {
+   if (state == STOPPED) {
+     populateSettings();
+-    prepareBufferPool<DmabufAllocator>(INPUT_PORT);
+-    prepareBufferPool<DmabufAllocator>(OUTPUT_PORT);
++    startPort(INPUT_PORT);
+     getDriver()->registerCallbacks(this);
+     getDriver()->start();
+     if (auto client_handler = notifier.lock()) {
+@@ -131,8 +130,7 @@ bool V4l2Codec::start()
+           shared_from_this(), std::dynamic_pointer_cast<Handler>(client_handler).get());
+     }
+ 
+-    startStreaming(INPUT_PORT);
+-    startStreaming(OUTPUT_PORT);
++    startPort(OUTPUT_PORT);
+     state = STARTED;
+   } else {
+     LOGE("V4l2Codec::start() called with invalid state %d", state.load());
+@@ -140,6 +138,12 @@ bool V4l2Codec::start()
+   return true;
+ }
+ 
++bool V4l2Codec::startPort(bool input)
++{
++  prepareBufferPool<DmabufAllocator>(input);
++  return startStreaming(input);
++}
++
+ bool V4l2Codec::stop()
+ {
+   if (state == STARTED) {
+@@ -448,6 +452,9 @@ bool V4l2Codec::feedOutputBuffer()
+ {
+   bool result = false;
+   std::shared_ptr<Buffer> buffer;
++  if (not outputPool) {
++    return false;
++  }
+   outputPool->acquire(buffer);
+   if (buffer) {
+     result = queueOutputBuffer(buffer);
+diff --git a/qrb_video_v4l2_lib/src/v4l2/V4l2Decoder.cpp b/qrb_video_v4l2_lib/src/v4l2/V4l2Decoder.cpp
+index 34c033b..ea570f7 100644
+--- a/qrb_video_v4l2_lib/src/v4l2/V4l2Decoder.cpp
++++ b/qrb_video_v4l2_lib/src/v4l2/V4l2Decoder.cpp
+@@ -60,6 +60,7 @@ bool V4l2Decoder::stop()
+   getDriver()->unsubscribeEvent(V4L2_EVENT_EOS);
+   cmd.cmd = V4L2_DEC_CMD_STOP;
+   driver->decCommand(&cmd);
++  outputPortStarted = false;
+   return V4l2Codec::stop();
+ }
+ 
+@@ -69,21 +70,26 @@ void V4l2Decoder::setCodecFormat()
+   *setting = compressedFormat;
+ }
+ 
+-bool V4l2Decoder::reconfigurePort(bool port)
++bool V4l2Decoder::startPort(bool port)
+ {
+-  auto ret = false;
+-  emptied_.get_future().get();
+   if (port == OUTPUT_PORT) {
+-    ret = reconfigureOutput();
++    // Output resolution isn't known until the driver reports it via
++    // V4L2_EVENT_SOURCE_CHANGE, so defer prepareBufferPool/streamOn until then.
++    return true;
+   }
+-  return ret;
++  return V4l2Codec::startPort(port);
+ }
+ 
+-bool V4l2Decoder::reconfigureOutput()
++bool V4l2Decoder::reconfigurePort(bool port)
+ {
++  if (outputPortStarted) {
++    emptied_.get_future().get();
++    emptied_ = std::promise<bool>();
++  }
+   get<V4l2Format>(OUTPUT_PORT)->get();
+   prepareBufferPool<DmabufAllocator>(OUTPUT_PORT);
+   startStreaming(OUTPUT_PORT);
++  outputPortStarted = true;
+   state = STARTED;
+   feedOutputBuffer();
+   return true;
+-- 
+2.34.1
+
