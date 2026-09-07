@@ -1,0 +1,29 @@
+name: Sync meta-qcom kas config
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6       
+      - name: Validate token
+        run: |
+          curl -sS \
+            -H "Authorization: Bearer ${{ secrets.PR_AUTO_MERGE_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user
+      - name: Validate target repo access
+        run: |
+          curl -sS \
+            -H "Authorization: Bearer ${{ secrets.PR_AUTO_MERGE_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/qualcomm-linux/meta-qcom
+      - name: Run GitHub File Sync
+        uses: BetaHuhn/repo-file-sync-action@v1
+        with:
+          GH_PAT: ${{ secrets.PR_AUTO_MERGE_TOKEN }}
+          IS_FINE_GRAINED: true
+          CONFIG_PATH: .github/config/sync-kas-config.yml     

@@ -1,0 +1,21 @@
+qualcomm-linux/meta-qcom@master:
+  - source: ci/base.lock.yml
+    dest: ci/base.lock.yml
+  - source: ci/base.yml
+    dest: ci/base.yml
+  - source: ci/iq-8275-evk.yml
+    dest: ci/iq-8275-evk.yml
+  - source: ci/iq-9075-evk.yml
+    dest: ci/iq-9075-evk.yml
+  - source: ci/qcom-distro.yml
+    dest: ci/qcom-distro.yml
+  - source: ci/linux-qcom-next.yml
+    dest: ci/linux-qcom-next.yml
+  - source: ci/linux-qcom-6.18.yml
+    dest: ci/linux-qcom-6.18.yml
+  - source: ci/performance.yml
+    dest: ci/performance.yml
+  - source: ci/debug.yml
+    dest: ci/debug.yml
+  - source: ci/mirror.yml
+    dest: ci/mirror.yml
