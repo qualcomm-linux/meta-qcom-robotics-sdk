@@ -95,6 +95,6 @@ local_conf_header:
 
     '
   meta_qcom_build_id: "META_QCOM_BUILD_ID = \"34175365960\"\n\n    "
-  coinor_license_qa: "# Suppress license-format QA check for meta-ros coinor recipes\n    ERROR_QA:remove = \"license-format\"\n\n    "
+  coinor_license_qa: "ERROR_QA:remove = \"license-format\"\n\n    "
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
