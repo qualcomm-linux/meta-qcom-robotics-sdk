@@ -94,5 +94,9 @@ local_conf_header:
     PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
 
     '
+
 distro: qcom-robotics-ros2-jazzy
-target: qcom-robotics-image
+
+target:
+  - qcom-robotics-image
+  - qcom-robotics-proprietary-image
