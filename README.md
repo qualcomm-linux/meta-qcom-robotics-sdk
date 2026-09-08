@@ -94,16 +94,20 @@ Install kas tool:
 
   3. Build Command(Example):<**MACHINE**: iq-9075-evk, **DISTRO**: qcom-robotics-distro>
 
-   - To build the robotics image based on open-source components, use the `qcom-robotics-image` target:
+   - To build the robotics image based on open-source components and generate the QIRP SDK, use the `qcom-robotics-image` target:
 
-     ```bash IQ-9075-EVK
-     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml
+     ```bash
+     kas shell meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml \
+       --command "bitbake qcom-robotics-image && \
+                  bitbake -c generate_qirp_sdk qcom-robotics-image"
      ```
 
-   - To build the robotics image with features in the Qualcomm proprietary components, use the `qcom-robotics-proprietary-image` target:
+   - To build the robotics image with Qualcomm proprietary components and generate the proprietary QIRP SDK, use the `qcom-robotics-proprietary-image` target:
 
-     ```bash IQ-9075-EVK
-     kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
+     ```bash
+     kas shell meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml \
+       --command "bitbake qcom-robotics-proprietary-image && \
+                  bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image"
      ```
 
 For more details, please refer to the [Qualcomm Linux Documentation — Build with GitHub Actions](https://dragonwingdocs.qualcomm.com/SDKs/QIR-SDK-2.0/build-with-git-hub-workflow). 
