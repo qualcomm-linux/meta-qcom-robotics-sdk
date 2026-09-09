@@ -94,7 +94,9 @@ local_conf_header:
     PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
 
     '
-  meta_qcom_build_id: "META_QCOM_BUILD_ID = \"34175365960\"\n\n    "
+  os-release: |
+    META_QCOM_BUILD_ID = "34175365960"
+    OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
   coinor_license_qa: "ERROR_QA:remove = \"license-format\"\n\n    "
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
