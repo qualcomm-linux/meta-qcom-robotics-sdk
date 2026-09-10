@@ -123,13 +123,6 @@ jobs:
             yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/debug.yml'
           - name: performance
             yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/performance.yml'
-        target:
-          - type: '_base'
-            name: qcom-robotics-image
-            yamlfile: ':ci/qcom-robotics-image.yml'
-          - type: '_full'
-            name: qcom-robotics-proprietary-image
-            yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
         kernel:
           - type: 6.18
             dirname: "_linux-qcom-6.18"
@@ -138,7 +131,7 @@ jobs:
             dirname: "_linux-qcom-rt-6.18_qcom-distro-kvm"
             yamlfile: ":ci/linux-qcom-rt-6.18.yml:ci/qcom-distro-kvm.yml"
 
-    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
+    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.kernel.dirname }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -153,9 +146,6 @@ jobs:
           machine: ${{matrix.machine}}
           distro_yaml: ${{matrix.distro.yamlfile}}
           distro_name: ${{matrix.distro.name}}
-          target_type: ${{matrix.target.type}}
-          target_yaml: ${{matrix.target.yamlfile}}
-          target_name: ${{matrix.target.name}}
           kernel_yaml: ${{matrix.kernel.yamlfile}}
           kernel_dirname: ${{matrix.kernel.dirname}}
           cache_dir: ${CACHE_DIR}

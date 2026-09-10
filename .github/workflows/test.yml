@@ -19,8 +19,6 @@ jobs:
           - iq-9075-evk
         distro:
           - name: qcom-robotics-distro
-        target:
-          - type: '_full'
         kernel:
           - dirname: '_linux-qcom-6.18'
     steps:
@@ -38,7 +36,7 @@ jobs:
 
       - name: "Generate testjobs"
         run: |
-          export BUILD_URL_FILE="$GITHUB_WORKSPACE/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}"
+          export BUILD_URL_FILE="$GITHUB_WORKSPACE/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.kernel.dirname }}/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.kernel.dirname }}"
           echo "${BUILD_URL_FILE}"
           if [ -f "$BUILD_URL_FILE" ]; then
               # install dependencies
@@ -52,6 +50,14 @@ jobs:
                   python3 ci/generatetests.py --templates ci/lava --os ${{ matrix.distro.name }} --device ${{ matrix.machine }} --build-url "${BUILD_URL}"
                   echo "MACHINE=${{ matrix.machine }}" >> $GITHUB_ENV
               fi
+          else
+              # The name has to match the one built by .github/actions/compile
+              # ("Print output" step). Failing loudly here is deliberate: a silent
+              # skip leaves the later jobs to submit an empty LAVA job definition.
+              echo "::error::Build URL file not found: $BUILD_URL_FILE"
+              echo "Downloaded build-url artifacts:"
+              ls -1 "$GITHUB_WORKSPACE" | grep '^build-url' || echo "  (none)"
+              exit 1
           fi
       - name: 'Upload test jobs'
         uses: actions/upload-artifact@v4
