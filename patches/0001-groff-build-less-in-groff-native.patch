@@ -1,0 +1,85 @@
+From aab110a3c0026296678aa3cf9ffd94bc3c948852 Mon Sep 17 00:00:00 2001
+From: Ross Burton <ross.burton@arm.com>
+Date: Wed, 9 Sep 2026 12:04:23 +0000
+Subject: groff: build less in groff-native
+
+When building groff-native we only really need enough of groff to build
+manpages, and don't need documentation or extra tools.
+
+Patch the Makefile to stop building the doc and contrib directories,
+which both take time and have incomplete build dependencies that cause
+intermittent failures. This also guards the hdtbl sed in do_install
+with an existence check, so native (which no longer ships the hdtbl
+examples) does not fail on an empty glob.
+
+Upstream-Status: Backport [oe-core 9deeb7474b2586eb031e4f00a644aed9ccf8cb19]
+
+Signed-off-by: Ross Burton <ross.burton@arm.com>
+Signed-off-by: Antonin Godard <antonin.godard@bootlin.com>
+Signed-off-by: Richard Purdie <richard.purdie@linuxfoundation.org>
+Signed-off-by: Teng Fan <tengf@qti.qualcomm.com>
+---
+ .../groff/files/build-less.patch              | 24 +++++++++++++++++++
+ meta/recipes-extended/groff/groff_1.24.1.bb   |  8 +++++--
+ 2 files changed, 30 insertions(+), 2 deletions(-)
+ create mode 100644 meta/recipes-extended/groff/files/build-less.patch
+
+diff --git a/meta/recipes-extended/groff/files/build-less.patch b/meta/recipes-extended/groff/files/build-less.patch
+new file mode 100644
+index 0000000000..dc560fbb30
+--- /dev/null
++++ b/meta/recipes-extended/groff/files/build-less.patch
+@@ -0,0 +1,24 @@
++Build less bits of groff to save time and reduce random build
++failures from missing dependencies in this logic.
++
++Upstream-Status: Inappropriate
++Signed-off-by: Ross Burton <ross.burton@arm.com>
++
++--- a/Makefile.am~	2026-05-15 13:23:08.000000000 +0100
+++++ b/Makefile.am	2026-05-15 13:29:17.053867035 +0100
++@@ -556,15 +556,0 @@
++-include $(top_srcdir)/contrib/chem/chem.am
++-include $(top_srcdir)/contrib/eqn2graph/eqn2graph.am
++-include $(top_srcdir)/contrib/gdiffmk/gdiffmk.am
++-include $(top_srcdir)/contrib/glilypond/glilypond.am
++-include $(top_srcdir)/contrib/gperl/gperl.am
++-include $(top_srcdir)/contrib/gpinyin/gpinyin.am
++-include $(top_srcdir)/contrib/grap2graph/grap2graph.am
++-include $(top_srcdir)/contrib/hdtbl/hdtbl.am
++-include $(top_srcdir)/contrib/install-font/install-font.am
++-include $(top_srcdir)/contrib/mm/mm.am
++-include $(top_srcdir)/contrib/mom/mom.am
++-include $(top_srcdir)/contrib/pic2graph/pic2graph.am
++-include $(top_srcdir)/contrib/rfc1345/rfc1345.am
++-include $(top_srcdir)/contrib/sboxes/sboxes.am
++-include $(top_srcdir)/doc/doc.am
+diff --git a/meta/recipes-extended/groff/groff_1.24.1.bb b/meta/recipes-extended/groff/groff_1.24.1.bb
+index 24b8146a72..dd5ebee3df 100644
+--- a/meta/recipes-extended/groff/groff_1.24.1.bb
++++ b/meta/recipes-extended/groff/groff_1.24.1.bb
+@@ -15,6 +15,8 @@ SRC_URI = "${GNU_MIRROR}/groff/groff-${PV}.tar.gz \
+            file://builddep.patch \
+            "
+ 
++SRC_URI:append:class-native = "file://build-less.patch"
++
+ SRC_URI[sha256sum] = "74e2819795b6aff431aeac983d63a9c8968eeaba2a2eba7df8ba4c7b41e7cfd8"
+ 
+ DEPENDS = "bison-native groff-native"
+@@ -65,8 +67,10 @@ do_install:append() {
+ 	rm -rf ${D}${bindir}/grap2graph
+ 	rm -rf ${D}${mandir}/man1/grap2graph*
+ 
+-        # strip hosttool path out of generated files
+-        sed -i -e 's:${HOSTTOOLS_DIR}/::g' ${D}${docdir}/${BP}/examples/hdtbl/*.roff
++	# strip hosttool path out of generated files
++	if [ -d ${D}${docdir}/${BP}/examples/hdtbl/ ]; then
++		sed -i -e 's:${HOSTTOOLS_DIR}/::g' ${D}${docdir}/${BP}/examples/hdtbl/*.roff
++	fi
+ }
+ 
+ do_install:append:class-native() {
+-- 
+2.53.0
+

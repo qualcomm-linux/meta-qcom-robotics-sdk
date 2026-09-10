@@ -19,9 +19,9 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-      groff-native-disable-parallel-make:
+      groff-build-less-in-native:
         repo: meta-qcom-robotics-sdk
-        path: patches/0001-groff-native-disable-parallel-make.patch
+        path: patches/0001-groff-build-less-in-groff-native.patch
     commit: 09df3e534c4f38a033c514d7567006ed35cc34df
   meta-ros:
     url: https://github.com/ros/meta-ros.git
