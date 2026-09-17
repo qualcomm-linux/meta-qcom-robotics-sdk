@@ -1,0 +1,478 @@
+From 9f36bd1ff5acb1ed558e73108eb0323e35eb31e9 Mon Sep 17 00:00:00 2001
+From: Ronghui Zhu <ronghuiz@qti.qualcomm.com>
+Date: Thu, 27 Aug 2026 10:44:18 +0800
+Subject: [PATCH] feat: merge qrb_ros_audio_common_msgs into
+ qrb_ros_audio_service_msgs
+
+Merge qrb_ros_audio_common_msgs into qrb_ros_audio_service_msgs,
+remove qrb_ros_audio_common_msgs.
+
+Upstream-Status: Submitted [https://github.com/qualcomm-qrb-ros/qrb_ros_interfaces/pull/68]
+
+Signed-off-by: Ronghui Zhu <ronghuiz@qti.qualcomm.com>
+---
+ .../CMakeLists.txt                            |  3 +-
+ .../msg/AudioData.msg                         |  0
+ .../msg/AudioInfo.msg                         |  0
+ .../package.xml                               |  4 +-
+ .../qrb_ros_audio_common_msgs/CMakeLists.txt  | 33 ---------
+ .../action/AudioCommon.action                 | 25 -------
+ .../debian/changelog                          |  7 --
+ .../qrb_ros_audio_common_msgs/debian/control  | 12 ----
+ .../debian/copyright                          |  7 --
+ .../qrb_ros_audio_common_msgs/debian/rules    | 67 -------------------
+ .../debian/source/format                      |  1 -
+ .../qrb_ros_audio_common_msgs/package.xml     | 26 -------
+ .../debian/changelog                          |  7 --
+ .../qrb_ros_audio_service_msgs/debian/control | 12 ----
+ .../debian/copyright                          |  7 --
+ .../qrb_ros_audio_service_msgs/debian/rules   | 67 -------------------
+ .../debian/source/format                      |  1 -
+ .../msg/AudioInfo.msg                         | 12 ----
+ .../srv/AudioRequest.srv                      |  0
+ 19 files changed, 4 insertions(+), 287 deletions(-)
+ rename qrb_ros_audio_service_msgs/{qrb_ros_audio_service_msgs => }/CMakeLists.txt (93%)
+ rename qrb_ros_audio_service_msgs/{qrb_ros_audio_common_msgs => }/msg/AudioData.msg (100%)
+ rename qrb_ros_audio_service_msgs/{qrb_ros_audio_common_msgs => }/msg/AudioInfo.msg (100%)
+ rename qrb_ros_audio_service_msgs/{qrb_ros_audio_service_msgs => }/package.xml (88%)
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/CMakeLists.txt
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/action/AudioCommon.action
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/changelog
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/control
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/copyright
+ delete mode 100755 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/rules
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/source/format
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/package.xml
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/changelog
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/control
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/copyright
+ delete mode 100755 qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/rules
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/source/format
+ delete mode 100644 qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/msg/AudioInfo.msg
+ rename qrb_ros_audio_service_msgs/{qrb_ros_audio_service_msgs => }/srv/AudioRequest.srv (100%)
+
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/CMakeLists.txt b/qrb_ros_audio_service_msgs/CMakeLists.txt
+similarity index 93%
+rename from qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/CMakeLists.txt
+rename to qrb_ros_audio_service_msgs/CMakeLists.txt
+index b500bfc..c44d23b 100644
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/CMakeLists.txt
++++ b/qrb_ros_audio_service_msgs/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.8)
+-project(qrb_ros_audio_service_msgs VERSION 1.0.0)
++project(qrb_ros_audio_service_msgs VERSION 2.0.1)
+ 
+ if(NOT CMAKE_CXX_STANDARD)
+   set(CMAKE_CXX_STANDARD 17)
+@@ -15,6 +15,7 @@ find_package(rosidl_default_generators REQUIRED)
+ 
+ rosidl_generate_interfaces(${PROJECT_NAME}
+   msg/AudioInfo.msg
++  msg/AudioData.msg
+   srv/AudioRequest.srv
+ )
+ 
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/msg/AudioData.msg b/qrb_ros_audio_service_msgs/msg/AudioData.msg
+similarity index 100%
+rename from qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/msg/AudioData.msg
+rename to qrb_ros_audio_service_msgs/msg/AudioData.msg
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/msg/AudioInfo.msg b/qrb_ros_audio_service_msgs/msg/AudioInfo.msg
+similarity index 100%
+rename from qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/msg/AudioInfo.msg
+rename to qrb_ros_audio_service_msgs/msg/AudioInfo.msg
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/package.xml b/qrb_ros_audio_service_msgs/package.xml
+similarity index 88%
+rename from qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/package.xml
+rename to qrb_ros_audio_service_msgs/package.xml
+index 8e64fd0..62a1d6e 100644
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/package.xml
++++ b/qrb_ros_audio_service_msgs/package.xml
+@@ -2,9 +2,9 @@
+ <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+ <package format="3">
+   <name>qrb_ros_audio_service_msgs</name>
+-  <version>1.0.0</version>
++  <version>2.0.1</version>
+   <description>QRB ROS Audio Service MSGS</description>
+-  <maintainer email="quic_yuchpan@quicinc.com">yuchpan</maintainer>
++  <maintainer email="yuchpan@qti.qualcomm.com">yuchpan</maintainer>
+   <license>BSD-3-Clause-Clear</license>
+ 
+   <buildtool_depend>ament_cmake</buildtool_depend>
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/CMakeLists.txt b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/CMakeLists.txt
+deleted file mode 100644
+index b4081eb..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/CMakeLists.txt
++++ /dev/null
+@@ -1,33 +0,0 @@
+-cmake_minimum_required(VERSION 3.5)
+-project(qrb_ros_audio_common_msgs)
+-
+-# Default to C99
+-if(NOT CMAKE_C_STANDARD)
+-  set(CMAKE_C_STANDARD 99)
+-endif()
+-
+-# Default to C++14
+-if(NOT CMAKE_CXX_STANDARD)
+-  set(CMAKE_CXX_STANDARD 14)
+-endif()
+-
+-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+-  add_compile_options(-Wall -Wextra -Wpedantic)
+-endif()
+-
+-# find dependencies
+-find_package(ament_cmake REQUIRED)
+-find_package(rosidl_default_generators REQUIRED)
+-
+-rosidl_generate_interfaces(${PROJECT_NAME}
+-  "msg/AudioInfo.msg"
+-  "msg/AudioData.msg"
+-  "action/AudioCommon.action"
+-)
+-
+-if(BUILD_TESTING)
+-  find_package(ament_lint_auto REQUIRED)
+-  ament_lint_auto_find_test_dependencies()
+-endif()
+-
+-ament_package()
+\ No newline at end of file
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/action/AudioCommon.action b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/action/AudioCommon.action
+deleted file mode 100644
+index cba7371..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/action/AudioCommon.action
++++ /dev/null
+@@ -1,25 +0,0 @@
+-AudioInfo audio_info
+-# Stream operations (e.g. open, start, stop, close, mute)
+-string command
+-uint32 stream_handle
+-uint32 audio_service_stream_handle
+-bool need_timestamp
+-# Playback volume [1~100]
+-uint8 volume
+-bool mute
+-# Repeat play count. -1: unlimited, 0: once
+-int32 repeat
+-# Whether publish pcm data on topic when recording. (true:yes, false:no)
+-# Default topic name is qrb_audiodata,
+-# client can specify topic name by topic_name.
+-bool pub_pcm
+-string topic_name
+-# Playback or Record path
+-string file_path
+----
+-uint32 stream_handle
+-uint32 audio_service_stream_handle
+-string command
+----
+-float32 timestamp
+-uint32 stream_handle
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/changelog b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/changelog
+deleted file mode 100644
+index 6b8ea3e..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/changelog
++++ /dev/null
+@@ -1,7 +0,0 @@
+-ros-jazzy-qrb-ros-audio-common-msgs (1.0.0) noble; urgency=high
+-
+-  * First release for Debian package.
+-
+- -- Ronghui Zhu <ronghuiz@qti.qualcomm.com>  Tue, 29 Jul 2025 13:02:04 -0000
+-
+-
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/control b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/control
+deleted file mode 100644
+index b526e36..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/control
++++ /dev/null
+@@ -1,12 +0,0 @@
+-Source: ros-jazzy-qrb-ros-audio-common-msgs
+-Section: misc
+-Priority: optional
+-Maintainer: Ronghui Zhu <ronghuiz@qti.qualcomm.com>
+-Build-Depends: debhelper-compat (= 13), ros-jazzy-action-msgs, ros-jazzy-ament-cmake, ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-rclcpp, ros-jazzy-rclcpp-action, ros-jazzy-rosidl-default-generators, ros-jazzy-std-msgs
+-Homepage: 
+-Standards-Version: 3.9.2
+-
+-Package: ros-jazzy-qrb-ros-audio-common-msgs
+-Architecture: any
+-Depends: ${shlibs:Depends}, ${misc:Depends}, ros-jazzy-action-msgs, ros-jazzy-rclcpp, ros-jazzy-rclcpp-action, ros-jazzy-rosidl-default-runtime, ros-jazzy-std-msgs
+-Description: QRB ROS audio common msgs
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/copyright b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/copyright
+deleted file mode 100644
+index 0e8708a..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/copyright
++++ /dev/null
+@@ -1,7 +0,0 @@
+-Format: Bloom subset of https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+-Upstream-Name: qrb_ros_audio_common_msgs
+-
+-Files: See file headers in repository for details
+-Copyright: See package copyright in source code for details
+-License: BSD-3-Clause-Clear
+- See repository for full license text
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/rules b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/rules
+deleted file mode 100755
+index ba39a60..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/rules
++++ /dev/null
+@@ -1,67 +0,0 @@
+-#!/usr/bin/make -f
+-# -*- makefile -*-
+-# Sample debian/rules that uses debhelper.
+-# This file was originally written by Joey Hess and Craig Small.
+-# As a special exception, when this file is copied by dh-make into a
+-# dh-make output file, you may use that output file without restriction.
+-# This special exception was added by Craig Small in version 0.37 of dh-make.
+-
+-# Uncomment this to turn on verbose mode.
+-export DH_VERBOSE=1
+-# TODO: remove the LDFLAGS override.  It's here to avoid esoteric problems
+-# of this sort:
+-#  https://code.ros.org/trac/ros/ticket/2977
+-#  https://code.ros.org/trac/ros/ticket/3842
+-export LDFLAGS=
+-export PKG_CONFIG_PATH=/opt/ros/jazzy/lib/pkgconfig
+-# Explicitly enable -DNDEBUG, see:
+-# 	https://github.com/ros-infrastructure/bloom/issues/327
+-export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG
+-ifneq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
+-	BUILD_TESTING_ARG=-DBUILD_TESTING=OFF
+-endif
+-
+-DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+-
+-%:
+-	dh $@ -v --buildsystem=cmake --builddirectory=.obj-$(DEB_HOST_GNU_TYPE)
+-
+-override_dh_auto_configure:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_configure -- \
+-		-DCMAKE_INSTALL_PREFIX="/opt/ros/jazzy" \
+-		-DAMENT_PREFIX_PATH="/opt/ros/jazzy" \
+-		-DCMAKE_PREFIX_PATH="/opt/ros/jazzy" \
+-		$(BUILD_TESTING_ARG)
+-
+-override_dh_auto_build:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_build
+-
+-override_dh_auto_test:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	echo -- Running tests. Even if one of them fails the build is not canceled.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_test || true
+-
+-override_dh_shlibdeps:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_shlibdeps -l$(CURDIR)/debian/ros-jazzy-qrb-ros-audio-common-msgs//opt/ros/jazzy/lib/:$(CURDIR)/debian/ros-jazzy-qrb-ros-audio-common-msgs//opt/ros/jazzy/opt/qrb_ros_audio_common_msgs/lib/
+-
+-override_dh_auto_install:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_install
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/source/format b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/source/format
+deleted file mode 100644
+index 89ae9db..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/debian/source/format
++++ /dev/null
+@@ -1 +0,0 @@
+-3.0 (native)
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/package.xml b/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/package.xml
+deleted file mode 100644
+index 4e5100f..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_common_msgs/package.xml
++++ /dev/null
+@@ -1,26 +0,0 @@
+-<?xml version="1.0"?>
+-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+-<package format="3">
+-  <name>qrb_ros_audio_common_msgs</name>
+-  <version>1.0.0</version>
+-  <description>QRB ROS audio common msgs</description>
+-  <maintainer email="quic_ronghuiz@quicinc.com">Ronghui Zhu</maintainer>
+-  <license>BSD-3-Clause-Clear</license>
+-
+-  <buildtool_depend>ament_cmake</buildtool_depend>
+-  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+-  <depend>rclcpp</depend>
+-  <depend>std_msgs</depend>
+-  <depend>action_msgs</depend>
+-  <depend>rclcpp_action</depend>
+-
+-  <member_of_group>rosidl_interface_packages</member_of_group>
+-  <exec_depend>rosidl_default_runtime</exec_depend>
+-
+-  <test_depend>ament_lint_auto</test_depend>
+-  <test_depend>ament_lint_common</test_depend>
+-
+-  <export>
+-    <build_type>ament_cmake</build_type>
+-  </export>
+-</package>
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/changelog b/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/changelog
+deleted file mode 100644
+index b1046bd..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/changelog
++++ /dev/null
+@@ -1,7 +0,0 @@
+-ros-jazzy-qrb-ros-audio-service-msgs (1.0.0) noble; urgency=high
+-
+-  * First release for Debian package.
+-
+- -- yuchpan <yuchpan@qti.qualcomm.com>  Tue, 29 Jul 2025 12:15:42 -0000
+-
+-
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/control b/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/control
+deleted file mode 100644
+index 2a1d2a2..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/control
++++ /dev/null
+@@ -1,12 +0,0 @@
+-Source: ros-jazzy-qrb-ros-audio-service-msgs
+-Section: misc
+-Priority: optional
+-Maintainer: yuchpan <yuchpan@qti.qualcomm.com>
+-Build-Depends: debhelper-compat (=13), ros-jazzy-ament-cmake, ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-rosidl-default-generators
+-Homepage: 
+-Standards-Version: 3.9.2
+-
+-Package: ros-jazzy-qrb-ros-audio-service-msgs
+-Architecture: any
+-Depends: ${shlibs:Depends}, ${misc:Depends}, ros-jazzy-rosidl-default-runtime
+-Description: QRB ROS Audio Service MSGS
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/copyright b/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/copyright
+deleted file mode 100644
+index ba3c4e2..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/copyright
++++ /dev/null
+@@ -1,7 +0,0 @@
+-Format: Bloom subset of https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+-Upstream-Name: qrb_ros_audio_service_msgs
+-
+-Files: See file headers in repository for details
+-Copyright: See package copyright in source code for details
+-License: BSD-3-Clause-Clear
+- See repository for full license text
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/rules b/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/rules
+deleted file mode 100755
+index 47ab6e4..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/rules
++++ /dev/null
+@@ -1,67 +0,0 @@
+-#!/usr/bin/make -f
+-# -*- makefile -*-
+-# Sample debian/rules that uses debhelper.
+-# This file was originally written by Joey Hess and Craig Small.
+-# As a special exception, when this file is copied by dh-make into a
+-# dh-make output file, you may use that output file without restriction.
+-# This special exception was added by Craig Small in version 0.37 of dh-make.
+-
+-# Uncomment this to turn on verbose mode.
+-export DH_VERBOSE=1
+-# TODO: remove the LDFLAGS override.  It's here to avoid esoteric problems
+-# of this sort:
+-#  https://code.ros.org/trac/ros/ticket/2977
+-#  https://code.ros.org/trac/ros/ticket/3842
+-export LDFLAGS=
+-export PKG_CONFIG_PATH=/opt/ros/jazzy/lib/pkgconfig
+-# Explicitly enable -DNDEBUG, see:
+-# 	https://github.com/ros-infrastructure/bloom/issues/327
+-export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG
+-ifneq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
+-	BUILD_TESTING_ARG=-DBUILD_TESTING=OFF
+-endif
+-
+-DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+-
+-%:
+-	dh $@ -v --buildsystem=cmake --builddirectory=.obj-$(DEB_HOST_GNU_TYPE)
+-
+-override_dh_auto_configure:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_configure -- \
+-		-DCMAKE_INSTALL_PREFIX="/opt/ros/jazzy" \
+-		-DAMENT_PREFIX_PATH="/opt/ros/jazzy" \
+-		-DCMAKE_PREFIX_PATH="/opt/ros/jazzy" \
+-		$(BUILD_TESTING_ARG)
+-
+-override_dh_auto_build:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_build
+-
+-override_dh_auto_test:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	echo -- Running tests. Even if one of them fails the build is not canceled.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_test || true
+-
+-override_dh_shlibdeps:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_shlibdeps -l$(CURDIR)/debian/ros-jazzy-qrb-ros-audio-service-msgs//opt/ros/jazzy/lib/:$(CURDIR)/debian/ros-jazzy-qrb-ros-audio-service-msgs//opt/ros/jazzy/opt/qrb_ros_audio_service_msgs/lib/
+-
+-override_dh_auto_install:
+-	# In case we're installing to a non-standard location, look for a setup.sh
+-	# in the install tree and source it.  It will set things like
+-	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+-	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+-	dh_auto_install
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/source/format b/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/source/format
+deleted file mode 100644
+index 89ae9db..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/debian/source/format
++++ /dev/null
+@@ -1 +0,0 @@
+-3.0 (native)
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/msg/AudioInfo.msg b/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/msg/AudioInfo.msg
+deleted file mode 100644
+index 1aaf871..0000000
+--- a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/msg/AudioInfo.msg
++++ /dev/null
+@@ -1,12 +0,0 @@
+-# This message contains the audio meta data
+-
+-# Number of channels
+-uint8 channels
+-# Sampling rate [Hz]
+-uint32 sample_rate
+-# Audio format [bit] (e.g. 8/16/23/32)
+-uint8 sample_format
+-# Amount of audio data per second [bits/s]
+-uint32 bitrate
+-# Audio coding format (e.g. wav)
+-string coding_format
+diff --git a/qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/srv/AudioRequest.srv b/qrb_ros_audio_service_msgs/srv/AudioRequest.srv
+similarity index 100%
+rename from qrb_ros_audio_service_msgs/qrb_ros_audio_service_msgs/srv/AudioRequest.srv
+rename to qrb_ros_audio_service_msgs/srv/AudioRequest.srv
+-- 
+2.34.1
+
