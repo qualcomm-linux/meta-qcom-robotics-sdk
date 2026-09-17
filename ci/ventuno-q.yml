@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+  includes:
+  - ci/base.yml
+
+# meta-qcom-arduino provides the ventuno-q machine configuration and its
+# board-specific recipes. It is pulled in from the machine fragment rather than
+# from the distro fragment so the BSP layer only joins BBLAYERS for Arduino
+# builds. Note that ci/base.yml defaults repos to the 'master' branch, so the
+# 'main' branch has to be stated explicitly here.
+repos:
+  meta-qcom-arduino:
+    url: https://github.com/qualcomm-linux/meta-qcom-arduino
+    branch: main
+
+machine: ventuno-q
