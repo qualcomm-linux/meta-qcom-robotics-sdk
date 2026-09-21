@@ -10,7 +10,7 @@ repos:
     branch: wrynose
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: 04cb529eb5b7e75b2f6a05697964826f0bf93fad
+    commit: 0cfd1a14d28f25dec88c0d79339fd180121b71d9
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -45,7 +45,7 @@ repos:
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
     commit: c671acf8a948e22a614a6d6d1dcf18bdf4113df5
   meta-qcom-distro:
-    commit: 5c101c304b11e5f54f9a4759e50c9c02dc78c2e5
+    commit: c0a64afaae0714df3ad2c0eb78a3e1282dd308bd
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
 
