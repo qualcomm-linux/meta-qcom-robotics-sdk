@@ -27,7 +27,7 @@ inputs:
 outputs:
   url:
     description: Location of the published binaries
-    value: ${{ steps.upload_artifacts.outputs.url }}
+    value: ${{ steps.upload_s3_artifacts.outputs.url }}
 runs:
   using: "composite"
   steps:
@@ -49,84 +49,89 @@ runs:
         KAS_CONTAINER=$RUNNER_TEMP/kas-container
         echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
         chmod +x $KAS_CONTAINER
-
+    
     - name: Setup build variables and sstate-cache
       shell: bash
       run: |
-        # use a monthly sstate cache folder
-        echo "DL_DIR=${{inputs.cache_dir}}/downloads" >> $GITHUB_ENV
+        INPUTS_CACHE_DIR="${{ inputs.cache_dir }}"
+        DL_DIR="${INPUTS_CACHE_DIR}/downloads"
+        KAS_WORK_DIR="${PWD}/../kas"
 
-        if [ "${{ inputs.use_sstate }}" = "false" ]; then
+        echo "INPUTS_CACHE_DIR=${INPUTS_CACHE_DIR}" >> "$GITHUB_ENV"
+        echo "DL_DIR=${DL_DIR}" >> "$GITHUB_ENV"
+        echo "KAS_WORK_DIR=${KAS_WORK_DIR}" >> "$GITHUB_ENV"
+
+        echo "Cache directory: ${INPUTS_CACHE_DIR}"
+        ls -ald "${INPUTS_CACHE_DIR}"
+
+        if [[ "${{ inputs.use_sstate }}" == "false" ]]; then
           echo "Not using SSTATE cache (full rebuild)."
         else
-          echo "Using SSTATE cache..."
-          echo "SSTATE_DIR=${{inputs.cache_dir}}/sstate-cache-$(date '+%Y-%m')" >> $GITHUB_ENV
+          SSTATE_DIR="${INPUTS_CACHE_DIR}/sstate-cache-$(date '+%Y-%m')"
+          echo "Using SSTATE cache: ${SSTATE_DIR}"
+          echo "SSTATE_DIR=${SSTATE_DIR}" >> "$GITHUB_ENV"
         fi
-
-        echo "KAS_WORK_DIR=$PWD/../kas" >> $GITHUB_ENV
-        echo "SSTATE_DIR PATH: "
-        ls -al /efs/qli/meta-qcom-robotics-sdk
+        
+        echo "KAS_YAMLS=ci/ci.yml:ci/mirror.yml:ci/${{ inputs.machine }}.yml:${{ inputs.distro_yaml }}:${{ inputs.target_yaml }}:${{ inputs.kernel_yaml }}" >> $GITHUB_ENV
 
     - name: Dump kas-build yaml
       shell: bash
       run: |
-        mkdir $KAS_WORK_DIR
-        $KAS_CONTAINER dump --resolve-env --resolve-local --resolve-refs \
-          ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} > kas-build.yml
-        echo "==== kas-build.yml contents: ===="
+        mkdir -p $KAS_WORK_DIR
+        $KAS_CONTAINER dump --resolve-env --resolve-local --resolve-refs ${KAS_YAMLS} > kas-build.yml
+        echo "==== kas-build.yml contents start ===="
         cat kas-build.yml
+        echo "==== kas-build.yml contents end ===="
 
-    - name: Kas build images
+    - name: Kas build images and QIR SDK
       shell: bash
       run: |
-        $KAS_CONTAINER shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.target_yaml }}${{ inputs.kernel_yaml }} --command "\
-        sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gfortran && \
+        $KAS_CONTAINER shell ${KAS_YAMLS} --command "\
+        sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gfortran ccache && \
         bitbake ${{ inputs.target_name }} && bitbake ${{ inputs.target_name }} -c generate_qirp_sdk"
-        
-        ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
-        mv $KAS_WORK_DIR/build/buildchart.svg .
-       
-    - uses: actions/upload-artifact@v6
-      with:
-        name: buildchart-${{ inputs.distro_name }}-${{ inputs.target_type }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
-        path: |
-          buildchart.svg
-          buildchart-world.svg
 
-    - uses: actions/upload-artifact@v6
-      with:
-        name: kas-build-${{ inputs.distro_name }}-${{ inputs.target_type }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
-        path: kas-build.yml
-
+    - name: Kas build images (buildstats)
+      shell: bash
+      run: |
+        ci/kas-container-shell-helper.sh ci/yocto-buildstats.sh
+        mv $KAS_WORK_DIR/build/buildstats* .
+    
     - name: Stage build artifacts for publishing
       shell: bash
       run: |
+        set -x
         # The upload-private-artifact-action runs from a container that
         # expects file to be relative to our PWD. deploy_dir is outside
         # that, so we move things around:
         echo "Current workdir: $(pwd)"
-        if [ -d ../kas/build/tmp/deploy/images/${{inputs.machine}} ]; then
-          echo "Build image files: "
-          ls ../kas/build/tmp/deploy/images/${{inputs.machine}}
-          deploy_dir=../kas/build/tmp/deploy/images/${{inputs.machine}}
-          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.target_type }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
-          mkdir -p $uploads_dir
-          find $deploy_dir/ -maxdepth 1 -type f -exec cp {} $uploads_dir/ \;
-          find $deploy_dir/ -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} $uploads_dir/ \;
-          cp buildchart.svg kas-build.yml $uploads_dir/
+        deploy_dir=../kas/build/tmp/deploy
+        images_dir=$deploy_dir/images/${{inputs.machine}}
+        uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.target_type }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
+        mkdir -p $uploads_dir
+
+        if [ -d $images_dir ]; then
+          echo "==== Build image files start ===="
+          ls -al $images_dir
+          echo "==== Build image files end ===="
+          
+          find $images_dir/ -maxdepth 1 -type f -exec cp {} $uploads_dir/ \;
+          find $images_dir/ -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} $uploads_dir/ \;
         else
           echo "WARNING: No build image files found!"
         fi
+        cp -v buildstats* kas-build.yml $uploads_dir/
     
     - name: Stage qirp-sdk artifacts for publishing
       shell: bash
       run: |
         echo "Current workdir: $(pwd)"
-        if [ -d ../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }} ]; then
+        deploy_dir=../kas/build/tmp/deploy
+        sdk_dir=$deploy_dir/qirpsdk_artifacts/${{ inputs.machine }}
+        uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.target_type }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
+
+        if [ -d $sdk_dir ]; then
           echo "QIRP-SDK files: "
-          ls ../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
-          sdk_dir=../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
-          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.target_type }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
+          ls -al $sdk_dir
           mkdir -p $uploads_dir
           find $sdk_dir/ -maxdepth 1 -type f -name "qirp-sdk_*.tar.gz" -printf "%f\n" | xargs tar -czf $uploads_dir/qirp_sdk.tar.gz -C $sdk_dir
         else
