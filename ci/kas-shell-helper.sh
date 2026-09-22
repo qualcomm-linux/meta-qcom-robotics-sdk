@@ -16,4 +16,4 @@ fi
 export KAS_WORK_DIR=$(realpath ${KAS_WORK_DIR:-$(mktemp -d)})
 
 echo "Running kas in $KAS_WORK_DIR"
-exec kas shell $TOPDIR/ci/base.yml --command "$SCRIPT $TOPDIR $KAS_WORK_DIR"
+exec $KAS_CONTAINER shell $TOPDIR/ci/base.yml:$TOPDIR/ci/qcom-distro.yml:$TOPDIR/ci/qcom-robotics-distro.yml --command "/repo/$SCRIPT /repo /work"
