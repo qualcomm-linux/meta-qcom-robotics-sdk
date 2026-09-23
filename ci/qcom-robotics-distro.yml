@@ -48,52 +48,47 @@ repos:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
     commit: 7c0bded4f8b2962ff1a0e6e74cb622c06f5255ce
+
+env:
+  CPU_COUNT: "12"
+  THREAD_COUNT: "12"
+
 local_conf_header:
-  resource_limitation: '# Capture the count of cpu cores available from the host.
+  resource_limitation: |
 
-    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=9)}"
+    # Capture the count of cpu cores available from the export variable.
 
+    CPU_COUNT = "${@os.getenv('CPU_COUNT', '12')}"
 
-    # Number of parallel threads make can run based on cpu cores with a max cap at
-    20.
-
-    THREAD_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=10)}"
-
+    THREAD_COUNT = "${@os.getenv('THREAD_COUNT', '12')}"
 
     # Determines how many tasks bitbake should run in parallel.
 
     BB_NUMBER_THREADS ?= "${CPU_COUNT}"
 
-
     # Determines how many tasks bitbake should run in parallel during parsing.
 
     BB_NUMBER_PARSE_THREADS ?= "${CPU_COUNT}"
 
-
-    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new
-    tasks.
+    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new tasks.
 
     BB_PRESSURE_MAX_CPU = "800000"
 
 
-    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new
-    tasks.
+    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new tasks.
 
     BB_PRESSURE_MAX_IO = "800000"
 
 
-    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start
-    new tasks.
+    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
 
     BB_PRESSURE_MAX_MEMORY = "800000"
 
 
-    # Determines how many processes make should run in parallel when running compile
-    tasks.
+    # Determines how many processes make should run in parallel when running compile tasks.
 
-    PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
+    PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
-    '
   os-release: 'META_QCOM_BUILD_ID = "34729757643"
 
     OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
