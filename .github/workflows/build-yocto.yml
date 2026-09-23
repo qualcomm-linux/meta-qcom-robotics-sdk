@@ -106,20 +106,20 @@ jobs:
           - iq-9075-evk
         distro:
           - name: qcom-robotics-distro
-            yamlfile: ':ci/qcom-robotics-distro.yml'
+            yamlfile: 'ci/qcom-robotics-distro.yml'
           - name: qcom-robotics-distro-catchall
-            yamlfile: ':ci/qcom-robotics-distro-catchall.yml'
+            yamlfile: 'ci/qcom-robotics-distro-catchall.yml'
           - name: debug
-            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/debug.yml'
+            yamlfile: 'ci/qcom-robotics-distro-catchall.yml:ci/debug.yml'
           - name: performance
-            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/performance.yml'
+            yamlfile: 'ci/qcom-robotics-distro-catchall.yml:ci/performance.yml'
         target:
           - type: '_base'
             name: qcom-robotics-image
-            yamlfile: ':ci/qcom-robotics-image.yml'
+            yamlfile: 'ci/qcom-robotics-image.yml'
           - type: '_full'
             name: qcom-robotics-proprietary-image
-            yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
+            yamlfile: 'ci/qcom-robotics-proprietary-image.yml'
         kernel:
           - type: default
             dirname: '_linux-qcom-next'
