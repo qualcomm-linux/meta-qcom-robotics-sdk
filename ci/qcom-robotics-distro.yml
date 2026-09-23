@@ -46,60 +46,47 @@ repos:
     commit: c671acf8a948e22a614a6d6d1dcf18bdf4113df5
   meta-qcom-distro:
     commit: 9b2bd8add61378f316b51d3dd848f2c2f6e80ae9
+
+env:
+  CPU_COUNT: "12"
+  THREAD_COUNT: "12"
+
 local_conf_header:
-  resource_limitation: '# Capture the count of cpu cores available from the host.
+  resource_limitation: |
 
-    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=8)}"
+    # Capture the count of cpu cores available from the export variable.
+    
+    CPU_COUNT = "${@os.getenv('CPU_COUNT', '12')}"
 
-
-    # Number of parallel threads make can run based on cpu cores with a max cap at
-    20.
-
-    THREAD_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=10)}"
-
+    THREAD_COUNT = "${@os.getenv('THREAD_COUNT', '12')}"
 
     # Determines how many tasks bitbake should run in parallel.
 
     BB_NUMBER_THREADS ?= "${CPU_COUNT}"
 
-
     # Determines how many tasks bitbake should run in parallel during parsing.
 
     BB_NUMBER_PARSE_THREADS ?= "${CPU_COUNT}"
 
-
-    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new
-    tasks.
+    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new tasks.
 
     BB_PRESSURE_MAX_CPU = "800000"
 
 
-    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new
-    tasks.
+    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new tasks.
 
     BB_PRESSURE_MAX_IO = "800000"
 
 
-    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start
-    new tasks.
+    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
 
     BB_PRESSURE_MAX_MEMORY = "800000"
 
 
-    # Determines how many processes make should run in parallel when running compile
-    tasks.
+    # Determines how many processes make should run in parallel when running compile tasks.
 
-    PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
+    PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
-    '
-  libcamera_mask: '# Disable the libcamera recipe to avoid conflicts with the meta-qcom-distro
-    libcamera recipe
-
-    BBMASK .= "|^${TOPDIR}/meta-ros/meta-ros-common/recipes-multimedia/libcamera/.*"
-
-    PREFERRED_VERSION_libcamera = "1:0.6.0"
-
-    '
   os-release: 'META_QCOM_BUILD_ID = "35544648064"
 
     OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
