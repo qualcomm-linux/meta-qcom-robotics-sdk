@@ -67,7 +67,8 @@ runs:
         if [[ "${{ inputs.use_sstate }}" == "false" ]]; then
           echo "Not using SSTATE cache (full rebuild)."
         else
-          SSTATE_DIR="${INPUTS_CACHE_DIR}/sstate-cache-$(date '+%Y-%m')"
+          # use a single shared sstate cache folder, cleaned up by mtime
+          SSTATE_DIR="${INPUTS_CACHE_DIR}/sstate-cache"
           echo "Using SSTATE cache: ${SSTATE_DIR}"
           echo "SSTATE_DIR=${SSTATE_DIR}" >> "$GITHUB_ENV"
         fi
