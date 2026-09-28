@@ -35,6 +35,7 @@ QIR SDK is a multi-component project. This guide walks you through building an i
 |----------|-------------------|--------|
 | Qualcomm Dragonwing IQ-9075 Evaluation Kit | [Quick Start Guide](https://dragonwingdocs.qualcomm.com/Linux/devices/iq9075-evk/device-overview) | Public |
 | Qualcomm Dragonwing IQ-8275 Evaluation Kit | [Quick Start Guide](https://dragonwingdocs.qualcomm.com/Linux/devices/iq8275-evk/device-overview) | Public |
+| Arduino VENTUNO Q | [Product Page](https://www.arduino.cc/product-ventuno-q/) | Public |
 
 ## Getting Started
 
@@ -74,6 +75,7 @@ Install kas tool:
                <ul>
                   <li><code>iq-8275-evk</code></li>
                   <li><code>iq-9075-evk</code></li>
+                  <li><code>ventuno-q</code></li>
                </ul>
             </td>
             <td align="left">
@@ -92,7 +94,7 @@ Install kas tool:
       </tbody>
       </table>
 
-  3. Build Command(Example):<**MACHINE**: iq-9075-evk, **DISTRO**: qcom-robotics-distro>
+3. Build Command(Example):<**MACHINE**: iq-9075-evk, **DISTRO**: qcom-robotics-distro>
 
    - To build the robotics image based on open-source components, use the `qcom-robotics-image` target:
 
@@ -104,6 +106,12 @@ Install kas tool:
 
      ```bash IQ-9075-EVK
      kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
+     ```
+
+   - The Arduino VENTUNO Q board is supported through the [meta-qcom-arduino](https://github.com/qualcomm-linux/meta-qcom-arduino) BSP layer, which `ci/ventuno-q.yml` pulls in automatically. Swap in the `ventuno-q` machine configuration:
+
+     ```bash VENTUNO-Q
+     kas build meta-qcom-robotics-sdk/ci/ventuno-q.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml
      ```
 
 For more details, please refer to the [Qualcomm Linux Documentation — Build with GitHub Actions](https://dragonwingdocs.qualcomm.com/SDKs/QIR-SDK-2.0/build-with-git-hub-workflow). 
