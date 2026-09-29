@@ -82,44 +82,42 @@ jobs:
         run: |
           ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
 
+  compile-env:
+    if: github.repository_owner == 'qualcomm-linux'
+    runs-on: ubuntu-latest
+    outputs:
+      CACHE_DIR: ${{ steps.compile_env.outputs.CACHE_DIR }}
+    steps:
+      - name: Setup compile variables
+        id: compile_env
+        run: |
+          echo "CACHE_DIR=${CACHE_DIR}" >> $GITHUB_OUTPUT
+
   # Fetches the sources of all the compile jobs and builds the catchall
   # proprietary image first, so the other compile jobs reuse its native
   # tools, toolchain and packages instead of each building them at the same
   # time.
   compile_stage1:
-    needs: [kas-setup, yocto-run-checks]
+    needs: [kas-setup, yocto-run-checks, compile-env]
     if: github.repository_owner == 'qualcomm-linux'
-    runs-on: [self-hosted, qcom-u2404, amd64]
-    timeout-minutes: 720 # 12 hours
-    name: iq-9075-evk/qcom-robotics-distro-catchall_full_linux-qcom-next
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Run kas build
-        uses: ./.github/actions/compile
-        with:
-          machine: iq-9075-evk
-          distro_yaml: 'ci/qcom-robotics-distro-catchall.yml'
-          distro_name: qcom-robotics-distro-catchall
-          target_type: '_full'
-          target_yaml: 'ci/qcom-robotics-proprietary-image.yml'
-          target_name: qcom-robotics-proprietary-image
-          kernel_yaml: ''
-          kernel_dirname: '_linux-qcom-next'
-          cache_dir: ${CACHE_DIR}
-          use_sstate: ${{ inputs.use_sstate || 'true' }}
-          # keep in sync with the machines of the compile matrix
-          fetch_machines: 'iq-8275-evk iq-9075-evk'
+    uses: ./.github/workflows/compile.yml
+    with:
+      machine: iq-9075-evk
+      distro_yaml: 'ci/qcom-robotics-distro-catchall.yml'
+      distro_name: qcom-robotics-distro-catchall
+      target_type: '_full'
+      target_yaml: 'ci/qcom-robotics-proprietary-image.yml'
+      target_name: qcom-robotics-proprietary-image
+      kernel_yaml: ''
+      kernel_dirname: '_linux-qcom-next'
+      cache_dir: ${{ needs.compile-env.outputs.CACHE_DIR }}
+      use_sstate: ${{ inputs.use_sstate || 'true' }}
+      # keep in sync with the machines of the compile matrix
+      fetch_machines: 'iq-8275-evk iq-9075-evk'
 
   compile:
-    needs: [kas-setup, compile_stage1]
+    needs: [compile_stage1, compile-env]
     if: github.repository_owner == 'qualcomm-linux'
-    runs-on: [self-hosted, qcom-u2404, amd64]
-    outputs:
-      url: ${{ steps.compile_kas.outputs.url }}
-    timeout-minutes: 720 # 12 hours
     strategy:
       fail-fast: true
       matrix:
@@ -157,26 +155,18 @@ jobs:
               name: qcom-robotics-proprietary-image
               yamlfile: 'ci/qcom-robotics-proprietary-image.yml'
 
-    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Run kas build
-        uses: ./.github/actions/compile
-        id: compile_kas
-        with:
-          machine: ${{matrix.machine}}
-          distro_yaml: ${{matrix.distro.yamlfile}}
-          distro_name: ${{matrix.distro.name}}
-          target_type: ${{matrix.target.type}}
-          target_yaml: ${{matrix.target.yamlfile}}
-          target_name: ${{matrix.target.name}}
-          kernel_yaml: ${{matrix.kernel.yamlfile}}
-          kernel_dirname: ${{matrix.kernel.dirname}}
-          cache_dir: ${CACHE_DIR}
-          use_sstate: ${{ inputs.use_sstate || 'true' }}
+    uses: ./.github/workflows/compile.yml
+    with:
+      machine: ${{matrix.machine}}
+      distro_yaml: ${{matrix.distro.yamlfile}}
+      distro_name: ${{matrix.distro.name}}
+      target_type: ${{matrix.target.type}}
+      target_yaml: ${{matrix.target.yamlfile}}
+      target_name: ${{matrix.target.name}}
+      kernel_yaml: ${{matrix.kernel.yamlfile}}
+      kernel_dirname: ${{matrix.kernel.dirname}}
+      cache_dir: ${{ needs.compile-env.outputs.CACHE_DIR }}
+      use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
     needs: [compile_stage1, compile]
