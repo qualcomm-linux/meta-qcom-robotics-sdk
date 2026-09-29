@@ -31,10 +31,11 @@ jobs:
         kernel:
           - dirname: '_linux-qcom-next'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.head_sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: 'Download build URLs'
         uses: actions/download-artifact@v4
@@ -148,7 +149,7 @@ jobs:
           done
 
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
         with:
           files: "${{ github.workspace }}/artifacts/**/*.xml"
           action_fail: true
