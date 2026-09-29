@@ -24,6 +24,10 @@ inputs:
   use_sstate:
     required: false
     default: "true"
+  fetch_machines:
+    description: "Machines to fetch the sources of all the compile jobs for, before the build"
+    required: false
+    default: ""
 outputs:
   url:
     description: Location of the published binaries
@@ -74,6 +78,31 @@ runs:
         echo "==== kas-build.yml contents start ===="
         cat kas-build.yml
         echo "==== kas-build.yml contents end ===="
+
+    - name: Kas fetch sources
+      if: inputs.fetch_machines != ''
+      shell: bash
+      run: |
+        # Download the sources of all the compile jobs once, before they write
+        # the same files into the shared DL_DIR at the same time. One machine
+        # at a time, and with the catchall distro that covers the recipes of
+        # the other distros.
+        for machine in ${INPUTS_FETCH_MACHINES}; do
+          $KAS_CONTAINER shell ci/ci.yml:ci/mirror.yml:ci/${machine}.yml:ci/qcom-robotics-distro-catchall.yml --command "\
+          bitbake --runall=fetch \
+            qcom-robotics-image qcom-robotics-image:do_generate_qirp_sdk \
+            qcom-robotics-proprietary-image qcom-robotics-proprietary-image:do_generate_qirp_sdk"
+        done
+      env:
+        INPUTS_FETCH_MACHINES: ${{ inputs.fetch_machines }}
+
+    - name: Kas fetch sources (buildstats)
+      if: inputs.fetch_machines != ''
+      shell: bash
+      run: |
+        ci/kas-container-shell-helper.sh ci/yocto-buildstats.sh
+        rename.ul -va buildstats buildstats-fetch $KAS_WORK_DIR/build/buildstats*
+        mv $KAS_WORK_DIR/build/buildstats* .
 
     - name: Kas build images and QIR SDK
       shell: bash
