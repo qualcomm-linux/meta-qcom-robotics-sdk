@@ -15,26 +15,40 @@ on:
         default: "false"
 
 permissions:
-  checks: write
-  pull-requests: write
   contents: read
-  packages: read
 
 jobs:
   build-nightly:
+    permissions:
+      contents: read
+      packages: read
+      actions: read
     uses: ./.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
   test-nightly:
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+      pull-requests: write
     uses: ./.github/workflows/test.yml
     needs: build-nightly
-    secrets: inherit
+    secrets:
+      LAVATOKEN: ${{ secrets.LAVATOKEN }}
     with:
       build_id: ${{ github.run_id }}
   publish-test-results:
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+      checks: write
+      pull-requests: write
     uses: ./.github/workflows/publish-results.yml
     needs: test-nightly
-    secrets: inherit
+    secrets:
+      TEST_REPORTING_APP_TOKEN: ${{ secrets.TEST_REPORTING_APP_TOKEN }}
     with:
       workflow_id: ${{ github.run_id }}
       event_name: ${{ github.event_name }}

@@ -10,16 +10,19 @@ on:
       - completed
 
 permissions:
-  checks: write
-  pull-requests: write
   contents: read
-  packages: read
 
 jobs:
   test:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+      pull-requests: write
     uses: ./.github/workflows/test.yml
-    secrets: inherit
+    secrets:
+      LAVATOKEN: ${{ secrets.LAVATOKEN }}
     with:
       build_id: ${{ github.event.workflow_run.id }}
       head_sha: ${{ github.event.workflow_run.head_sha }}
@@ -28,6 +31,10 @@ jobs:
     name: "Comment on PR"
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
     steps:
 
       - uses: actions/checkout@v4
@@ -75,8 +82,15 @@ jobs:
           pr-number: ${{ steps.pr_comment_prep.outputs.pr_number }}
 
   publish-test-results:
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+      checks: write
+      pull-requests: write
     uses: ./.github/workflows/publish-results.yml
-    secrets: inherit
+    secrets:
+      TEST_REPORTING_APP_TOKEN: ${{ secrets.TEST_REPORTING_APP_TOKEN }}
     needs: [test]
     with:
       commit: ${{ github.event.workflow_run.sha }}
