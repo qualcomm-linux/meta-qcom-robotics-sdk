@@ -68,7 +68,22 @@ runs:
           echo "SSTATE_DIR=${SSTATE_DIR}" >> "$GITHUB_ENV"
         fi
         
-        echo "KAS_YAMLS=ci/ci.yml:ci/mirror.yml:ci/${{ inputs.machine }}.yml:${{ inputs.distro_yaml }}:${{ inputs.target_yaml }}:${{ inputs.kernel_yaml }}" >> $GITHUB_ENV
+        echo "KAS_YAMLS=ci/ci.yml:ci/mirror.yml:ci/build-id.yml:ci/${{ inputs.machine }}.yml:${{ inputs.distro_yaml }}:${{ inputs.target_yaml }}:${{ inputs.kernel_yaml }}" >> $GITHUB_ENV
+
+        # kas-container does not forward arbitrary env vars into the
+        # container, so bake the CI run id into a kas fragment inside the
+        # mounted checkout. This overrides the local default set in
+        # ci/base.yml so the image's /etc/os-release maps back to the run
+        # (and to the S3 artifact folder named ${run_id}-${run_attempt}).
+        cat > ci/build-id.yml <<EOF
+        header:
+          version: 14
+        local_conf_header:
+          build-id: |
+            BUILD_ID = "${BUILD_ID}"
+        EOF
+      env:
+        BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
     - name: Dump kas-build yaml
       shell: bash
