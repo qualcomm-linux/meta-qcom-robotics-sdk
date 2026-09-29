@@ -21,39 +21,40 @@ concurrency:
 env:
   CACHE_DIR: /efsx/qli/meta-qcom-robotics-sdk
   KAS_CLONE_DEPTH: 1
+  KAS_CONTAINER: ${{ github.workspace }}/kas-container
+  KAS_CONTAINER_IMAGE: ghcr.io/siemens/kas/kas@sha256:3f3d3257e8d4ca3adfcb2e0025e6da24339fb8d68a6999ca36c37381351582d5 # 5.5-9-g0555188
 
 jobs:
   kas-setup:
     if: github.repository_owner == 'qualcomm-linux'    
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
-      - name: Setting up kas-container
-        run: |
-          KAS_CONTAINER=$RUNNER_TEMP/kas-container
-          echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
-          LATEST=$(git ls-remote --tags --refs --sort="v:refname" https://github.com/siemens/kas | tail -n1 | sed 's/.*\///')
-          wget -qO ${KAS_CONTAINER} https://raw.githubusercontent.com/siemens/kas/refs/tags/$LATEST/kas-container
-          chmod +x ${KAS_CONTAINER}
-
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
+      - name: Setting up kas-container
+        run: |
+          KAS_ID=$(docker create ${KAS_CONTAINER_IMAGE})
+          docker cp $KAS_ID:/usr/local/bin/kas-container $KAS_CONTAINER
+          docker rm $KAS_ID
+          LATEST=$(git ls-remote --tags --refs --sort="v:refname" https://github.com/siemens/kas | tail -n1 | sed 's/.*\///')
+          if ! grep -q "KAS_CONTAINER_SCRIPT_VERSION=\"${LATEST}\"" $KAS_CONTAINER ; then
+            echo "Version ${LATEST} of kas is available, please update KAS_CONTAINER_IMAGE: $KAS_CONTAINER_IMAGE"
+          fi
+
       - name: Run kas lock
         run: |
-          ${KAS_CONTAINER} lock --update ci/qcom-robotics-distro.yml
+          ${KAS_CONTAINER} lock ci/base.yml:ci/qcom-robotics-distro.yml
 
-      - name: Upload kas lockfile
+      - name: Upload kas
         uses: actions/upload-artifact@v6
         with:
-          name: kas-lockfile
-          path: ci/*.lock.yml
-
-      - name: Upload kas-container
-        uses: actions/upload-artifact@v6
-        with:
-          name: kas-container
-          path: ${{ env.KAS_CONTAINER }}
+          name: kas
+          if-no-files-found: error
+          path: |
+            ci/*.lock.yml
+            kas-container
 
   yocto-run-checks:
     needs: kas-setup
@@ -64,23 +65,13 @@ jobs:
         with:
           persist-credentials: false
 
-      # qcom-robotics-distro.yml used special commit id, so we need to fetch it again
-      # - name: Download kas lockfile
-      #   uses: actions/download-artifact@v6
-      #   with:
-      #     name: kas-lockfile
-      #     path: ci
-
-      - name: Download kas-container
+      - name: Download kas
         uses: actions/download-artifact@v7
         with:
-          name: kas-container
-          path: ${{ runner.temp }}
+          name: kas
 
       - name: Setting up kas-container
         run: |
-          KAS_CONTAINER=$RUNNER_TEMP/kas-container
-          echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
           chmod +x $KAS_CONTAINER
 
       - name: Run yocto-check-layer
