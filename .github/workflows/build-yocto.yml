@@ -8,10 +8,18 @@ on:
         required: false
         default: "true"
         type: string
+      skip_if_github_cached:
+        required: false
+        type: boolean
+        default: false
+        description: "Skip the build matrix if the github actions cache already records a previously-successful run for the same inputs"
     outputs:
       artifacts_url:
         description: "URL to retrieve build artifacts"
         value: ${{ jobs.create-output.outputs.url }}
+      build_skipped:
+        description: "True when the compile matrix was skipped because the github cache recorded a previously-successful build for the same inputs"
+        value: ${{ jobs.github-cache-check.outputs.skip_build }}
 
 # Concurrency is used to prevent multiple workflows from running for the same PR
 concurrency:
@@ -56,8 +64,64 @@ jobs:
             ci/*.lock.yml
             kas-container
 
-  yocto-run-checks:
+  github-cache-check:
     needs: kas-setup
+    if: github.repository_owner == 'qualcomm-linux'
+    runs-on: ubuntu-latest
+    outputs:
+      skip_build: ${{ inputs.skip_if_github_cached && steps.restore.outputs.cache-hit == 'true' }}
+      run_hash: ${{ steps.hash.outputs.run_hash }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Download kas
+        uses: actions/download-artifact@v7
+        with:
+          name: kas
+
+      - name: Compute build input hash
+        id: hash
+        run: |
+          # Hash inputs that fully determine the build:
+          # - the resolved base.lock.yml produced by `kas lock` (pins every layer)
+          # - the meta-qcom-robotics-sdk revision being built, which pins the rest
+          LOCK_HASH=$(sha256sum ci/base.lock.yml | cut -d' ' -f1)
+          SRC_HASH=$(git rev-parse HEAD)
+          RUN_HASH=$(printf '%s\n%s' "$LOCK_HASH" "$SRC_HASH" | sha256sum | cut -d' ' -f1)
+          echo "base.lock.yml hash: $LOCK_HASH"
+          echo "meta-qcom-robotics-sdk HEAD: $SRC_HASH"
+          echo "Combined run hash: $RUN_HASH"
+          echo "run_hash=$RUN_HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Look up previous successful build marker in github cache
+        id: restore
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/build-success-marker
+          key: build-success-${{ github.repository }}-${{ github.workflow }}-${{ github.ref_name }}-${{ steps.hash.outputs.run_hash }}
+          lookup-only: true
+
+      - name: Report github-cache-check decision
+        env:
+          SKIP_IF_CACHED: ${{ inputs.skip_if_github_cached }}
+          CACHE_HIT: ${{ steps.restore.outputs.cache-hit }}
+          RUN_HASH: ${{ steps.hash.outputs.run_hash }}
+        run: |
+          if [ "${SKIP_IF_CACHED}" != "true" ]; then
+            echo "skip_if_github_cached not set; build will run"
+          elif [ "${CACHE_HIT}" = "true" ]; then
+            echo "Run cache hit on key build-success, hash ${RUN_HASH}: skipping build matrix"
+          else
+            echo "No previous successful build run recorded in github cache for this hash: build will run"
+          fi
+
+  yocto-run-checks:
+    needs: [kas-setup, github-cache-check]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
     
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
@@ -98,8 +162,10 @@ jobs:
   # tools, toolchain and packages instead of each building them at the same
   # time.
   compile_stage1:
-    needs: [kas-setup, yocto-run-checks, compile-env]
-    if: github.repository_owner == 'qualcomm-linux'
+    needs: [kas-setup, github-cache-check, yocto-run-checks, compile-env]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
     permissions:
       contents: read
       packages: read
@@ -120,8 +186,10 @@ jobs:
       fetch_machines: 'iq-8275-evk iq-9075-evk'
 
   compile:
-    needs: [compile_stage1, compile-env]
-    if: github.repository_owner == 'qualcomm-linux'
+    needs: [github-cache-check, compile_stage1, compile-env]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
     permissions:
       contents: read
       packages: read
@@ -177,7 +245,10 @@ jobs:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
-    needs: [compile_stage1, compile]
+    needs: [github-cache-check, compile_stage1, compile]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: 'Download build URLs'
@@ -236,3 +307,21 @@ jobs:
                   summaryfile.write("## Download URLs\n")
                   summaryfile.write(table_str)
           print(table_str)
+
+  github-cache-save:
+    needs: [github-cache-check, compile_stage1, compile]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      inputs.skip_if_github_cached == true &&
+      needs.github-cache-check.outputs.skip_build != 'true' &&
+      needs.compile.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create build success marker
+        run: date -u +%FT%TZ > /tmp/build-success-marker
+
+      - name: Save successful build marker to github cache
+        uses: actions/cache/save@v5
+        with:
+          path: /tmp/build-success-marker
+          key: build-success-${{ github.repository }}-${{ github.workflow }}-${{ github.ref_name }}-${{ needs.github-cache-check.outputs.run_hash }}

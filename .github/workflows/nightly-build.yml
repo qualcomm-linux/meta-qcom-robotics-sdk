@@ -26,7 +26,10 @@ jobs:
     uses: ./.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
+      # a full rebuild (use_sstate false) runs even when nothing changed
+      skip_if_github_cached: ${{ inputs.use_sstate != 'false' }}
   test-nightly:
+    if: needs.build-nightly.outputs.build_skipped != 'true'
     permissions:
       contents: read
       actions: read
@@ -39,6 +42,7 @@ jobs:
     with:
       build_id: ${{ github.run_id }}
   publish-test-results:
+    if: needs.build-nightly.outputs.build_skipped != 'true'
     permissions:
       contents: read
       packages: read
@@ -46,7 +50,7 @@ jobs:
       checks: write
       pull-requests: write
     uses: ./.github/workflows/publish-results.yml
-    needs: test-nightly
+    needs: [build-nightly, test-nightly]
     secrets:
       TEST_REPORTING_APP_TOKEN: ${{ secrets.TEST_REPORTING_APP_TOKEN }}
     with:
