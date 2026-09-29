@@ -37,9 +37,10 @@ jobs:
       pull-requests: write
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Download Artifacts
         uses: actions/download-artifact@v6
@@ -76,7 +77,7 @@ jobs:
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Comment on PR
-        uses: thollander/actions-comment-pull-request@v3
+        uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         with:
           file-path: pr-comment.txt
           pr-number: ${{ steps.pr_comment_prep.outputs.pr_number }}
