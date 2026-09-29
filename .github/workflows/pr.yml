@@ -17,11 +17,7 @@ on:
         default: "false"
 
 permissions:
-  checks: write
-  pull-requests: write
-  contents: write # Use write access to auto merge PR
-  packages: read
-  actions: read
+  contents: read
 
 jobs:
   event-file:
@@ -34,6 +30,10 @@ jobs:
         name: Event File
         path: ${{ github.event_path }}
   build-pr:
+    permissions:
+      contents: read
+      packages: read
+      actions: read
     uses: ./.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}

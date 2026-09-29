@@ -100,6 +100,10 @@ jobs:
   compile_stage1:
     needs: [kas-setup, yocto-run-checks, compile-env]
     if: github.repository_owner == 'qualcomm-linux'
+    permissions:
+      contents: read
+      packages: read
+      actions: read
     uses: ./.github/workflows/compile.yml
     with:
       machine: iq-9075-evk
@@ -118,6 +122,10 @@ jobs:
   compile:
     needs: [compile_stage1, compile-env]
     if: github.repository_owner == 'qualcomm-linux'
+    permissions:
+      contents: read
+      packages: read
+      actions: read
     strategy:
       fail-fast: true
       matrix:

@@ -9,10 +9,17 @@ on:
       head_sha:
         required: false
         type: string
+    secrets:
+      LAVATOKEN:
+        required: true
+        description: "Token used to submit jobs to the LAVA lab"
 
 jobs:
   prepare-jobs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     strategy:
       matrix:
         machine:
