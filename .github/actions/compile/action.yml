@@ -94,7 +94,11 @@ runs:
     - name: Kas build images (buildstats)
       shell: bash
       run: |
-        ci/kas-container-shell-helper.sh ci/yocto-buildstats.sh
+        # meta-ros needs gfortran on the host to parse the configuration, so
+        # run the script with the build's configuration after installing it
+        $KAS_CONTAINER shell ${KAS_YAMLS} --command "\
+        sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gfortran && \
+        /repo/ci/yocto-buildstats.sh /repo /work"
         mv $KAS_WORK_DIR/build/buildstats* .
     
     - name: Stage build artifacts for publishing
