@@ -125,6 +125,18 @@ jobs:
           - type: default
             dirname: '_linux-qcom-next'
             yamlfile: ''
+        exclude:
+          - machine: ventuno-q
+            distro:
+              name: qcom-robotics-distro-catchall
+
+          - machine: ventuno-q
+            distro:
+              name: debug
+
+          - machine: ventuno-q
+            distro:
+              name: performance
 
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:
