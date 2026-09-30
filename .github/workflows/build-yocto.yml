@@ -104,6 +104,7 @@ jobs:
         machine:
           - iq-8275-evk
           - iq-9075-evk
+          - ventuno-q
         distro:
           - name: qcom-robotics-distro
             yamlfile: 'ci/qcom-robotics-distro.yml'
