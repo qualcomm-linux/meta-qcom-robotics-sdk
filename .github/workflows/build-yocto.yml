@@ -322,3 +322,12 @@ jobs:
         with:
           path: /tmp/build-success-marker
           key: build-success-${{ github.repository }}-${{ github.workflow }}-${{ github.ref_name }}-${{ needs.github-cache-check.outputs.run_hash }}
+
+  build_successful:
+    if: github.repository_owner == 'qualcomm-linux'
+    needs: [compile_stage1, compile]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build completed successfully
+        run: |
+          echo "All compile matrix jobs succeeded and artifacts uploaded to S3 bucket"
