@@ -27,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_DIR: /efs/qli/meta-qcom-robotics-sdk
+  CACHE_DIR: /efsx/qli/meta-qcom-robotics-sdk
   KAS_CLONE_DEPTH: 1
 
 jobs:
@@ -116,27 +116,27 @@ jobs:
           - iq-9075-evk
         distro:
           - name: qcom-robotics-distro
-            yamlfile: ':ci/qcom-robotics-distro.yml'
+            yamlfile: 'ci/qcom-robotics-distro.yml'
           - name: qcom-robotics-distro-catchall
-            yamlfile: ':ci/qcom-robotics-distro-catchall.yml'
+            yamlfile: 'ci/qcom-robotics-distro-catchall.yml'
           - name: debug
-            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/debug.yml'
+            yamlfile: 'ci/qcom-robotics-distro-catchall.yml:ci/debug.yml'
           - name: performance
-            yamlfile: ':ci/qcom-robotics-distro-catchall.yml:ci/performance.yml'
+            yamlfile: 'ci/qcom-robotics-distro-catchall.yml:ci/performance.yml'
         target:
           - type: '_base'
             name: qcom-robotics-image
-            yamlfile: ':ci/qcom-robotics-image.yml'
+            yamlfile: 'ci/qcom-robotics-image.yml'
           - type: '_full'
             name: qcom-robotics-proprietary-image
-            yamlfile: ':ci/qcom-robotics-proprietary-image.yml'
+            yamlfile: 'ci/qcom-robotics-proprietary-image.yml'
         kernel:
           - type: 6.18
             dirname: "_linux-qcom-6.18"
-            yamlfile: ":ci/linux-qcom-6.18.yml"
+            yamlfile: "ci/linux-qcom-6.18.yml"
           - type: rt-6.18-distro-kvm
             dirname: "_linux-qcom-rt-6.18_qcom-distro-kvm"
-            yamlfile: ":ci/linux-qcom-rt-6.18.yml:ci/qcom-distro-kvm.yml"
+            yamlfile: "ci/linux-qcom-rt-6.18.yml:ci/qcom-distro-kvm.yml"
 
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:
@@ -158,7 +158,7 @@ jobs:
           target_name: ${{matrix.target.name}}
           kernel_yaml: ${{matrix.kernel.yamlfile}}
           kernel_dirname: ${{matrix.kernel.dirname}}
-          cache_dir: ${CACHE_DIR}
+          cache_dir: ${{ env.CACHE_DIR }}
           use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
