@@ -81,19 +81,18 @@ local_conf_header:
 
 
     # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
+    # Weak, so the lower limit that ci/ci.yml sets for the CI runners applies.
 
-    BB_PRESSURE_MAX_MEMORY = "800000"
+    BB_PRESSURE_MAX_MEMORY ?= "800000"
 
 
     # Determines how many processes make should run in parallel when running compile tasks.
 
     PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
-  os-release: 'META_QCOM_BUILD_ID = "34729757643"
-
-    OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
-
-    '
+  meta_qcom_build_id: |
+    META_QCOM_BUILD_ID = "34729757643"
+    OS_RELEASE_FIELDS:append = " META_QCOM_BUILD_ID"
   coinor_license_qa: "ERROR_QA:remove = \"license-format\"\n\n    "
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image

@@ -14,19 +14,26 @@ on:
         default: "false"
 
 permissions:
-  checks: write
-  pull-requests: write
   contents: read
-  packages: read
 
 jobs:
   build:
-    uses: ./.github/workflows/build-yocto.yml
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+    uses: $/.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
   test:
-    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+      pull-requests: write
+    uses: $/.github/workflows/test.yml
     needs: [build]
-    secrets: inherit
+    secrets:
+      LAVATOKEN: ${{ secrets.LAVATOKEN }}
     with:
       build_id: ${{ github.run_id }}

@@ -15,26 +15,44 @@ on:
         default: "false"
 
 permissions:
-  checks: write
-  pull-requests: write
   contents: read
-  packages: read
 
 jobs:
   build-nightly:
-    uses: ./.github/workflows/build-yocto.yml
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+    uses: $/.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
+      # a full rebuild (use_sstate false) runs even when nothing changed
+      skip_if_github_cached: ${{ inputs.use_sstate != 'false' }}
   test-nightly:
-    uses: ./.github/workflows/test.yml
+    if: needs.build-nightly.outputs.build_skipped != 'true'
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+      pull-requests: write
+    uses: $/.github/workflows/test.yml
     needs: build-nightly
-    secrets: inherit
+    secrets:
+      LAVATOKEN: ${{ secrets.LAVATOKEN }}
     with:
       build_id: ${{ github.run_id }}
   publish-test-results:
-    uses: ./.github/workflows/publish-results.yml
-    needs: test-nightly
-    secrets: inherit
+    if: needs.build-nightly.outputs.build_skipped != 'true'
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+      checks: write
+      pull-requests: write
+    uses: $/.github/workflows/publish-results.yml
+    needs: [build-nightly, test-nightly]
+    secrets:
+      TEST_REPORTING_APP_TOKEN: ${{ secrets.TEST_REPORTING_APP_TOKEN }}
     with:
       workflow_id: ${{ github.run_id }}
       event_name: ${{ github.event_name }}

@@ -8,10 +8,15 @@ on:
         required: false
         default: "true"
         type: string
+      skip_if_github_cached:
+        required: false
+        type: boolean
+        default: false
+        description: "Skip the build matrix if the github actions cache already records a previously-successful run for the same inputs"
     outputs:
-      artifacts_url:
-        description: "URL to retrieve build artifacts"
-        value: ${{ jobs.create-output.outputs.url }}
+      build_skipped:
+        description: "True when the compile matrix was skipped because the github cache recorded a previously-successful build for the same inputs"
+        value: ${{ jobs.github-cache-check.outputs.skip_build }}
 
 # Concurrency is used to prevent multiple workflows from running for the same PR
 concurrency:
@@ -21,42 +26,99 @@ concurrency:
 env:
   CACHE_DIR: /efsx/qli/meta-qcom-robotics-sdk
   KAS_CLONE_DEPTH: 1
+  KAS_CONTAINER: ${{ github.workspace }}/kas-container
+  KAS_CONTAINER_IMAGE: ghcr.io/siemens/kas/kas@sha256:3f3d3257e8d4ca3adfcb2e0025e6da24339fb8d68a6999ca36c37381351582d5 # 5.5-9-g0555188
 
 jobs:
   kas-setup:
     if: github.repository_owner == 'qualcomm-linux'    
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
-      - name: Setting up kas-container
-        run: |
-          KAS_CONTAINER=$RUNNER_TEMP/kas-container
-          echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
-          LATEST=$(git ls-remote --tags --refs --sort="v:refname" https://github.com/siemens/kas | tail -n1 | sed 's/.*\///')
-          wget -qO ${KAS_CONTAINER} https://raw.githubusercontent.com/siemens/kas/refs/tags/$LATEST/kas-container
-          chmod +x ${KAS_CONTAINER}
-
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
+      - name: Setting up kas-container
+        run: |
+          KAS_ID=$(docker create ${KAS_CONTAINER_IMAGE})
+          docker cp $KAS_ID:/usr/local/bin/kas-container $KAS_CONTAINER
+          docker rm $KAS_ID
+          LATEST=$(git ls-remote --tags --refs --sort="v:refname" https://github.com/siemens/kas | tail -n1 | sed 's/.*\///')
+          if ! grep -q "KAS_CONTAINER_SCRIPT_VERSION=\"${LATEST}\"" $KAS_CONTAINER ; then
+            echo "Version ${LATEST} of kas is available, please update KAS_CONTAINER_IMAGE: $KAS_CONTAINER_IMAGE"
+          fi
+
       - name: Run kas lock
         run: |
-          ${KAS_CONTAINER} lock --update ci/qcom-robotics-distro.yml
+          ${KAS_CONTAINER} lock ci/base.yml:ci/qcom-robotics-distro.yml
 
-      - name: Upload kas lockfile
+      - name: Upload kas
         uses: actions/upload-artifact@v6
         with:
-          name: kas-lockfile
-          path: ci/*.lock.yml
+          name: kas
+          if-no-files-found: error
+          path: |
+            ci/*.lock.yml
+            kas-container
 
-      - name: Upload kas-container
-        uses: actions/upload-artifact@v6
+  github-cache-check:
+    needs: kas-setup
+    if: github.repository_owner == 'qualcomm-linux'
+    runs-on: ubuntu-latest
+    outputs:
+      skip_build: ${{ inputs.skip_if_github_cached && steps.restore.outputs.cache-hit == 'true' }}
+      run_hash: ${{ steps.hash.outputs.run_hash }}
+    steps:
+      - uses: actions/checkout@v6
         with:
-          name: kas-container
-          path: ${{ env.KAS_CONTAINER }}
+          persist-credentials: false
+
+      - name: Download kas
+        uses: actions/download-artifact@v7
+        with:
+          name: kas
+
+      - name: Compute build input hash
+        id: hash
+        run: |
+          # Hash inputs that fully determine the build:
+          # - the resolved base.lock.yml produced by `kas lock` (pins every layer)
+          # - the meta-qcom-robotics-sdk revision being built, which pins the rest
+          LOCK_HASH=$(sha256sum ci/base.lock.yml | cut -d' ' -f1)
+          SRC_HASH=$(git rev-parse HEAD)
+          RUN_HASH=$(printf '%s\n%s' "$LOCK_HASH" "$SRC_HASH" | sha256sum | cut -d' ' -f1)
+          echo "base.lock.yml hash: $LOCK_HASH"
+          echo "meta-qcom-robotics-sdk HEAD: $SRC_HASH"
+          echo "Combined run hash: $RUN_HASH"
+          echo "run_hash=$RUN_HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Look up previous successful build marker in github cache
+        id: restore
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/build-success-marker
+          key: build-success-${{ github.repository }}-${{ github.workflow }}-${{ github.ref_name }}-${{ steps.hash.outputs.run_hash }}
+          lookup-only: true
+
+      - name: Report github-cache-check decision
+        env:
+          SKIP_IF_CACHED: ${{ inputs.skip_if_github_cached }}
+          CACHE_HIT: ${{ steps.restore.outputs.cache-hit }}
+          RUN_HASH: ${{ steps.hash.outputs.run_hash }}
+        run: |
+          if [ "${SKIP_IF_CACHED}" != "true" ]; then
+            echo "skip_if_github_cached not set; build will run"
+          elif [ "${CACHE_HIT}" = "true" ]; then
+            echo "Run cache hit on key build-success, hash ${RUN_HASH}: skipping build matrix"
+          else
+            echo "No previous successful build run recorded in github cache for this hash: build will run"
+          fi
 
   yocto-run-checks:
-    needs: kas-setup
+    needs: [kas-setup, github-cache-check]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
     
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
@@ -64,23 +126,13 @@ jobs:
         with:
           persist-credentials: false
 
-      # qcom-robotics-distro.yml used special commit id, so we need to fetch it again
-      # - name: Download kas lockfile
-      #   uses: actions/download-artifact@v6
-      #   with:
-      #     name: kas-lockfile
-      #     path: ci
-
-      - name: Download kas-container
+      - name: Download kas
         uses: actions/download-artifact@v7
         with:
-          name: kas-container
-          path: ${{ runner.temp }}
+          name: kas
 
       - name: Setting up kas-container
         run: |
-          KAS_CONTAINER=$RUNNER_TEMP/kas-container
-          echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
           chmod +x $KAS_CONTAINER
 
       - name: Run yocto-check-layer
@@ -91,13 +143,54 @@ jobs:
         run: |
           ci/kas-container-shell-helper.sh ci/yocto-patchreview.sh
 
-  compile:
-    needs: [kas-setup, yocto-run-checks]
-    if: github.repository_owner == 'qualcomm-linux'    
-    runs-on: [self-hosted, qcom-u2404, amd64]
+  compile-env:
+    if: github.repository_owner == 'qualcomm-linux'
+    runs-on: ubuntu-latest
     outputs:
-      url: ${{ steps.compile_kas.outputs.url }}
-    timeout-minutes: 720 # 12 hours
+      CACHE_DIR: ${{ steps.compile_env.outputs.CACHE_DIR }}
+    steps:
+      - name: Setup compile variables
+        id: compile_env
+        run: |
+          echo "CACHE_DIR=${CACHE_DIR}" >> $GITHUB_OUTPUT
+
+  # Fetches the sources of all the compile jobs and builds the catchall
+  # proprietary image first, so the other compile jobs reuse its native
+  # tools, toolchain and packages instead of each building them at the same
+  # time.
+  compile_stage1:
+    needs: [kas-setup, github-cache-check, yocto-run-checks, compile-env]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+    uses: $/.github/workflows/compile.yml
+    with:
+      machine: iq-9075-evk
+      distro_yaml: 'ci/qcom-robotics-distro-catchall.yml'
+      distro_name: qcom-robotics-distro-catchall
+      target_type: '_full'
+      target_yaml: 'ci/qcom-robotics-proprietary-image.yml'
+      target_name: qcom-robotics-proprietary-image
+      kernel_yaml: ''
+      kernel_dirname: '_linux-qcom-next'
+      cache_dir: ${{ needs.compile-env.outputs.CACHE_DIR }}
+      use_sstate: ${{ inputs.use_sstate || 'true' }}
+      # keep in sync with the machines of the compile matrix
+      fetch_machines: 'iq-8275-evk iq-9075-evk'
+
+  compile:
+    needs: [github-cache-check, compile_stage1, compile-env]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
+    permissions:
+      contents: read
+      packages: read
+      actions: read
     strategy:
       fail-fast: true
       matrix:
@@ -124,30 +217,35 @@ jobs:
           - type: default
             dirname: '_linux-qcom-next'
             yamlfile: ''
+        exclude:
+          # built by compile_stage1
+          - machine: iq-9075-evk
+            distro:
+              name: qcom-robotics-distro-catchall
+              yamlfile: 'ci/qcom-robotics-distro-catchall.yml'
+            target:
+              type: '_full'
+              name: qcom-robotics-proprietary-image
+              yamlfile: 'ci/qcom-robotics-proprietary-image.yml'
 
-    name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Run kas build
-        uses: ./.github/actions/compile
-        id: compile_kas
-        with:
-          machine: ${{matrix.machine}}
-          distro_yaml: ${{matrix.distro.yamlfile}}
-          distro_name: ${{matrix.distro.name}}
-          target_type: ${{matrix.target.type}}
-          target_yaml: ${{matrix.target.yamlfile}}
-          target_name: ${{matrix.target.name}}
-          kernel_yaml: ${{matrix.kernel.yamlfile}}
-          kernel_dirname: ${{matrix.kernel.dirname}}
-          cache_dir: ${CACHE_DIR}
-          use_sstate: ${{ inputs.use_sstate || 'true' }}
+    uses: $/.github/workflows/compile.yml
+    with:
+      machine: ${{matrix.machine}}
+      distro_yaml: ${{matrix.distro.yamlfile}}
+      distro_name: ${{matrix.distro.name}}
+      target_type: ${{matrix.target.type}}
+      target_yaml: ${{matrix.target.yamlfile}}
+      target_name: ${{matrix.target.name}}
+      kernel_yaml: ${{matrix.kernel.yamlfile}}
+      kernel_dirname: ${{matrix.kernel.dirname}}
+      cache_dir: ${{ needs.compile-env.outputs.CACHE_DIR }}
+      use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
-    needs: compile
+    needs: [github-cache-check, compile_stage1, compile]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      needs.github-cache-check.outputs.skip_build != 'true'
     runs-on: [self-hosted, qcom-u2404, amd64]
     steps:
       - name: 'Download build URLs'
@@ -206,3 +304,30 @@ jobs:
                   summaryfile.write("## Download URLs\n")
                   summaryfile.write(table_str)
           print(table_str)
+
+  github-cache-save:
+    needs: [github-cache-check, compile_stage1, compile]
+    if: |
+      github.repository_owner == 'qualcomm-linux' &&
+      inputs.skip_if_github_cached == true &&
+      needs.github-cache-check.outputs.skip_build != 'true' &&
+      needs.compile.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create build success marker
+        run: date -u +%FT%TZ > /tmp/build-success-marker
+
+      - name: Save successful build marker to github cache
+        uses: actions/cache/save@v5
+        with:
+          path: /tmp/build-success-marker
+          key: build-success-${{ github.repository }}-${{ github.workflow }}-${{ github.ref_name }}-${{ needs.github-cache-check.outputs.run_hash }}
+
+  build_successful:
+    if: github.repository_owner == 'qualcomm-linux'
+    needs: [compile_stage1, compile]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build completed successfully
+        run: |
+          echo "All compile matrix jobs succeeded and artifacts uploaded to S3 bucket"

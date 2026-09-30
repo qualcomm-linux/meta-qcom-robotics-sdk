@@ -15,15 +15,13 @@ on:
         default: "true"
 
 permissions:
-  checks: write
-  pull-requests: write
   contents: read
-  packages: read
-  actions: write
 
 jobs:
   trigger-build:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - name: Trigger Nightly Build
         env:
