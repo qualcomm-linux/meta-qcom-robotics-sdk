@@ -158,7 +158,7 @@ jobs:
           target_name: ${{matrix.target.name}}
           kernel_yaml: ${{matrix.kernel.yamlfile}}
           kernel_dirname: ${{matrix.kernel.dirname}}
-          cache_dir: ${CACHE_DIR}
+          cache_dir: ${{ env.CACHE_DIR }}
           use_sstate: ${{ inputs.use_sstate || 'true' }}
 
   publish_summary:
