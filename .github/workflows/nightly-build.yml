@@ -23,7 +23,7 @@ jobs:
       contents: read
       packages: read
       actions: read
-    uses: ./.github/workflows/build-yocto.yml
+    uses: $/.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
       # a full rebuild (use_sstate false) runs even when nothing changed
@@ -35,7 +35,7 @@ jobs:
       actions: read
       checks: write
       pull-requests: write
-    uses: ./.github/workflows/test.yml
+    uses: $/.github/workflows/test.yml
     needs: build-nightly
     secrets:
       LAVATOKEN: ${{ secrets.LAVATOKEN }}
@@ -49,7 +49,7 @@ jobs:
       actions: read
       checks: write
       pull-requests: write
-    uses: ./.github/workflows/publish-results.yml
+    uses: $/.github/workflows/publish-results.yml
     needs: [build-nightly, test-nightly]
     secrets:
       TEST_REPORTING_APP_TOKEN: ${{ secrets.TEST_REPORTING_APP_TOKEN }}

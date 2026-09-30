@@ -22,7 +22,7 @@ jobs:
       contents: read
       packages: read
       actions: read
-    uses: ./.github/workflows/build-yocto.yml
+    uses: $/.github/workflows/build-yocto.yml
     with:
       use_sstate: ${{ inputs.use_sstate || 'true' }}
   test:
@@ -31,7 +31,7 @@ jobs:
       actions: read
       checks: write
       pull-requests: write
-    uses: ./.github/workflows/test.yml
+    uses: $/.github/workflows/test.yml
     needs: [build]
     secrets:
       LAVATOKEN: ${{ secrets.LAVATOKEN }}

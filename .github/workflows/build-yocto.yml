@@ -167,7 +167,7 @@ jobs:
       contents: read
       packages: read
       actions: read
-    uses: ./.github/workflows/compile.yml
+    uses: $/.github/workflows/compile.yml
     with:
       machine: iq-9075-evk
       distro_yaml: 'ci/qcom-robotics-distro-catchall.yml'
@@ -228,7 +228,7 @@ jobs:
               name: qcom-robotics-proprietary-image
               yamlfile: 'ci/qcom-robotics-proprietary-image.yml'
 
-    uses: ./.github/workflows/compile.yml
+    uses: $/.github/workflows/compile.yml
     with:
       machine: ${{matrix.machine}}
       distro_yaml: ${{matrix.distro.yamlfile}}
