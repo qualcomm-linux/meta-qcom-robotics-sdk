@@ -10,7 +10,7 @@ repos:
     branch: wrynose
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: ea0fdcc27decd59c3e9bc81dcacf9c5f9a65a062
+    commit: b094cfccc192d8e02809bf87c6dd9c76bcf31330
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -44,8 +44,6 @@ repos:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
     commit: c671acf8a948e22a614a6d6d1dcf18bdf4113df5
-  meta-qcom-distro:
-    commit: 9b2bd8add61378f316b51d3dd848f2c2f6e80ae9
 
 env:
   CPU_COUNT: "12"
@@ -87,7 +85,7 @@ local_conf_header:
 
     PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
-  os-release: 'META_QCOM_BUILD_ID = "35544648064"
+  os-release: 'META_QCOM_BUILD_ID = "36811664911"
 
     OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
 
