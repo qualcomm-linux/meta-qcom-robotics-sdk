@@ -13,7 +13,7 @@ repos:
   meta-qcom-arduino:
     url: https://github.com/qualcomm-linux/meta-qcom-arduino
     branch: main
-    commit: 35f3dfdd4dca56d0df60b621ff8fd70a8043bcfd
+    commit: a5c303281ddec6d15a50485b89f6981d9cce6050 
     layers:
       .:
 
