@@ -1,0 +1,148 @@
+From 3779990788cbe5427ad46a26e5f229cc4f4877cf Mon Sep 17 00:00:00 2001
+From: Teng Fan <tengf@qti.qualcomm.com>
+Date: Thu, 10 Sep 2026 15:36:40 +0800
+Subject: [PATCH] fix: block signals and serialize teardown in QnnInference
+
+Upstream-Status: Pending
+
+The HTP backend reaches the DSP through a blocking fastrpc ioctl. When
+SIGINT is delivered to the thread sitting in that ioctl it returns EINTR,
+QNN reports "DspTransport call failed, error 0x0000000f" and the DSP side
+session is left in an error state. Every unmap and contextFree afterwards
+then fails, and the ~60 MiB of mappings per launch cycle survive process
+exit. After enough start/stop cycles no PD has room left and the model can
+no longer be loaded until the board is rebooted.
+
+- Block SIGINT and SIGTERM for the duration of inference_execute() via an
+  RAII guard, so the fastrpc ioctl is not interrupted and the DSP session
+  stays healthy, at the cost of one inference period of extra latency.
+- Serialize inference_execute() against ~QnnInference() with a mutex, so
+  the context is never freed while the DSP is still executing a graph, and
+  reject requests that arrive once teardown has started.
+
+This is the qrb_inference_manager half of the fix; the node-side teardown
+ordering lives in the qrb_ros_nn_inference recipe.
+
+Signed-off-by: Teng Fan <tengf@qti.qualcomm.com>
+---
+diff --git a/qrb_inference_manager/include/qnn_inference/qnn_inference.hpp b/qrb_inference_manager/include/qnn_inference/qnn_inference.hpp
+index 506895c..02e72bc 100644
+--- a/qrb_inference_manager/include/qnn_inference/qnn_inference.hpp
++++ b/qrb_inference_manager/include/qnn_inference/qnn_inference.hpp
+@@ -4,6 +4,8 @@
+ #ifndef QRB_INFERENCE_MANAGER_QNN_INFERENCE_HPP_
+ #define QRB_INFERENCE_MANAGER_QNN_INFERENCE_HPP_
+ 
++#include <mutex>
++
+ #include "qnn_inference/qnn_inference_impl.hpp"
+ #include "qrb_inference.hpp"
+ 
+@@ -37,6 +39,11 @@ private:
+   std::vector<OutputTensor> output_tensor_;
+   std::unique_ptr<QnnInterface> qnn_interface_{ nullptr };
+ 
++  // Serializes inference_execute() against the destructor, so that the QNN
++  // context is never freed while the DSP is still executing a graph.
++  std::mutex inference_mutex_;
++  bool tearing_down_ = false;
++
+   StatusCode initialize_backend();
+   StatusCode create_device();
+   StatusCode create_context();
+diff --git a/qrb_inference_manager/src/qnn_inference/qnn_inference.cpp b/qrb_inference_manager/src/qnn_inference/qnn_inference.cpp
+index a5b9e26..088448e 100644
+--- a/qrb_inference_manager/src/qnn_inference/qnn_inference.cpp
++++ b/qrb_inference_manager/src/qnn_inference/qnn_inference.cpp
+@@ -3,9 +3,61 @@
+ 
+ #include "qnn_inference/qnn_inference.hpp"
+ 
++#include <pthread.h>
++
++#include <csignal>
++#include <mutex>
++
+ namespace qrb::inference_mgr
+ {
+ 
++namespace
++{
++
++/**
++ * \brief blocks SIGINT and SIGTERM for the lifetime of the object
++ *
++ * The HTP backend reaches the DSP through a blocking fastrpc ioctl. A signal
++ * delivered to the thread sitting in that ioctl makes it return EINTR, QNN
++ * reports "DspTransport call failed" and the DSP side session is left in an
++ * error state. Every later contextFree() and fastrpc unmap then fails with
++ * err 1003 / 0x14, and the mappings - about 60 MiB for a Depth-Anything-V2
++ * sized model - are never reclaimed, not even once the process has exited.
++ * After enough launch cycles no PD has room left and the model cannot be
++ * loaded at all.
++ *
++ * Keeping the signals pending until the inference has returned costs one
++ * inference period of extra shutdown latency and avoids all of that.
++ */
++class ScopedSignalBlock
++{
++public:
++  ScopedSignalBlock()
++  {
++    sigset_t block_set;
++    sigemptyset(&block_set);
++    sigaddset(&block_set, SIGINT);
++    sigaddset(&block_set, SIGTERM);
++    blocked_ = (0 == ::pthread_sigmask(SIG_BLOCK, &block_set, &old_set_));
++  }
++
++  ~ScopedSignalBlock()
++  {
++    if (blocked_) {
++      ::pthread_sigmask(SIG_SETMASK, &old_set_, nullptr);
++    }
++  }
++
++  ScopedSignalBlock(const ScopedSignalBlock &) = delete;
++  ScopedSignalBlock & operator=(const ScopedSignalBlock &) = delete;
++
++private:
++  sigset_t old_set_;
++  bool blocked_ = false;
++};
++
++}  // namespace
++
+ QnnInference::QnnInference(const std::string & model_path, const std::string & backend_option)
+   : model_path_(model_path), backend_option_(backend_option)
+ {
+@@ -25,6 +77,11 @@ QnnInference::QnnInference(const std::string & model_path, const std::string & b
+ 
+ QnnInference::~QnnInference()
+ {
++  // Blocks until an in-flight inference_execute() has returned, so that we never
++  // free the context or unmap the buffers while the DSP is still working on them.
++  std::lock_guard<std::mutex> lock(this->inference_mutex_);
++  this->tearing_down_ = true;
++
+   free_graphs_info();
+   free_context();
+   free_device();
+@@ -89,6 +146,15 @@ StatusCode QnnInference::inference_execute(const std::vector<uint8_t> & input_te
+     return StatusCode::FAILURE;
+   }
+ 
++  std::lock_guard<std::mutex> lock(this->inference_mutex_);
++  if (this->tearing_down_) {
++    QRB_WARNING("Inference requested while tearing down, dropping the request");
++    return StatusCode::FAILURE;
++  }
++
++  // Must outlive every fastrpc call below, see the ScopedSignalBlock comment.
++  ScopedSignalBlock signal_block;
++
+   for (uint32_t i = 0; i < graphs_count_; i++) {
+     const auto & graphs_info = (*(graphs_info_))[i];
+ 
+-- 
+2.43.0

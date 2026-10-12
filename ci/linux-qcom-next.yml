@@ -1,6 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
 header:
   version: 14
-
-local_conf_header:
-  kernelprovider: |
-    PREFERRED_PROVIDER_virtual/kernel = "linux-qcom-next"
+  includes:
+    - ci/meta-qcom.yml
+    - repo: meta-qcom
+      file: ci/linux-qcom-next.yml

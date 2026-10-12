@@ -13,8 +13,5 @@ repos:
   meta-qcom-arduino:
     url: https://github.com/qualcomm-linux/meta-qcom-arduino
     branch: main
-    commit: 35f3dfdd4dca56d0df60b621ff8fd70a8043bcfd
-    layers:
-      .:
 
 machine: ventuno-q

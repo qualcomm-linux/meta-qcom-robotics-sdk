@@ -1,0 +1,62 @@
+From 3779990788cbe5427ad46a26e5f229cc4f4877cf Mon Sep 17 00:00:00 2001
+From: Teng Fan <tengf@qti.qualcomm.com>
+Date: Thu, 10 Sep 2026 15:36:40 +0800
+Subject: [PATCH] fix: tear down QrbRosInferenceNode in a defined order
+
+Upstream-Status: Pending
+
+Give QrbRosInferenceNode a destructor that drops the subscription before
+the inference manager, so no callback can be dispatched into a
+half-destroyed manager. Destroying the manager then blocks until any
+in-flight inference has returned (see the qrb_inference_manager half of
+this fix), so the QNN context is only freed while the DSP is idle.
+
+A downstream node cannot work around this: ros2 launch forwards SIGINT to
+every process in the same instant, so draining in-flight requests on the
+client side has no way to delay this node's teardown.
+
+Signed-off-by: Teng Fan <tengf@qti.qualcomm.com>
+---
+diff --git a/qrb_ros_nn_inference/include/qrb_ros_nn_inference/qrb_ros_inference_node.hpp b/qrb_ros_nn_inference/include/qrb_ros_nn_inference/qrb_ros_inference_node.hpp
+index c84b708..96c2e50 100644
+--- a/qrb_ros_nn_inference/include/qrb_ros_nn_inference/qrb_ros_inference_node.hpp
++++ b/qrb_ros_nn_inference/include/qrb_ros_nn_inference/qrb_ros_inference_node.hpp
+@@ -19,7 +19,7 @@ class QrbRosInferenceNode : public rclcpp::Node
+ {
+ public:
+   QrbRosInferenceNode(const rclcpp::NodeOptions & options);
+-  ~QrbRosInferenceNode() = default;
++  ~QrbRosInferenceNode();
+ 
+ private:
+   std::unique_ptr<qrb::inference_mgr::QrbInferenceManager> qrb_inference_mgr_{ nullptr };
+diff --git a/qrb_ros_nn_inference/src/qrb_ros_inference_node.cpp b/qrb_ros_nn_inference/src/qrb_ros_inference_node.cpp
+index a5b320b..5527640 100644
+--- a/qrb_ros_nn_inference/src/qrb_ros_inference_node.cpp
++++ b/qrb_ros_nn_inference/src/qrb_ros_inference_node.cpp
+@@ -32,6 +32,20 @@ QrbRosInferenceNode::QrbRosInferenceNode(const rclcpp::NodeOptions & options)
+   RCLCPP_INFO(this->get_logger(), "Inference init successfully!");
+ }
+ 
++/**
++ * \brief tear down in a defined order
++ *
++ * The subscription has to go first: once it is gone no callback can be
++ * dispatched into a half-destroyed inference manager. Destroying the manager
++ * then blocks until an in-flight inference has returned, so the QNN context is
++ * only freed while the DSP is idle.
++ */
++QrbRosInferenceNode::~QrbRosInferenceNode()
++{
++  this->sub_.reset();
++  this->qrb_inference_mgr_.reset();
++}
++
+ /**
+  * \brief callback func of subscriper, do model inference for every topic msg
+  * \param msg msg from subscribed topic
+-- 
+2.43.0
+
+-- 
+2.43.0
