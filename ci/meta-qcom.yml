@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+
+repos:
+  meta-qcom:
+    url: https://github.com/qualcomm-linux/meta-qcom
+    branch: master
+    commit: d006b6a9dbf910b7203a1545b2f52659899c82d2
+
+  meta-qcom-distro:
+    commit: 270fab495f0fe6175016ca75bcbc98e69314e2ca
