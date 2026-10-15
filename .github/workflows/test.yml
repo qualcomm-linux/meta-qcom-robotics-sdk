@@ -9,10 +9,17 @@ on:
       head_sha:
         required: false
         type: string
+    secrets:
+      LAVATOKEN:
+        required: true
+        description: "Token used to submit jobs to the LAVA lab"
 
 jobs:
   prepare-jobs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     strategy:
       matrix:
         machine:
@@ -24,40 +31,49 @@ jobs:
         kernel:
           - dirname: '_linux-qcom-next'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.head_sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: 'Download build URLs'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ inputs.build_id }}
           pattern: build-url*
 
       - name: "Generate testjobs"
+        id: generate
         run: |
-          export BUILD_URL_FILE="$GITHUB_WORKSPACE/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}/build-url_${{ matrix.machine }}_${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}"
+          BUILD_NAME="${MATRIX_MACHINE}_${MATRIX_DISTRO}${MATRIX_TARGET_TYPE}${MATRIX_KERNEL_DIRNAME}"
+          BUILD_URL_FILE="$GITHUB_WORKSPACE/build-url_${BUILD_NAME}/build-url_${BUILD_NAME}"
           echo "${BUILD_URL_FILE}"
           if [ -f "$BUILD_URL_FILE" ]; then
               # install dependencies
               export BUILD_URL=$(cat "${BUILD_URL_FILE}")
               pip install jinja2
-              if [ "${{ matrix.machine }}" = "qcom-armv8a" ]; then
-                  python3 ci/generatetests.py --templates ci/lava --os ${{ matrix.distro.name }} --device dragonboard-410c --build-url "${BUILD_URL}"
-                  python3 ci/generatetests.py --templates ci/lava --os ${{ matrix.distro.name }} --device dragonboard-820c --build-url "${BUILD_URL}"
-                  echo "MACHINE=dragonboard" >> $GITHUB_ENV
+              if [ "${MATRIX_MACHINE}" = "qcom-armv8a" ]; then
+                  python3 ci/generatetests.py --templates ci/lava --os ${MATRIX_DISTRO} --device dragonboard-410c --build-url "${BUILD_URL}"
+                  python3 ci/generatetests.py --templates ci/lava --os ${MATRIX_DISTRO} --device dragonboard-820c --build-url "${BUILD_URL}"
+                  echo "machine=dragonboard" >> $GITHUB_OUTPUT
               else
-                  python3 ci/generatetests.py --templates ci/lava --os ${{ matrix.distro.name }} --device ${{ matrix.machine }} --build-url "${BUILD_URL}"
-                  echo "MACHINE=${{ matrix.machine }}" >> $GITHUB_ENV
+                  python3 ci/generatetests.py --templates ci/lava --os ${MATRIX_DISTRO} --device ${MATRIX_MACHINE} --build-url "${BUILD_URL}"
+                  echo "machine=${MATRIX_MACHINE}" >> $GITHUB_OUTPUT
               fi
           fi
+        env:
+          MATRIX_MACHINE: ${{ matrix.machine }}
+          MATRIX_DISTRO: ${{ matrix.distro.name }}
+          MATRIX_TARGET_TYPE: ${{ matrix.target.type }}
+          MATRIX_KERNEL_DIRNAME: ${{ matrix.kernel.dirname }}
+
       - name: 'Upload test jobs'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: testjobs-${{ matrix.machine }}-${{ matrix.distro.name }}
-          path: ${{ env.MACHINE}}*-${{ matrix.distro.name }}-*.yaml
+          path: ${{ steps.generate.outputs.machine }}*-${{ matrix.distro.name }}-*.yaml
 
   prepare-job-list:
     needs: prepare-jobs
@@ -66,7 +82,7 @@ jobs:
       jobmatrix: ${{ steps.listjobs.outputs.jobmatrix }}
     steps:
       - name: 'Download job templates'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: testjobs-*
 
@@ -87,18 +103,21 @@ jobs:
       matrix: ${{ fromJson(needs.prepare-job-list.outputs.jobmatrix) }}
     steps:
       - name: 'Download job templates'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: testjobs-*
 
       - name: 'Prepare output file name'
+        id: result
         run: |
-          OUTPUT_NAME=$(echo "${{ matrix.target }}" | sed "s|\/|-|g")
-          echo "RESULT_NAME=${OUTPUT_NAME#??}" >> $GITHUB_ENV
+          OUTPUT_NAME=$(echo "${MATRIX_TARGET}" | sed "s|\/|-|g")
+          echo "name=${OUTPUT_NAME#??}" >> $GITHUB_OUTPUT
+        env:
+          MATRIX_TARGET: ${{ matrix.target }}
 
       - name: Submit ${{ matrix.target }}
         timeout-minutes: 20
-        uses: foundriesio/lava-action@v8
+        uses: foundriesio/lava-action@v13
         with:
           lava_token: ${{ secrets.LAVATOKEN }}
           lava_url: 'lava.infra.foundries.io'
@@ -108,7 +127,7 @@ jobs:
           fail_action_on_incomplete: false
           save_result_as_artifact: true
           save_job_details: true
-          result_file_name: "${{ env.RESULT_NAME }}"
+          result_file_name: "${{ steps.result.outputs.name }}"
 
   publish-test-results:
     name: "Publish Tests Results"
@@ -120,7 +139,7 @@ jobs:
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts
 
@@ -131,7 +150,7 @@ jobs:
 
       - name: Publish Test Job Details
         run: |
-          for json_file in $(find ${{ github.workspace }} -name "test-job-*.json")
+          for json_file in $(find ${GITHUB_WORKSPACE} -name "test-job-*.json")
           do
               DEVICE_TYPE=$(cat "$json_file" | jq -r ".requested_device_type")
               URL=$(cat "$json_file" | jq -r ".url")
@@ -141,7 +160,7 @@ jobs:
           done
 
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
         with:
           files: "${{ github.workspace }}/artifacts/**/*.xml"
           action_fail: true

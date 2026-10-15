@@ -15,6 +15,10 @@ on:
       commit:
         required: true
         type: string
+    secrets:
+      TEST_REPORTING_APP_TOKEN:
+        required: true
+        description: "Private key of the GitHub App used to report test results"
 
 permissions:
   checks: write
@@ -28,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download result files
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
             run-id: ${{ inputs.workflow_id }}
             path: artifacts
@@ -36,26 +40,39 @@ jobs:
 
       - name: Download result files PR
         if: ${{ github.run_id != inputs.workflow_id }}
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
             path: artifacts
             github-token: ${{ github.token }}
 
       - name: "List files"
+        id: listfiles
         run: |
           echo $GITHUB_WORKSPACE
           ls -R $GITHUB_WORKSPACE
+          if ! find "${GITHUB_WORKSPACE}/artifacts/" -name '*.xml' -print -quit | grep -q .; then
+            echo "Error: no .xml files found"
+            exit 1
+          fi
 
       - id: app_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         if: always()
         with:
-          app-id: 2291458
+          client-id: 2291458
           private-key: ${{ secrets.TEST_REPORTING_APP_TOKEN }}
+          # Scope the token to what publish-unit-test-result-action uses on a
+          # public repository instead of inheriting every permission of the app
+          # installation. contents and issues are only needed on private repos,
+          # and the app is not granted issues at all.
+          permission-checks: write
+          permission-pull-requests: write
 
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
+        if: |
+          always()
+          && contains(steps.listfiles.outcome, 'success')
         with:
           commit: ${{ inputs.commit }}
           event_file: ${{ inputs.event_file}}
@@ -64,3 +81,5 @@ jobs:
           action_fail: true
           action_fail_on_inconclusive: true
           github_token: ${{ steps.app_token.outputs.token }}
+          report_individual_runs: true
+          report_suite_logs: any
