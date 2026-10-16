@@ -3,6 +3,6 @@
 header:
   version: 14
   includes:
-  - ci/base.yml
-
-machine: iq-9075-evk
+    - ci/meta-qcom.yml
+    - repo: meta-qcom
+      file: ci/iq-9075-evk.yml

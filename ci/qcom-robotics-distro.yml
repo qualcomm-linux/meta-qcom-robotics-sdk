@@ -8,22 +8,6 @@ defaults:
 repos:
   meta-qcom-robotics-sdk:
     branch: main
-  meta-qcom:
-    url: https://github.com/qualcomm-linux/meta-qcom
-    commit: fc9a9e41edc6c19e343a31b23e208a453b8cced4
-  meta-qcom-distro:
-    url: https://github.com/qualcomm-linux/meta-qcom-distro
-    branch: main
-    commit: 2c0f42b3212043aa116b189b10cac6d2d1f4a02e
-  oe-core:
-    url: https://github.com/openembedded/openembedded-core
-    layers:
-      meta:
-    patches:
-      fix-BSD-license-missing:
-        repo: meta-qcom-robotics-sdk
-        path: patches/Initial-commit-of-license.patch
-    commit: db81c1a42a0f552d9a8ec124f004ae2063d58c33
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
