@@ -26,14 +26,12 @@ repos:
 
   meta-ai:
     url: https://github.com/qualcomm-linux/meta-ai
-    branch: main
 
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization
 
   meta-audioreach:
     url: https://github.com/AudioReach/meta-audioreach
-    branch: master
 
   meta-selinux:
     url: https://git.yoctoproject.org/meta-selinux

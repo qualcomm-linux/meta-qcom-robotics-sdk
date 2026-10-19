@@ -10,7 +10,7 @@ repos:
     branch: wrynose
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: b094cfccc192d8e02809bf87c6dd9c76bcf31330
+    commit: 793056ce7a3f48813dbda9e9ce84e458583a9824
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -19,7 +19,7 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: ef022bf82d79015802309d14c28b13373ebe53f5
+    commit: 0f03c732a0a2d0506b41b1abe60b3f368b2300dc
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: wrynose
@@ -44,55 +44,75 @@ repos:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
     commit: c671acf8a948e22a614a6d6d1dcf18bdf4113df5
-
+  meta-qcom-distro:
+    commit: fce52059e2a3d4c53e51be176296fbb96ab7d55e
 env:
-  CPU_COUNT: "12"
-  THREAD_COUNT: "12"
-
+  CPU_COUNT: '12'
+  THREAD_COUNT: '12'
 local_conf_header:
-  resource_limitation: |
+  resource_limitation: '
 
     # Capture the count of cpu cores available from the export variable.
-    
-    CPU_COUNT = "${@os.getenv('CPU_COUNT', '12')}"
 
-    THREAD_COUNT = "${@os.getenv('THREAD_COUNT', '12')}"
+
+    CPU_COUNT = "${@os.getenv(''CPU_COUNT'', ''12'')}"
+
+
+    THREAD_COUNT = "${@os.getenv(''THREAD_COUNT'', ''12'')}"
+
 
     # Determines how many tasks bitbake should run in parallel.
 
+
     BB_NUMBER_THREADS ?= "${CPU_COUNT}"
+
 
     # Determines how many tasks bitbake should run in parallel during parsing.
 
+
     BB_NUMBER_PARSE_THREADS ?= "${CPU_COUNT}"
 
-    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new
+    tasks.
+
 
     BB_PRESSURE_MAX_CPU = "800000"
 
 
-    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new
+    tasks.
+
 
     BB_PRESSURE_MAX_IO = "800000"
 
 
-    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start
+    new tasks.
+
 
     BB_PRESSURE_MAX_MEMORY = "800000"
 
 
-    # Determines how many processes make should run in parallel when running compile tasks.
+
+    # Determines how many processes make should run in parallel when running compile
+    tasks.
+
 
     PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
+    '
   os-release: 'META_QCOM_BUILD_ID = "36811664911"
 
     OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
 
     '
-  assimp-preference: |
-    
+  assimp-preference: '
+
     PREFERRED_VERSION_assimp = "5.4.0"
 
+    '
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
