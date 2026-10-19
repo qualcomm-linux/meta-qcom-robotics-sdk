@@ -32,6 +32,14 @@ repos:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
     commit: 6a9a84fa556f40fbb90395b52a911f6f803fc695
+  oe-core:
+    url: https://github.com/openembedded/openembedded-core
+    layers:
+      meta:
+    patches:
+      fix-BSD-license-missing:
+        repo: meta-qcom-robotics-sdk
+        path: patches/Initial-commit-of-license.patch
 
 env:
   CPU_COUNT: "12"
@@ -75,7 +83,7 @@ local_conf_header:
     PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
   meta_qcom_build_id: |
-    META_QCOM_BUILD_ID = "34729757643"
+    META_QCOM_BUILD_ID = "36506547000"
     OS_RELEASE_FIELDS:append = " META_QCOM_BUILD_ID"
   coinor_license_qa: "ERROR_QA:remove = \"license-format\"\n\n    "
 distro: qcom-robotics-ros2-jazzy
