@@ -1,8 +1,3 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
-SRC_URI += " \
-    file://0001-fix-remove-boost-system-component-for-Boost-1.90.0.patch \
-"
-
 # Fix QA Issue [buildpaths]: CMake export files contain TMPDIR references
 do_install:append() {
     # Clean up CMake export files to use relocatable paths
