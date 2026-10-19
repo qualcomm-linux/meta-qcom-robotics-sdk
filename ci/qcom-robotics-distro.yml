@@ -8,18 +8,6 @@ defaults:
 repos:
   meta-qcom-robotics-sdk:
     branch: wrynose
-  meta-qcom:
-    url: https://github.com/qualcomm-linux/meta-qcom
-    commit: b094cfccc192d8e02809bf87c6dd9c76bcf31330
-  oe-core:
-    url: https://github.com/openembedded/openembedded-core
-    layers:
-      meta:
-    patches:
-      fix-BSD-license-missing:
-        repo: meta-qcom-robotics-sdk
-        path: patches/Initial-commit-of-license.patch
-    commit: ef022bf82d79015802309d14c28b13373ebe53f5
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: wrynose
