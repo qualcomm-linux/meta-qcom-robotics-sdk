@@ -1,5 +1,5 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
-SRC_URI += "file://0001-build-remove-boost-system.patch"
+# SRC_URI += "file://0001-build-remove-boost-system.patch"
 SRC_URI:remove = "file://0001-FindPython.cmake-install_python-Allow-to-set-differe.patch"
 
 # Fix QA Issue [buildpaths]: Remove TMPDIR references from all installed files

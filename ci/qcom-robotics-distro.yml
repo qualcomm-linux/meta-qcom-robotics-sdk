@@ -28,22 +28,13 @@ repos:
       meta-ros2:
       meta-ros2-jazzy:
     patches:
-      qcom-fixes1:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
-      qcom-fixes2:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0002-jazzy-update-libdir-of-ompl.patch
       qcom-fixes3:
         repo: meta-qcom-robotics-sdk
         path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
       ament_cmake_py_fix:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
-      remove-rosbag2-compressionn-zstd-bbappend:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
-    commit: c671acf8a948e22a614a6d6d1dcf18bdf4113df5
+    commit: 95c08773cff114b3fe1a8c8f43643e59151bc8db 
 
 env:
   CPU_COUNT: "12"
