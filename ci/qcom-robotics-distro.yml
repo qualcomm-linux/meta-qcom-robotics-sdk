@@ -22,7 +22,7 @@ repos:
       ament_cmake_py_fix:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
-    commit: 95c08773cff114b3fe1a8c8f43643e59151bc8db 
+    commit: 95c08773cff114b3fe1a8c8f43643e59151bc8db
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -31,55 +31,73 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-
 env:
-  CPU_COUNT: "12"
-  THREAD_COUNT: "12"
-
+  CPU_COUNT: '12'
+  THREAD_COUNT: '12'
 local_conf_header:
-  resource_limitation: |
+  resource_limitation: '
 
     # Capture the count of cpu cores available from the export variable.
-    
-    CPU_COUNT = "${@os.getenv('CPU_COUNT', '12')}"
 
-    THREAD_COUNT = "${@os.getenv('THREAD_COUNT', '12')}"
+
+    CPU_COUNT = "${@os.getenv(''CPU_COUNT'', ''12'')}"
+
+
+    THREAD_COUNT = "${@os.getenv(''THREAD_COUNT'', ''12'')}"
+
 
     # Determines how many tasks bitbake should run in parallel.
 
+
     BB_NUMBER_THREADS ?= "${CPU_COUNT}"
+
 
     # Determines how many tasks bitbake should run in parallel during parsing.
 
+
     BB_NUMBER_PARSE_THREADS ?= "${CPU_COUNT}"
 
-    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum CPU pressure threshold for bitbake scheduler to start new
+    tasks.
+
 
     BB_PRESSURE_MAX_CPU = "800000"
 
 
-    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum IO pressure threshold for bitbake scheduler to start new
+    tasks.
+
 
     BB_PRESSURE_MAX_IO = "800000"
 
 
-    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start new tasks.
+
+    # Specifies a maximum Memory pressure threshold for bitbake scheduler to start
+    new tasks.
+
 
     BB_PRESSURE_MAX_MEMORY = "800000"
 
 
-    # Determines how many processes make should run in parallel when running compile tasks.
+
+    # Determines how many processes make should run in parallel when running compile
+    tasks.
+
 
     PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
-  os-release: 'META_QCOM_BUILD_ID = "36811664911"
+    '
+  os-release: 'META_QCOM_BUILD_ID = "40155329192"
 
     OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
 
     '
-  assimp-preference: |
-    
+  assimp-preference: '
+
     PREFERRED_VERSION_assimp = "5.4.0"
 
+    '
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
