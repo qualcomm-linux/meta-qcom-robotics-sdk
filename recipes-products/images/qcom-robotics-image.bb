@@ -1,6 +1,7 @@
 # Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
+require conf/distro/include/qcom-robotics-sdk.inc
 require recipes-products/images/qcom-multimedia-image.bb
 
 inherit psdk-image
@@ -19,8 +20,7 @@ CORE_IMAGE_BASE_INSTALL += "            \
     packagegroup-qcom-ros2              \
     packagegroup-robotics-opensource    \
     qirp-sdk                            \
-    chrony                              \
-    chronyc                             \
+    ${ROBOTICS_REQUIRED_TOOLS}          \
 "
 
 ROOTFS_SYMLINK_PAIRS = "\
