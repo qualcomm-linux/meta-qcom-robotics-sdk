@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+
+# Single source of truth for the meta-qcom-arduino revision.
+
+# meta-qcom-arduino tracks the tip of meta-qcom, while this layer pins
+# meta-qcom to an older revision gated on meta-ros compatibility. The two
+# revisions therefore have to be picked as a pair: a meta-qcom-arduino
+# commit may rely on kernel or BSP support that is only present in a
+# meta-qcom newer than the one pinned in ci/qcom-robotics-distro.yml.
+# Keep this file revision-only so updating the pair is a one-line change.
+
+repos:
+  meta-qcom-arduino:
+    url: https://github.com/qualcomm-linux/meta-qcom-arduino
+    branch: main
+    commit: a5c303281ddec6d15a50485b89f6981d9cce6050
+    layers:
+      .:
