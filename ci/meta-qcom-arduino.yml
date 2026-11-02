@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+header:
+  version: 14
+
+# Single source of truth for the meta-qcom-arduino repository definition,
+# mirroring ci/meta-qcom.yml.
+
+repos:
+  meta-qcom-arduino:
+    url: https://github.com/qualcomm-linux/meta-qcom-arduino
+    branch: wrynose
+    commit: 1704d8090ba8e85261afa3d627f81890b490fc0b
+    layers:
+      .:
