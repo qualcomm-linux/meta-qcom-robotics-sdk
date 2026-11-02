@@ -10,6 +10,5 @@ repos:
   meta-qcom-arduino:
     url: https://github.com/qualcomm-linux/meta-qcom-arduino
     branch: wrynose
-    commit: 1704d8090ba8e85261afa3d627f81890b490fc0b
     layers:
       .:
