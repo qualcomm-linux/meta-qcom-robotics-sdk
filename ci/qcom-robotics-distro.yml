@@ -22,7 +22,7 @@ repos:
       ament_cmake_py_fix:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
-    commit: 95c08773cff114b3fe1a8c8f43643e59151bc8db
+    commit: 3cf9bda282e09d1e19ac10861b2c66dbcb621054
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
