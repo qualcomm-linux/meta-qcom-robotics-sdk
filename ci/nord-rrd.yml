@@ -3,6 +3,6 @@
 header:
   version: 14
   includes:
-  - ci/base.yml
-
-machine: nord-rrd
+    - ci/meta-qcom.yml
+    - repo: meta-qcom
+      file: ci/nord-rrd.yml
