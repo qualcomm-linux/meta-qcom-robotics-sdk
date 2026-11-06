@@ -1,0 +1,32 @@
+From bed8541f0773a0964bb38b5bf85e903482f15420 Mon Sep 17 00:00:00 2001
+From: dnie <dnie@qti.qualcomm.com>
+Date: Thu, 5 Nov 2026 10:36:25 +0800
+Subject: [PATCH] qrb_inference_manager: fix invalid XML declaration
+
+XML declarations only support version 1.0 or 1.1.
+
+The package manifest incorrectly uses the package version 1.1.1 as
+the XML version, causing catkin_pkg to reject package.xml during
+CMake configuration.
+
+Use XML version 1.0 while keeping the package version unchanged.
+
+Upstream-Status: Pending
+
+Signed-off-by: dnie <dnie@qti.qualcomm.com>
+---
+ qrb_inference_manager/package.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/qrb_inference_manager/package.xml b/qrb_inference_manager/package.xml
+index d6d2270..56bbdb2 100644
+--- a/qrb_inference_manager/package.xml
++++ b/qrb_inference_manager/package.xml
+@@ -1,4 +1,4 @@
+-<?xml version="1.1.1"?>
++<?xml version="1.0"?>
+ <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+ <package format="3">
+   <name>qrb_inference_manager</name>
+-- 
+2.34.1

@@ -1,7 +1,5 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
-SRC_URI += " \
-    file://0001-fix-remove-boost-system-component-for-Boost-1.90.0.patch \
-"
+
 do_install:append() {
     # Clean up CMake export files to use relocatable paths
     if [ -d ${D}${ros_prefix}/share/${ROS_BPN}/cmake ]; then
