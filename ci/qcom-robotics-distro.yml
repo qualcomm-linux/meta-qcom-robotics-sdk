@@ -16,22 +16,13 @@ repos:
       meta-ros2:
       meta-ros2-jazzy:
     patches:
-      qcom-fixes1:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0001-jazzy-remove-outdated-bbappend-and-patches-of-stomp.patch
-      qcom-fixes2:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0002-jazzy-update-libdir-of-ompl.patch
       qcom-fixes3:
         repo: meta-qcom-robotics-sdk
         path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
       ament_cmake_py_fix:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
-      remove-rosbag2-compressionn-zstd-bbappend:
-        repo: meta-qcom-robotics-sdk
-        path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
-    commit: 6a9a84fa556f40fbb90395b52a911f6f803fc695
+    commit: f48b64b15f13bb929a35140c15126e7930a4e2a5
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
