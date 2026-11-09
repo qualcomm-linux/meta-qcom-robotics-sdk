@@ -1,7 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
 header:
   version: 14
-
-local_conf_header:
-  cmdline-perf: |
-    KERNEL_CMDLINE_EXTRA:append = " quiet systemd.tty.term.console=linux"
-    KERNEL_CMDLINE_EXTRA:append = "${@' initramfs.udev-root-only=1' if d.getVar('INITRAMFS_IMAGE') == 'initramfs-rootfs-image' else ''}"
+  includes:
+    - ci/meta-qcom.yml
+    - repo: meta-qcom
+      file: ci/performance.yml

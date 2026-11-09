@@ -5,3 +5,5 @@ EXTRA_OECMAKE += " \
     -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
 "
 CXXFLAGS += "-Wno-error=old-style-cast"
+
+do_configure[network] = "1"

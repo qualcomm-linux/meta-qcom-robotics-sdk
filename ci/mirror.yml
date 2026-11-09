@@ -2,7 +2,7 @@
 
 header:
   version: 14
-
-local_conf_header:
-  mirror: |
-    SSTATE_MIRRORS = "file://.* http://sstate.yoctoproject.org/all/PATH;downloadfilename=PATH"
+  includes:
+    - ci/meta-qcom.yml
+    - repo: meta-qcom
+      file: ci/mirror.yml

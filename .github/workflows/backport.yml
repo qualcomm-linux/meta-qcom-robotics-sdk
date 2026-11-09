@@ -1,20 +1,27 @@
 name: Backport merged pull request
 on:
-  pull_request_target:
+  # pull_request_target is required here: the workflow must run with a write
+  # token after the pull request is closed. It only acts on merged pull
+  # requests (see the job condition) and checks out the base repository, so
+  # no pull-request-controlled code is ever executed.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [closed]
 permissions:
-  contents: write # so it can comment
-  pull-requests: write # so it can create pull requests
+  contents: read
 jobs:
   backport:
     name: Backport pull request
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # so it can comment
+      pull-requests: write # so it can create pull requests
     # Don't run on closed unmerged pull requests
     if: >
       github.event.pull_request.merged == true &&
       github.event.pull_request.base.ref == 'main'
     steps:
-      - uses: actions/checkout@v6
+      # backport-action pushes the backport branch with these credentials
+      - uses: actions/checkout@v6 # zizmor: ignore[artipacked]
       - name: Create backport pull requests
         uses: korthout/backport-action@7c3f6cd5843cac11bc59a04a1b7699af93261670 # 4.5.0
         with:

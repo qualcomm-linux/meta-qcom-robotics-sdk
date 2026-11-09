@@ -76,8 +76,14 @@ ROS_GST_BRIDGE = " \
     ros-gst-bridge-pipeline-plugins \
 "
 
+ROBOTICS_REQUIRED_TOOLS = " \
+    chrony                  \
+    chronyc                 \
+"
+
 RDEPENDS:${PN} = "           \
     ${QUALCOMM_QRB_ROS}      \
     ${QRB_ROS_SAMPLE}        \
     ${EXTERNAL_OPENSOURCE}   \
+    ${ROBOTICS_REQUIRED_TOOLS} \
 "
