@@ -215,18 +215,6 @@ jobs:
             dirname: '_linux-qcom-next'
             yamlfile: ''
         exclude:
-          - machine: ventuno-q
-            distro:
-              name: qcom-robotics-distro-catchall
-
-          - machine: ventuno-q
-            distro:
-              name: debug
-
-          - machine: ventuno-q
-            distro:
-              name: performance
-
           # built by compile_stage1
           - machine: iq-9075-evk
             distro:
