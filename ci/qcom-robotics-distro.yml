@@ -89,7 +89,7 @@ local_conf_header:
     PARALLEL_MAKE ?= "-j${THREAD_COUNT} -l${THREAD_COUNT}"
 
     '
-  os-release: 'META_QCOM_BUILD_ID = "40155329192"
+  os-release: 'META_QCOM_BUILD_ID = "42438668237"
 
     OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
 
