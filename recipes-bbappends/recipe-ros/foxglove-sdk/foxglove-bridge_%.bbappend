@@ -1,9 +1,23 @@
-# Allow FetchContent to download Foxglove SDK from GitHub
-# By default, Yocto sets FETCHCONTENT_FULLY_DISCONNECTED=ON to prevent network access during configure
-# But foxglove-bridge needs to download the pre-compiled SDK
-EXTRA_OECMAKE += " \
-    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
-"
-CXXFLAGS += "-Wno-error=old-style-cast"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
 
-do_configure[network] = "1"
+# foxglove-bridge 3.5.0+ uses FetchContent to download a prebuilt Foxglove SDK zip during
+# configure. Pre-fetch the zip via SRC_URI and patch CMakeLists.txt to redirect FetchContent
+# to the local file. Then pass foxglove-sdk_DIR explicitly because Yocto's toolchain sets
+# CMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY, which prevents find_package from seeing _deps/.
+EXTRA_OECMAKE += "-DFETCHCONTENT_FULLY_DISCONNECTED=OFF"
+
+# Yocto sets CMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY, which prevents find_package from
+# searching outside the sysroot — including FetchContent's _deps directory. Override
+# foxglove-sdk_DIR explicitly so CMake skips the search and uses the extracted SDK directly.
+EXTRA_OECMAKE += "-Dfoxglove-sdk_DIR=${B}/_deps/foxglove_sdk-src/lib/cmake/foxglove-sdk"
+
+SRC_URI += " \
+    file://0001-redirect-sdk-url-to-local-file.patch \
+    https://github.com/foxglove/foxglove-sdk/releases/download/sdk%2Fv0.28.0/foxglove-v0.28.0-cpp-aarch64-unknown-linux-gnu.zip;name=aarch64;unpack=0;subdir=${BP} \
+    https://github.com/foxglove/foxglove-sdk/releases/download/sdk%2Fv0.28.0/foxglove-v0.28.0-cpp-x86_64-unknown-linux-gnu.zip;name=x86_64;unpack=0;subdir=${BP} \
+"
+
+SRC_URI[aarch64.sha256sum] = "9c6efdf3bbc491be3fc5f33a6e2467469786ccb3465554c793a59ee2676c9b57"
+SRC_URI[x86_64.sha256sum] = "1a0d8e03a885f01ae7cfb08dc9076090ba2cf8a15b7f46dda11451e2e2758978"
+
+CXXFLAGS += "-Wno-error=old-style-cast"
