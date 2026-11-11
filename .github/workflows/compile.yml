@@ -84,7 +84,25 @@ jobs:
             echo "SSTATE_DIR=${SSTATE_DIR}" >> $GITHUB_ENV
           fi
 
-          echo "KAS_YAMLS=ci/ci.yml:ci/mirror.yml:ci/build-id.yml:ci/${INPUTS_MACHINE}.yml:${INPUTS_DISTRO_YAML}:${INPUTS_TARGET_YAML}:${INPUTS_KERNEL_YAML}" >> $GITHUB_ENV
+          KAS_YAMLS="ci/ci.yml:ci/mirror.yml:ci/build-id.yml:ci/${INPUTS_MACHINE}.yml:${INPUTS_DISTRO_YAML}:${INPUTS_TARGET_YAML}"
+          # kernel_yaml is optional; only append it when set (kas rejects empty
+          # path elements, e.g. a trailing or doubled ':').
+          if [[ -n "${INPUTS_KERNEL_YAML}" ]]; then
+            KAS_YAMLS="${KAS_YAMLS}:${INPUTS_KERNEL_YAML}"
+          fi
+          # Some machines ride a meta-qcom revision different from the shared
+          # ci/meta-qcom.yml. Their revision fragment must be appended last so it
+          # wins over the shared file that other fragments keep re-including (kas
+          # applies the last-listed value).
+          case "${INPUTS_MACHINE}" in
+            ventuno-q)
+              KAS_YAMLS="${KAS_YAMLS}:ci/meta-qcom-arduino.yml"
+              ;;
+            nord-rrd-auto)
+              KAS_YAMLS="${KAS_YAMLS}:ci/meta-qcom-autonomy.yml"
+              ;;
+          esac
+          echo "KAS_YAMLS=${KAS_YAMLS}" >> $GITHUB_ENV
 
           # kas-container does not forward arbitrary env vars into the
           # container, so bake the CI run id into a kas fragment inside the
@@ -122,14 +140,10 @@ jobs:
           # the same files into the shared DL_DIR at the same time. One machine
           # at a time, and with the catchall distro that covers the recipes of
           # the other distros.
-          for machine in ${INPUTS_FETCH_MACHINES}; do
-            $KAS_CONTAINER shell ci/ci.yml:ci/mirror.yml:ci/${machine}.yml:ci/qcom-robotics-distro-catchall.yml --command "\
-            bitbake --runall=fetch \
-              qcom-robotics-image qcom-robotics-image:do_generate_qirp_sdk \
-              qcom-robotics-proprietary-image qcom-robotics-proprietary-image:do_generate_qirp_sdk"
-          done
-        env:
-          INPUTS_FETCH_MACHINES: ${{ inputs.fetch_machines }}
+          $KAS_CONTAINER shell ${KAS_YAMLS} --command "\
+          bitbake --runall=fetch \
+            qcom-robotics-image qcom-robotics-image:do_generate_qirp_sdk \
+            qcom-robotics-proprietary-image qcom-robotics-proprietary-image:do_generate_qirp_sdk"
 
       - name: Kas fetch sources (buildstats)
         if: inputs.fetch_machines != ''
