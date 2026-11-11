@@ -72,7 +72,17 @@ runs:
           echo "SSTATE_DIR=${SSTATE_DIR}" >> "$GITHUB_ENV"
         fi
         
-        echo "KAS_YAMLS=ci/ci.yml:ci/mirror.yml:ci/${INPUTS_MACHINE}.yml:${INPUTS_DISTRO_YAML}:${INPUTS_TARGET_YAML}:${INPUTS_KERNEL_YAML}" >> $GITHUB_ENV
+        KAS_YAMLS="ci/ci.yml:ci/mirror.yml:ci/${INPUTS_MACHINE}.yml:${INPUTS_DISTRO_YAML}:${INPUTS_TARGET_YAML}:${INPUTS_KERNEL_YAML}"
+
+        # Machines that need a meta-qcom revision different from the shared
+        # ci/meta-qcom.yml provide a ci/<machine>-meta-qcom.yml fragment. It must
+        # be appended last so its revisions win over the shared file that other
+        # fragments keep re-including (kas applies the last-listed value).
+        if [[ -f "ci/${INPUTS_MACHINE}-meta-qcom.yml" ]]; then
+          KAS_YAMLS="${KAS_YAMLS}:ci/${INPUTS_MACHINE}-meta-qcom.yml"
+        fi
+
+        echo "KAS_YAMLS=${KAS_YAMLS}" >> $GITHUB_ENV
       env:
         INPUTS_CACHE_DIR: ${{ inputs.cache_dir }}
         INPUTS_USE_SSTATE: ${{ inputs.use_sstate }}

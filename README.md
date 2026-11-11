@@ -108,10 +108,10 @@ Install kas tool:
      kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml
      ```
 
-   - The Arduino VENTUNO Q board is supported through the [meta-qcom-arduino](https://github.com/qualcomm-linux/meta-qcom-arduino) BSP layer, which `ci/ventuno-q.yml` pulls in automatically. Swap in the `ventuno-q` machine configuration:
+   - The Arduino VENTUNO Q board is supported through the [meta-qcom-arduino](https://github.com/qualcomm-linux/meta-qcom-arduino) BSP layer, which `ci/ventuno-q.yml` pulls in automatically. Swap in the `ventuno-q` machine configuration. VENTUNO Q also pins its own meta-qcom revision, so append `ci/ventuno-q-meta-qcom.yml` as the last fragment:
 
      ```bash VENTUNO-Q
-     kas build meta-qcom-robotics-sdk/ci/ventuno-q.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml
+     kas build meta-qcom-robotics-sdk/ci/ventuno-q.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-distro.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml:meta-qcom-robotics-sdk/ci/ventuno-q-meta-qcom.yml
      ```
 
 For more details, please refer to the [Qualcomm Linux Documentation — Build with GitHub Actions](https://dragonwingdocs.qualcomm.com/SDKs/QIR-SDK-2.0/build-with-git-hub-workflow). 

@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+# Per-machine meta-qcom / meta-qcom-distro revisions for ventuno-q, decoupled
+# from the shared ci/meta-qcom.yml used by the iq-* machines.
+#
+# This fragment MUST be the last kas file on the command line so its revisions
+# win over the shared ci/meta-qcom.yml that other fragments keep re-including
+# (kas applies the last-listed value). The CI compile action appends it
+# automatically for any machine that has a ci/<machine>-meta-qcom.yml file; for
+# local builds, append it to the end of your `kas build ...` chain.
+header:
+  version: 14
+repos:
+  meta-qcom:
+    url: https://github.com/qualcomm-linux/meta-qcom
+    branch: wrynose
+    commit: a6c92fad47164e6f051ab5d90567bc92afa661ae
+  meta-qcom-distro:
+    commit: 70eabc36e1a8347cbe332e9b52acabd39f4832e0
+
+local_conf_header:
+  os-release: 'META_QCOM_BUILD_ID = "41973234106"
+
+    OS_RELEASE_FIELDS:append = "META_QCOM_BUILD_ID"
+
+    '

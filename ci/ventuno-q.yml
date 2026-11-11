@@ -8,12 +8,18 @@ header:
 # meta-qcom-arduino provides the ventuno-q machine configuration and its
 # board-specific recipes. It is pulled in from the machine fragment rather than
 # from the distro fragment so the BSP layer only joins BBLAYERS for Arduino builds.
-
+#
+# NOTE: ventuno-q's meta-qcom / meta-qcom-distro revisions are NOT pinned here.
+# Every CI fragment (ci.yml, mirror.yml, qcom-distro.yml, ...) includes the shared
+# ci/meta-qcom.yml, and kas applies the last-listed value, so a repo override in
+# this (early) machine fragment would be clobbered by a later fragment. The
+# machine-specific revisions live in ci/ventuno-q-meta-qcom.yml, which the build
+# appends as the final kas fragment so it wins. See .github/actions/compile.
 repos:
   meta-qcom-arduino:
     url: https://github.com/qualcomm-linux/meta-qcom-arduino
     branch: wrynose
-    commit: 1704d8090ba8e85261afa3d627f81890b490fc0b
+    commit: 583c6e4b496d9c1a0531c98c69eae971a2c71623
     layers:
          .:
 
