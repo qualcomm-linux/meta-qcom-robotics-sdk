@@ -4,6 +4,6 @@ repos:
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
     branch: wrynose
-    commit: 09fd45227ed1982d17812834d33c9a2a458a7a24
+    commit: eb9f51ba2bc7950c2896faa5787f9f37cfda2a9e
   meta-qcom-distro:
-    commit: c9284896be60a01e7cc6bd94d932fe2c84cb1a2e
+    commit: 82745f538eb046cda5d79c5651ffd37c6a478082
