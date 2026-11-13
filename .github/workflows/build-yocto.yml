@@ -104,6 +104,7 @@ jobs:
           - iq-8275-evk
           - iq-9075-evk
           - ventuno-q
+          - nord-rrd
         distro:
           - name: qcom-robotics-distro
             yamlfile: 'ci/qcom-robotics-distro.yml'
@@ -127,6 +128,25 @@ jobs:
           - type: rt-6.18-distro-kvm
             dirname: "_linux-qcom-rt-6.18_qcom-distro-kvm"
             yamlfile: "ci/linux-qcom-rt-6.18.yml:ci/qcom-distro-kvm.yml"
+          - type: qcom-next
+            dirname: "_linux-qcom-next"
+            yamlfile: ":ci/linux-qcom-next.yml"
+        exclude:
+          - machine: nord-rrd
+            kernel:
+                type: 6.18
+          - machine: nord-rrd
+            kernel:
+                type: rt-6.18-distro-kvm
+          - machine: iq-8275-evk
+            kernel:
+                type: qcom-next
+          - machine: iq-9075-evk
+            kernel:
+                type: qcom-next
+          - machine: ventuno-q
+            kernel:
+                type: qcom-next
 
     name: ${{ matrix.machine }}/${{ matrix.distro.name }}${{ matrix.target.type }}${{ matrix.kernel.dirname }}
     steps:

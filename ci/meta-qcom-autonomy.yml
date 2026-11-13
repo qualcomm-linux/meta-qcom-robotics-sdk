@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+# meta-qcom / meta-qcom-autonomy revisions for the autonomy (nord-rrd-auto)
+# machine, decoupled from the shared ci/meta-qcom.yml used by the iq-* machines.
+#
+# This fragment MUST be the last kas file on the command line so its revisions
+# win over the shared ci/meta-qcom.yml that other fragments keep re-including
+# (kas applies the last-listed value). The CI compile action appends it for
+# machine nord-rrd-auto; for local builds, append it to the end of your
+# `kas build ...` chain.
+#
+# TODO(wrynose): the revisions below are carried over from the main branch and
+# point at master/main-branch commits. Update them to the wrynose-appropriate
+# meta-qcom / meta-qcom-autonomy / meta-qcom-autonomy-distro revisions before
+# adding nord-rrd-auto to the build matrix.
+header:
+  version: 14
+# repos:
+#   meta-qcom:
+#     url: https://github.com/qualcomm-linux/meta-qcom
+#     branch: wrynose
+#     commit: a6c92fad47164e6f051ab5d90567bc92afa661ae
+#   meta-qcom-autonomy-distro:
+#     url: https://github.com/qualcomm-linux/meta-qcom-autonomy-distro
+#     branch: main
+#     commit: 621d7918b8a975738e9e1b4ee5cd5b154034d847
+#   meta-qcom-autonomy:
+#     url: https://github.com/qualcomm-linux/meta-qcom-autonomy
+#     branch: main
+#     commit: 8afe4ecbe72baebe0b7009931aff64ec70e234cd
+local_conf_header:
+  os-release: 'META_QCOM_AUTONOMY_BUILD_ID = ""
+
+    OS_RELEASE_FIELDS:append = "META_QCOM_AUTONOMY_BUILD_ID"
+
+    '

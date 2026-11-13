@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+# nord-rrd-auto machine configuration only. Its meta-qcom / meta-qcom-autonomy
+# revisions live in ci/meta-qcom-autonomy.yml, which the build appends as the
+# final kas fragment so its revisions win over the shared ci/meta-qcom.yml.
+header:
+  version: 14
+  includes:
+    - ci/base.yml
+
+machine: nord-rrd-auto

@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
+
+# nord-rrd machine configuration. The machine definition comes from the
+# meta-qcom layer (same pattern as the iq-* machines). nord-rrd currently tracks
+# the shared ci/meta-qcom.yml revision; to pin its own, add a case for it in
+# .github/actions/compile/action.yml that appends a revision fragment last.
+header:
+  version: 14
+  includes:
+    - ci/meta-qcom.yml
+    - repo: meta-qcom
+      file: ci/nord-rrd.yml
