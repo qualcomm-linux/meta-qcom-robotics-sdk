@@ -1,23 +1,10 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
-
-# meta-qcom / meta-qcom-distro revisions for the autonomy (nord-rrd-auto)
-# machine, decoupled from the shared ci/meta-qcom.yml used by the iq-* machines.
-#
-# Initially pinned to the same code base as ci/meta-qcom.yml; bump these
-# independently when nord-rrd-auto needs to diverge.
-#
-# This fragment MUST be the last kas file on the command line so its revisions
-# win over the shared ci/meta-qcom.yml that other fragments keep re-including
-# (kas applies the last-listed value). The CI compile workflow appends it for
-# machine nord-rrd-auto; for local builds, append it to the end of your
-# `kas build ...` chain.
 header:
   version: 14
 repos:
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
     branch: master
-    commit: b0eaab97bbf4290a37441df0e8f9b7b13d0131e4 
+    commit: b0eaab97bbf4290a37441df0e8f9b7b13d0131e4
   meta-qcom-autonomy-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-autonomy-distro
     branch: main
