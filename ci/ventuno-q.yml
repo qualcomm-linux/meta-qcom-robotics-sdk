@@ -1,12 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
 
+# ventuno-q machine configuration only. The meta-qcom-arduino BSP (which provides
+# this machine and its board recipes) and ventuno-q's meta-qcom / meta-qcom-distro
+# revisions live in ci/meta-qcom-arduino.yml, which the build appends as the
+# final kas fragment so its revisions win over the shared ci/meta-qcom.yml.
 header:
   version: 14
   includes:
     - repo: meta-qcom-arduino
       file: ci/ventuno-q.yml
-    - ci/meta-qcom.yml
-    - ci/meta-qcom-arduino.yml
-
-# meta-qcom-arduino provides the ventuno-q machine configuration and its
-# board-specific recipes. 

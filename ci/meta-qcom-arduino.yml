@@ -1,18 +1,34 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/siemens/kas/master/kas/schema-kas.json
 
+# meta-qcom / meta-qcom-distro revisions for the arduino (ventuno-q) machine,
+# decoupled from the shared ci/meta-qcom.yml used by the iq-* machines, plus the
+# meta-qcom-arduino BSP that provides the ventuno-q machine.
+#
+# This fragment MUST be the last kas file on the command line so its revisions
+# win over the shared ci/meta-qcom.yml that other fragments keep re-including
+# (kas applies the last-listed value). The CI compile workflow appends it for
+# machine ventuno-q; for local builds, append it to the end of your
+# `kas build ...` chain.
 header:
   version: 14
-
-# Single source of truth for the meta-qcom-arduino revision.
-
-# meta-qcom-arduino tracks the tip of meta-qcom, while this layer pins
-# meta-qcom to an older revision gated on meta-ros compatibility. 
-# Keep this file revision-only so updating the pair is a one-line change.
-
 repos:
+  meta-qcom:
+    url: https://github.com/qualcomm-linux/meta-qcom
+    branch: master
+    commit: 4cd87176382a393d9558690e892d5aa9d2343ee6
+  meta-qcom-distro:
+    commit: 5e4fabeba8b9666b33a037f8da2f96ab1dbf4924
+  # meta-qcom-arduino provides the ventuno-q machine configuration and its
+  # board-specific recipes; it tracks the tip of meta-qcom.
   meta-qcom-arduino:
     url: https://github.com/qualcomm-linux/meta-qcom-arduino
     branch: main
     commit: 5bc3b15e2d691a257bd5470d3b5ff8cee7e67fd9
     layers:
       .:
+local_conf_header:
+  os-release: 'META_QCOM_ARDUINO_BUILD_ID = ""
+
+    OS_RELEASE_FIELDS:append = "META_QCOM_ARDUINO_BUILD_ID"
+
+    '

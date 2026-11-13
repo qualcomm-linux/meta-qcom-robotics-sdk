@@ -176,7 +176,7 @@ jobs:
       cache_dir: ${{ needs.compile-env.outputs.CACHE_DIR }}
       use_sstate: ${{ inputs.use_sstate || 'true' }}
       # keep in sync with the machines of the compile matrix
-      fetch_machines: 'iq-8275-evk iq-9075-evk ventuno-q'
+      fetch_machines: 'iq-8275-evk iq-9075-evk ventuno-q nord-rrd'
 
   compile:
     needs: [github-cache-check, compile_stage1, compile-env]
@@ -194,6 +194,7 @@ jobs:
           - iq-8275-evk
           - iq-9075-evk
           - ventuno-q
+          - nord-rrd
         distro:
           - name: qcom-robotics-distro
             yamlfile: 'ci/qcom-robotics-distro.yml'
@@ -215,6 +216,15 @@ jobs:
             dirname: '_linux-qcom-next'
             yamlfile: ''
         exclude:
+          # built by compile_stage1
+          - machine: iq-9075-evk
+            distro:
+              name: qcom-robotics-distro-catchall
+              yamlfile: 'ci/qcom-robotics-distro-catchall.yml'
+            target:
+              type: '_full'
+              name: qcom-robotics-proprietary-image
+              yamlfile: 'ci/qcom-robotics-proprietary-image.yml'
           - machine: ventuno-q
             distro:
               name: qcom-robotics-distro-catchall
@@ -225,17 +235,7 @@ jobs:
 
           - machine: ventuno-q
             distro:
-              name: performance
-
-          # built by compile_stage1
-          - machine: iq-9075-evk
-            distro:
-              name: qcom-robotics-distro-catchall
-              yamlfile: 'ci/qcom-robotics-distro-catchall.yml'
-            target:
-              type: '_full'
-              name: qcom-robotics-proprietary-image
-              yamlfile: 'ci/qcom-robotics-proprietary-image.yml'
+              name: performance          
 
     uses: $/.github/workflows/compile.yml
     with:
