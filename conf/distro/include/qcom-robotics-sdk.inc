@@ -41,6 +41,8 @@ ROBOTICS_TOOLCHAIN_REQUIRED_LIBS = " \
     fmt-staticdev \
     octomap-staticdev \
     osqp-vendor-staticdev \
+    libflann-staticdev \
+    qhull-staticdev \
 "
 
 # Add default packages from meta-ros ros-sdk.inc
